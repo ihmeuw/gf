@@ -95,7 +95,7 @@ id_focus_topics <- function(country, include_module_intervention = FALSE) {
   # print(unique(missing_ids[,.(gf_module, gf_intervention, activity_description)]))
   
   # insert print statement
-  print(paste0("There were ", length(unique(missing_ids$activity_description)),  " additional activities identified as focus topics through keyword search." ))
+  print(paste0("There were ", length(unique(missing_ids$activity_description)),  " activities missing from what were originally ID'ed by CEPs." ))
 }
 
 # -----
