@@ -27,11 +27,11 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # -----------------------------------------------
 
 # Function to read in detailed budgets and search through activities for keywords, could be saved in common_functions folder later on
-id_focus_topics <- function(country, topic_area) {
+id_focus_topics <- function(country, include_module_intervention = FALSE) {
   
-  # #example - can uncomment two lines below to troubleshoot/test
-  # country <- 'Senegal'
-  # topic_area <- 'diagnostic'
+  # # example - can uncomment the lines below to troubleshoot/test
+  # country <- 'Uganda'
+  # include_module_intervention = TRUE
   
   # step 0: make sure inputs are currect
   # if () stop("Error: country must be either 'sen', 'uga', 'gtm', or 'cod'") or (Senegal, Uganda, Guatemala, DRC)
@@ -39,40 +39,69 @@ id_focus_topics <- function(country, topic_area) {
   # if (class(year)=='character') stop('Error: year argument must be a number!')
   # -----------------------------------------------------------------------------
   
-  # step 1: read in data
-  data <- fread(paste0(box, "tableau_data/all_budget_revisions_activityLevel.csv")) #make sure this can access the correct data source
+  # step 1: read in data at activity level
+  data <- as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas.csv'))) #make sure this can access the correct data source
   data <- data[loc_name==country]
+  # just resetting these because I had manually entered some but I want it to be set here instead:
+  data[, topicAreaDesc := '']
+  data[, keyword_topic_area := FALSE]
   
   # step 2: read in keywords for each focus topic
   key_words_file <- fread(paste0(mapping_dir, "focus_topic_keyword_search_log.csv"))
-  key_words <- key_words_file[loc_name==country & focus_topic==topic_area, keyword] ##these are the key words we settle on for a certain topic area in a given country.
+  topic_areas = key_words_file[loc_name==country, unique(focus_topic)]
   
-  # step 3: loop through specific columns to use to search for hits
-  hits <- Reduce(`|`, lapply(key_words, function(x) grepl(x, tolower(data$activity_description)))) ## this produces a vector of TRUE/FALSE for every row in ‘data’ where a key word was identified in character column of activity descriptions, the `|` function makes sure that each key word is looked for indepently (as opposed to `&`, where it looks for the unity)
-  data[hits,paste0("ta_", topic_area):=1]
-  data[!hits,paste0("ta_", topic_area):=0]
+  # use activity description or the combination of module/intervention/activity to search for key words
+  if (include_module_intervention == TRUE){
+    data[, search_column := paste(gf_module, gf_intervention, activity_description)]
+  } else {
+    data[, search_column := activity_description]
+  }
   
-  # which module/intervention pairs were identified that are also not currently being hand coded?
-  # insert code here
-  ta_indic <- as.name(paste0("ta_", topic_area))
-  tabletest <- data[isTopicArea==FALSE & budget_version=="approved" & eval(ta_indic)==1] # need to change name of variable in subsetting dynamically
+  for(t in topic_areas){
+    # these are the key words we settle on for a certain topic area in a given country.
+    key_words <- key_words_file[loc_name==country & focus_topic==t, keyword]
+    
+    # step 3: loop through specific columns to use to search for hits
+    # this produces a vector of TRUE/FALSE for every row in data where a key word was identified in character column of activity descriptions, 
+    # the `|` function makes sure that each key word is looked for indepently (as opposed to `&`, where it looks for the unity)
+    hits <- Reduce(`|`, lapply(key_words, function(x) grepl(x, tolower(data$search_column)))) 
+    data[hits, keyword_topic_area := TRUE]
+    data[hits, topicAreaDesc := paste(topicAreaDesc, toupper(t))] # to identify if both topic areas get id'ed by the keywords
+  }
   
-  # create table to visualize
-  # print((unique(tabletest[,.(gf_module, gf_intervention, activity_description, budget_version)])))
+  # remove search column and clean up results
+  data[, search_column := NULL]
+  data[, X := NULL]
+  data[, topicAreaDesc := trimws(topicAreaDesc)]
   
-  # insert print statement
-  print(paste0("There were ",length(unique(tabletest$gf_intervention)),  " additional interventions in final approved budgets marked as focus topics through keyword search." ))
-  
-  # save data in new folder
-  write.csv(data, file = paste0(dir, "_gf_files_gos/tableau_data/test_senegal_focus_topic_search.csv"))
+  # save data in new folder - save a separate file for now on J
+  write.csv(data, file = paste0(dir, "/modular_framework_mapping/keyword_search/test_", tolower(country), "_focus_topic_search.csv", row.names = FALSE))
   print("Data saved on J drive")
   
-  # save data on box or prepped data folder in J?
-}
+  # Step 4: check out the results compare to what the CEPs have ID'ed previously
+  # which module/intervention pairs were identified that are also not currently being hand coded?
+  new_ids = data[cep_topic_area == FALSE & keyword_topic_area == TRUE,]
+    
+  # create table to visualize
+  # print(unique(new_ids[,.(gf_module, gf_intervention, activity_description)]))
+  
+  # insert print statement
+  print(paste0("There were ", length(unique(new_ids$activity_description)),  " additional activities identified as focus topics through keyword search." ))
 
+  # Are any of the previously ID'ed activities now NOT ID'ed? 
+  missing_ids = data[cep_topic_area == TRUE & keyword_topic_area == FALSE,]
+  
+  # create table to visualize
+  # print(unique(missing_ids[,.(gf_module, gf_intervention, activity_description)]))
+  
+  # insert print statement
+  print(paste0("There were ", length(unique(missing_ids$activity_description)),  " additional activities identified as focus topics through keyword search." ))
+}
 
 # -----
 # TEST USING SENEGAL DATA
 # ----
 
- id_focus_topics("Senegal", "diagnostic")
+id_focus_topics("Senegal")
+
+id_focus_topics('Uganda', include_module_intervention = TRUE)
