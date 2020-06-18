@@ -105,3 +105,31 @@ id_focus_topics <- function(country, include_module_intervention = FALSE) {
 id_focus_topics("Senegal")
 
 id_focus_topics('Uganda', include_module_intervention = TRUE)
+
+dt = read_xlsx(paste0(dir, 'modular_framework_mapping/keyword_search/uganda_keyword_search_focus_topic_areas.xlsx'))
+dt = as.data.table(dt)
+nrow(unique(dt[,c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description")]))
+dt = unique(dt[,c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description")])
+setorderv(dt, c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
+dt[, id := .I]
+
+budget_rev = read.csv(paste0(box, 'tableau_data/all_budget_revisions_activityLevel.csv'))
+budget_rev = as.data.table(budget_rev)
+budget_rev = budget_rev[loc_name == 'Uganda', ]
+budget_rev = budget_rev[, -c('isTopicArea', 'topicAreaDesc')]
+budget_rev = unique(budget_rev[,c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description")])
+budget_rev = budget_rev[, lapply(.SD, as.character), .SDcols = names(budget_rev)]
+budget_rev = budget_rev[, lapply(.SD, trimws), .SDcols = names(budget_rev)]
+budget_rev = budget_rev[, activity_description:=str_replace_all(x, "[\r\n]" , "")
+
+setorderv(budget_rev, c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
+budget_rev[, id := .I]
+
+check = merge(dt, budget_rev, all = TRUE, by = c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
+
+
+budget_rev = budget_rev[grant_period == '2018-2020' & file_iteration %in% c('approved_gm', 'revision'),]
+budget_rev = budget_rev[, .(budget = sum(budget)), by = c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description", "grant", "budget_version")]
+
+budget_rev = dcast.data.table(budget_rev, loc_name + disease + gf_module + gf_intervention + activity_description + grant ~ budget_version)
+ 
