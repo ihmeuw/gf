@@ -30,8 +30,8 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 id_focus_topics <- function(country, include_module_intervention = FALSE) {
   
   # # example - can uncomment the lines below to troubleshoot/test
-  # country <- 'Uganda'
-  # include_module_intervention = TRUE
+  country <- 'Guatemala'
+  include_module_intervention = FALSE
   
   # step 0: make sure inputs are currect
   # if () stop("Error: country must be either 'sen', 'uga', 'gtm', or 'cod'") or (Senegal, Uganda, Guatemala, DRC)
