@@ -57,14 +57,19 @@ id_focus_topics <- function(country, include_module_intervention = FALSE) {
     data[, search_column := activity_description]
   }
   
+  data[,search_column := tolower(search_column)]
+  data[,search_column := trimws(search_column)]
+  
   for(t in topic_areas){
     # these are the key words we settle on for a certain topic area in a given country.
     key_words <- key_words_file[loc_name==country & focus_topic==t, keyword]
+    key_words = tolower(key_words)
+    key_words = trimws(key_words)
     
     # step 3: loop through specific columns to use to search for hits
     # this produces a vector of TRUE/FALSE for every row in data where a key word was identified in character column of activity descriptions, 
     # the `|` function makes sure that each key word is looked for indepently (as opposed to `&`, where it looks for the unity)
-    hits <- Reduce(`|`, lapply(key_words, function(x) grepl(x, tolower(data$search_column)))) 
+    hits <- Reduce(`|`, lapply(key_words, function(x) grepl(x, data$search_column))) 
     data[hits, keyword_topic_area := TRUE]
     data[hits, topicAreaDesc := paste(topicAreaDesc, toupper(t))] # to identify if both topic areas get id'ed by the keywords
   }
@@ -100,15 +105,17 @@ id_focus_topics <- function(country, include_module_intervention = FALSE) {
 }
 
 # -----
-# TEST USING SENEGAL DATA
+# TEST on country data:
 # ----
 
 id_focus_topics("Senegal")
 id_focus_topics('Guatemala', include_module_intervention = FALSE)
 
 id_focus_topics('Uganda', include_module_intervention = TRUE)
+id_focus_topics('DRC', include_module_intervention = TRUE)
 
 
+# merging budget data and troubleshooting:
 dt = read_xlsx(paste0(dir, 'modular_framework_mapping/keyword_search/uganda_keyword_search_focus_topic_areas.xlsx'))
 dt = as.data.table(dt)
 nrow(unique(dt[,c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description")]))
