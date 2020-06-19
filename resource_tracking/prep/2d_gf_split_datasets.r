@@ -311,13 +311,16 @@ cumulative_absorption_cep = cumulative_absorption[, cep_cols, with=FALSE]
 
 all_absorption = mapped_data[grant_status=="active" & data_source=="pudr", .(grant, grant_period, code, gf_module, gf_intervention, 
                                                                      budget, expenditure, lfa_exp_adjustment, pudr_semester_financial, start_date,
-                                 file_name, loc_name, kp, rssh, equity)] # added these variables to keep
+                                 file_name, loc_name, kp, rssh, equity, current_grant)] # added these variables to keep
+
+# subset data to only the currently active grant period
+all_absorption = all_absorption[current_grant==TRUE]
 
 all_absorption[, expenditure:=expenditure+lfa_exp_adjustment] #Calculate final expenditure. 
 all_absorption = all_absorption[, -c('lfa_exp_adjustment')]
 setnames(all_absorption, 'pudr_semester_financial', 'pudr_code')
 all_absorption = merge(all_absorption, pudr_labels, by=c('pudr_code'), all.x=T)
-if (nrow(all_absorption[is.na(semester)])>0){ # this part of the code is breaking--as I'm not sure what it intended to do
+if (nrow(all_absorption[is.na(semester)])>0){
   print(unique(all_absorption[is.na(semester), .(pudr_code)]))
   stop("Values of pudr_code did not merge correctly.")
 }
@@ -369,16 +372,13 @@ all_absorption[grant_disease=='Z' & grant=='SEN-Z-MOH', grant_disease:='tb'] #ON
 stopifnot(unique(all_absorption$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'malaria'))
 
 #Make Nan, Infinity all NA 
-all_absorption[is.nan(absorption), absorption:=NA] # FRC not sure if the last variable refers to name of column or name of datable (should perhaps stay as 'absorption:=NA')
+all_absorption[is.nan(absorption), absorption:=NA] 
 all_absorption[!is.finite(absorption), absorption:=NA]
 
 # Subset columns to GEP and CEP variables. 
 all_absorption_gep = copy(all_absorption) # Leaving this in this format for now EL 3/9/20 
 all_absorption_cep = all_absorption[, .(grant, grant_period, gf_module, gf_intervention, disease, start_date, end_date, 
                                 budget, expenditure, absorption, file_name, loc_name, kp, rssh, equity)]
-
-# subset data to only the currently active grant period
-
 
 #---------------------------------------------------------
 # 6. Expenditures - pull out expenditures file, and 
