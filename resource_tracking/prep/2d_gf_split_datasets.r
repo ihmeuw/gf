@@ -377,6 +377,9 @@ all_absorption_gep = copy(all_absorption) # Leaving this in this format for now 
 all_absorption_cep = all_absorption[, .(grant, grant_period, gf_module, gf_intervention, disease, start_date, end_date, 
                                 budget, expenditure, absorption, file_name, loc_name, kp, rssh, equity)]
 
+# subset data to only the currently active grant period
+
+
 #---------------------------------------------------------
 # 6. Expenditures - pull out expenditures file, and 
 #   generate 'final expenditure' variable. 
