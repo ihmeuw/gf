@@ -210,11 +210,43 @@ dt$target_met[which(dt$reverse_indicator_final=="no" & dt$any_result_value < dt$
 dt$target_met[which(dt$reverse_indicator_final=="yes" & dt$any_result_value <= dt$target_value)] <- "yes"
 dt$target_met[which(dt$reverse_indicator_final=="yes" & dt$any_result_value > dt$target_value)] <- "no"
 
+#-------------------------------------------------------------
+# Re-format data to make easier to visualize on tableau
+#-------------------------------------------------------------
+dt[pudr_sheet=="coverage_indicators_main", indicator_type:="Coverage"]
+dt[pudr_sheet=="coverage_indicators_disagg", indicator_type:="Coverage_disagg"]
+dt[pudr_sheet=="impact_outcome_indicators_main", indicator_type:="Impact"]
+
+# select columns to keep
+tableau.cols <- c('loc_name', 'grant', 'grant_period', 'grant_status', 'primary_recipient','start_date_programmatic', 'end_date_programmatic', 'disease', 'file_name',
+                  'indicator_code', 'indicator', 'full_description', 'brief_description',
+                  'indicator_type', 'category', 'sub-category', 
+                  'target_n', 'target_d', 'target_pct', 'target_year',
+                  'pr_result_n', 'pr_result_d', 'pr_result_pct', 'pr_result_year','pr_result_source_code',
+                  'lfa_result_n', 'lfa_result_d', 'lfa_result_pct', 'lfa_result_year', 'lfa_result_source_code',
+                  'gf_result_n', 'gf_result_d', 'gf_result_pct', 'gf_result_source',
+                  'module',
+                  'cumulative_target', 
+                  'reverse_indicator',
+                  'completeness_rating')
+
+tableau.dt <- dt[,..tableau.cols]
+
+tableau.dt <- tableau.dt[completeness_rating %in% c("Both available", "Only Result", "Only Target")]
+
+# use an if statement to create the "final_result" categories
+# something like
+
+# tableau.dt$final_result_n <- with(tableau.dt, ifelse(is.na(gf_result_n),
+#                                                      )))
+# if is.na(gf_result_n)
+# if (is.na(tableau.cols$gf_result_n)
+
 #------------------------------------------------------
 # SAVE FINAL DATA
 # -----------------------------------------------------
 saveRDS(dt, paste0(prepped_dir, "cleaned_pfi.rds"))
-write.csv(dt, paste0(box,"tableau_data/all_performance_indicators.csv"))
+write.csv(tableau.dt, paste0(box,"tableau_data/all_performance_indicators.csv"))
 saveRDS(dt, paste0(prepped_dir, "archive/cleaned_pfi_", Sys.Date(), ".rds"))
 
 print("Step 3: Clean and validated data completed. Validated data saved as cleaned_pfi.RDS in prepped_data folder.")
