@@ -20,7 +20,16 @@ if (Sys.info()[1]=='Windows'){
 
 # source files with other functions and common resource tracking filepaths
 source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
-# source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8") # not sure if we will need this one
+
+#---------------------------------------------------
+# Download new version of keyword search log from google drive
+# --------------------------------------------------
+# library(googledrive)
+# keywordsearchlogfile <- drive_get(as_id("1TOE7EYnHozN5oNNrkILuiGWvFc-yQyGvLZg1JJFjb5o")) # ID of file on drive
+# local_file = paste0(mapping_dir, "keyword_search/focus_topic_keyword_search_log.csv") # where to save copy of file locally
+# drive_download(file=keywordsearchlogfile, 
+#                path=local_file,
+#                overwrite = TRUE)
 
 # -----------------------------------------------
 # FUNCTION
@@ -30,8 +39,8 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 id_focus_topics <- function(country, include_module_intervention = FALSE) {
   
   # # example - can uncomment the lines below to troubleshoot/test
-  country <- 'Guatemala'
-  include_module_intervention = FALSE
+  # country <- 'Senegal'
+  # include_module_intervention = FALSE
   
   # step 0: make sure inputs are currect
   # if () stop("Error: country must be either 'sen', 'uga', 'gtm', or 'cod'") or (Senegal, Uganda, Guatemala, DRC)
@@ -86,9 +95,6 @@ id_focus_topics <- function(country, include_module_intervention = FALSE) {
   # Step 4: check out the results compare to what the CEPs have ID'ed previously
   # which module/intervention pairs were identified that are also not currently being hand coded?
   new_ids = data[cep_topic_area == FALSE & keyword_topic_area == TRUE,]
-    
-  # create table to visualize
-  # print(unique(new_ids[,.(gf_module, gf_intervention, activity_description)]))
   
   # insert print statement
   print(paste0("There were ", length(unique(new_ids$activity_description)),  " additional activities identified as focus topics through keyword search." ))
@@ -96,20 +102,20 @@ id_focus_topics <- function(country, include_module_intervention = FALSE) {
   # Are any of the previously ID'ed activities now NOT ID'ed? 
   missing_ids = data[cep_topic_area == TRUE & keyword_topic_area == FALSE,]
   
-  # curious how many different interventions those activities are found in...
-  # create table to visualize
-  # print(unique(missing_ids[,.(gf_module, gf_intervention, activity_description)]))
-  
-  # insert print statement
+  # insert print statements
   print(paste0("There were ", length(unique(missing_ids$activity_description)),  " activities missing from what were originally ID'ed by CEPs." ))
+  print(paste0("There were ", length(unique(new_ids$gf_intervention)), " additional interventions identified as focus topics through keyword search."))
+  print(paste0("There were ", length(unique(missing_ids$gf_intervention)), " interventions missing from what were originally ID'ed by CEPs."))
 }
 
 # -----
 # TEST on country data:
 # ----
 
-id_focus_topics("Senegal")
-id_focus_topics('Guatemala', include_module_intervention = FALSE)
+id_focus_topics("Senegal", include_module_intervention = TRUE)
+# for guatemala only run certain keywords on the HIV grant
+
+id_focus_topics('Guatemala', include_module_intervention = TRUE)
 
 id_focus_topics('Uganda', include_module_intervention = TRUE)
 id_focus_topics('DRC', include_module_intervention = TRUE)
