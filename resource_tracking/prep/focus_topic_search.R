@@ -27,7 +27,7 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # library(googledrive)
 # keywordsearchlogfile <- drive_get(as_id("1TOE7EYnHozN5oNNrkILuiGWvFc-yQyGvLZg1JJFjb5o")) # ID of file on drive
 # local_file = paste0(mapping_dir, "keyword_search/focus_topic_keyword_search_log.csv") # where to save copy of file locally
-# drive_download(file=keywordsearchlogfile, 
+# drive_download(file=keywordsearchlogfile,
 #                path=local_file,
 #                overwrite = TRUE)
 
