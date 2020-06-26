@@ -22,6 +22,16 @@ sen_prepped = paste0(box, "SEN/prepped_data/")
 
 final_write = paste0(box, "tableau_data/")
 
+# # create topic areas spreadsheet activity level - AB 6/15/20
+# dt_all_rev = as.data.table(read.csv(paste0(box, 'tableau_data/all_budget_revisions_activityLevel.csv')))
+# dt_unique = unique(dt_all_rev[, .(loc_name, disease, gf_module, gf_intervention, activity_description)])
+# setorderv(dt_unique, c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
+# dt_unique[, cep_topic_area := FALSE]
+# dt_unique[, keyword_topic_area := FALSE]
+# dt_unique[, isTopicArea := FALSE]
+# dt_unique[, topicAreaDesc := '']
+# write.csv(dt_unique, paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas.csv'))
+topic_areas_activity = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas.csv')))
 # load spreadsheet to merge onto data to identify topic areas
 topic_areas = as.data.table(read.xlsx(paste0(dir, 'modular_framework_mapping/identifyTopicAreas_PCE2020_forSubsetting.xlsx')))
 # checks on topic areas manual entry
