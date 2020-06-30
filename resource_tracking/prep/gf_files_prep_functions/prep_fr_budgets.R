@@ -4,10 +4,10 @@
 # DATE: Last updated June 2020.
 
 # TO DO: 
-
 # ----------------------------------------------
+# PREP FR BUDGETS code taken directly from the prep general detail budget code and modified slightly
 
-prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, period, qtr_num, language) {
+prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num, language) {
   
   #TROUBLESHOOTING HELP
   # dir = file_dir
@@ -20,8 +20,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   # language = file_list$language_financial[i]
   # -------------------------------------
   #Sanity check: Is this sheet name one you've checked before? 
-  verified_sheet_names <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', 'Detailed Budget Revise',
-                            'DETAIL', 'Detailed Budget _ Human rights', 'Detailed _ budget AGYW', 'DETAIL BUDGET V2' )
+  verified_sheet_names <- c('Detailed Budget', 'Detailed budget')
   if (!sheet_name%in%verified_sheet_names){
     print(paste0("Sheet name: '", sheet_name, "'"))
     stop("This sheet name has not been run with this function before - Are you sure you want this function? Add sheet name to verified list within function to proceed.")
@@ -29,8 +28,8 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   
   KEEP_COLS = 5 #Number of columns that are extracted before the budget columns (Module, intervention, activity, cost category, and implementer)
   
-  # Load/prep data
-  gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name, detectDates=TRUE))
+  # Load data
+  gf_data = data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name, detectDates=TRUE))
   initial_rows = nrow(gf_data) #Save to run a check on later. 
   
   #-------------------------------------
@@ -60,7 +59,6 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
     while(is.na(gf_data[name_row, 2]) | is.na(gf_data[name_row, 6]) ){
       name_row = name_row + 1
     }
-    
     names = gf_data[name_row, ]
     names = tolower(names)
   } else { #Otherwise, just grab the names of the data table. 
@@ -69,23 +67,24 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
     names = fix_diacritics(names)
   }
   
-  names=gsub("\r\n", "", names) #Remove extraneous characters
+  names = gsub("\r\n", "", names) #Remove extraneous characters
   names = gsub("\\.", " ", names) #Remove periods
   
   #Grab module and intervention rows
-  module_col <- grep("modul", names)
-  intervention_col <- grep("intervention|intervencion", names)
+  module_col = grep("modul", names)
+  intervention_col = grep("intervention|intervencion", names)
+  
   #Remove "Module ID and Intervention Sub ID columns" 
   mod_id_col = grep("module id|moduleid", names)
   intervention_id_col = grep("intervention sub id|intervention salesforce id", names)
   cat_budget_col = grep("catalytic budget", names)
   
-  module_col = module_col[!module_col%in%mod_id_col]
-  intervention_col = intervention_col[!intervention_col%in%intervention_id_col & !intervention_col%in%cat_budget_col] 
-  if (inFile=="COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisé 2018.xlsx"){
-    module_col <- 5
-    intervention_col <- 9
-  }
+  # Remove columns that talk about conditional formatting
+  cond_format_col = grep('conditional formatting', names)
+  pop_breakdown_col = grep('interventions requiring population breakdown', names)
+  
+  module_col = module_col[!module_col%in% c(mod_id_col, cond_format_col)]
+  intervention_col = intervention_col[!intervention_col%in% c(intervention_id_col, cat_budget_col, cond_format_col, pop_breakdown_col)] 
   
   stopifnot(length(module_col)==1 & length(intervention_col)==1)
   
@@ -93,7 +92,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   if (language == "eng"){
     activity_col = grep("activity description", names)
     cost_category_col = grep("cost input", names)
-    drop_cost_category = grep("cost input id|cost input sub id|cost input no|cost input salesforce id", names) #Drop extra cost category columns
+    drop_cost_category = grep("cost input id|cost input sub id|cost input no|cost input salesforce id|conditional formatting|cost input and same cost grouping are entered", names) #Drop extra cost category columns
     cost_category_col = cost_category_col[!cost_category_col%in%drop_cost_category]
   } else if (language == "fr"){
     activity_col = grep("description de l'activite", names)
@@ -117,6 +116,10 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   } else {
     implementer_col = grep("implementador|receptor", names)
   }
+  
+  drop_implementer_col = grep("conditional formatting", names) #Drop extra implementer columns
+  implementer_col = implementer_col[!implementer_col%in%drop_implementer_col]
+  
   stopifnot(length(implementer_col)==1)
   
   #Grab all budget rows 
@@ -288,7 +291,6 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   #--------------------------------
   # Note: Are there any other checks I could add here? #EKL
   # -------------------------------
-  
   
   return(budget_dataset)
 }

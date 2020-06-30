@@ -78,8 +78,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   # this part of the code includes PUDRs with zero expenditure, or else removes both PUDRs and Budgets with zero expenditure. Added by FRC on 6/8/2020
   if (include_zero_pudrs ==TRUE) {
     file_list = file_list[!file_name %in% c(verified_0_budget)]
-  }
-  else { 
+  } else { 
     file_list = file_list[!file_name %in% c(verified_0_expenditure, verified_0_budget)]
   }
   
