@@ -41,7 +41,7 @@ if (prep_files == TRUE){
 
 # we are only prepping final/approved and revisions of all files, but for "initial" files we are only prepping budgets
 # not also pu/drs - AB EL 3/12/20 (note: it is fine if there aren't pu/dr revisions)
-file_list = file_list[(data_source == 'budget' | (data_source =='pudr' & file_iteration %in% c('approved_gm', 'revision'))) & file_iteration != 'unclear',]
+file_list = file_list[(data_source == 'budget' | data_source == 'funding_request' | (data_source =='pudr' & file_iteration %in% c('approved_gm', 'revision'))) & file_iteration != 'unclear',]
 
 #----------------------------------------------------
 # 1. Rerun prep functions, or read in prepped files
@@ -78,8 +78,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   # this part of the code includes PUDRs with zero expenditure, or else removes both PUDRs and Budgets with zero expenditure. Added by FRC on 6/8/2020
   if (include_zero_pudrs ==TRUE) {
     file_list = file_list[!file_name %in% c(verified_0_budget)]
-  }
-  else { 
+  } else { 
     file_list = file_list[!file_name %in% c(verified_0_expenditure, verified_0_budget)]
   }
   

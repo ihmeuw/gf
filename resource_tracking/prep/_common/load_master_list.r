@@ -31,7 +31,7 @@ load_master_list = function(purpose=NULL) {
   #Run some validation checks before you start. 
   #------------------------------------------------
   #Certain columns should never have missing values. 
-  core_cols = c('loc_name', 'grant', 'grant_period', 'grant_status', 'file_name', 'disease', 'data_source', 'primary_recipient', 
+  core_cols = c('loc_name', 'grant_period', 'grant_status', 'file_name', 'disease', 'data_source', 'primary_recipient', 
                 'file_currency', 'file_iteration') #Note that secondary_recipient and geography_detail aren't included in this list at the moment, 
                                                   # because they aren't really used in the prep pipeline at the moment. EL 9.9.2019
   for (col in core_cols) {
@@ -41,6 +41,8 @@ load_master_list = function(purpose=NULL) {
     stopifnot(nrow(dt[is.na(get(col))])==0)
   } 
   
+  stopifnot(nrow(dt[is.na(grant) & data_source != 'funding_request',])==0)
+  
   #Certain columns should only have specific values. 
   #First, check data source and function columns so they can be used to filter rows. 
   stopifnot(unique(dt$data_source)%in%c('budget', 'pudr', 'document', 'performance_framework', 'funding_request_narrative',
@@ -49,7 +51,7 @@ load_master_list = function(purpose=NULL) {
   stopifnot(unique(dt$function_programmatic)%in%c('master', 'unknown', 'NA'))
   
   #Then, drop out data types that aren't being processed. 
-  if (purpose=="financial") dt = dt[data_source%in%c('budget', 'pudr') & !function_financial%in%c('NA', 'unknown')]
+  if (purpose=="financial") dt = dt[data_source%in%c('budget', 'pudr', 'funding_request') & !function_financial%in%c('NA', 'unknown')]
   if (purpose=="performance indicators") dt = dt[data_source%in%c('pudr', 'performance_framework') & !function_programmatic%in%c('NA', 'unknown')]
   #*** Note that 'unknown' typed into a column means data is there, but there's not a function that can process it yet. 
   # 'NA' typed into a column means that extraction type doesn't apply here. 
@@ -86,13 +88,13 @@ load_master_list = function(purpose=NULL) {
   # Financial 
   #-------------------------------
   if (purpose=="financial") {
-    keep_cols = c('budget_version', 'revision_type', 'gf_revision_type', 'version_date', 'function_financial', 'sheet_financial', 'start_date_financial', 'period_financial', 'qtr_number_financial', 'language_financial', 
+    keep_cols = c('grant', 'budget_version', 'revision_type', 'gf_revision_type', 'version_date', 'function_financial', 'sheet_financial', 'start_date_financial', 'period_financial', 'qtr_number_financial', 'language_financial', 
                   'pudr_semester_financial', 'update_date', 'mod_framework_format', 'cumul_exp_start_date', 'cumul_exp_end_date', 'lfa_verified')
     keep_cols = c(core_cols, keep_cols)
     dt = dt[, c(keep_cols), with=F]
     
     for (col in names(dt)[!names(dt)%in%c('budget_version', 'revision_type', 'gf_revision_type', 'version_date', 'start_date_financial', 'update_date', 'pudr_semester_financial', 
-                                          'cumul_exp_start_date', 'cumul_exp_end_date', 'lfa_verified')]){ #Check all applicable string columns. PUDR semester is OK to be NA if the line-item is a budget.  
+                                          'cumul_exp_start_date', 'cumul_exp_end_date', 'lfa_verified', 'grant', 'primary_recipient')]){ #Check all applicable string columns. PUDR semester is OK to be NA if the line-item is a budget.  
       if ('verbose'%in%ls() & verbose){
         print(paste0("Checking for NA values in ", col))
       }
