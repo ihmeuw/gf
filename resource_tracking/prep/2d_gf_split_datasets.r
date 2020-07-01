@@ -311,7 +311,7 @@ cumulative_absorption_cep = cumulative_absorption[, cep_cols, with=FALSE]
 
 all_absorption = mapped_data[grant_status=="active" & data_source=="pudr", .(grant, grant_period, code, gf_module, gf_intervention, 
                                                                      budget, expenditure, lfa_exp_adjustment, pudr_semester_financial, start_date,
-                                 file_name, loc_name, kp, rssh, equity, current_grant)] # added these variables to keep
+                                 file_name, lfa_verified, loc_name, kp, rssh, equity, current_grant)] # added these variables to keep
 
 # subset data to only the currently active grant period
 all_absorption = all_absorption[current_grant==TRUE]
@@ -330,7 +330,7 @@ all_absorption[, start_date:=min(start_date), by=c('grant', 'grant_period', 'sem
 
 #Calculate absorption by module/intervention 
 all_absorption = all_absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), 
-                        by=c('grant', 'grant_period', 'gf_module', 'gf_intervention', 'semester', 'code', 'duration_quarters', 'start_date', 'file_name', 'loc_name', 'kp', 'rssh', 'equity')]
+                        by=c('grant', 'grant_period', 'gf_module', 'gf_intervention', 'semester', 'code', 'duration_quarters', 'start_date', 'file_name', 'lfa_verified', 'loc_name', 'kp', 'rssh', 'equity')]
 all_absorption[, absorption:=(expenditure/budget)*100]
 
 #Add additional variables 
@@ -378,7 +378,7 @@ all_absorption[!is.finite(absorption), absorption:=NA]
 # Subset columns to GEP and CEP variables. 
 all_absorption_gep = copy(all_absorption) # Leaving this in this format for now EL 3/9/20 
 all_absorption_cep = all_absorption[, .(grant, grant_period, gf_module, gf_intervention, disease, start_date, end_date, 
-                                budget, expenditure, absorption, file_name, loc_name, kp, rssh, equity)]
+                                budget, expenditure, absorption, file_name, lfa_verified, loc_name, kp, rssh, equity)]
 
 #---------------------------------------------------------
 # 6. Expenditures - pull out expenditures file, and 
