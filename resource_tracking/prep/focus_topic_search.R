@@ -1,16 +1,17 @@
+# -----------------------------------------------
 # AUTHOR: Francisco Rios Casas
 # PURPOSE: Identify budget items that relate to country focus topics
 # DATE: June 12, 2020
 
 # The current working directory should be the root of this repository
 
-
 # pending issues
 # add option to specify budget_version?
+# -----------------------------------------------
 
-# ----------------------------------------------
+# -----------------------------------------------
 # STEP 1: SET UP R
-# ----------------------------------------------
+# -----------------------------------------------
 user=as.character(Sys.info()[7])
 if (Sys.info()[1]=='Windows'){
   setwd(paste0("C:/Users/",user,"/Documents/gf/")) #Change to the root of your repository
@@ -20,21 +21,22 @@ if (Sys.info()[1]=='Windows'){
 
 # source files with other functions and common resource tracking filepaths
 source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
+# -----------------------------------------------
 
-#---------------------------------------------------
+# -----------------------------------------------
 # Download new version of keyword search log from google drive
-# --------------------------------------------------
+# -----------------------------------------------
 # library(googledrive)
 # keywordsearchlogfile <- drive_get(as_id("1TOE7EYnHozN5oNNrkILuiGWvFc-yQyGvLZg1JJFjb5o")) # ID of file on drive
 # local_file = paste0(mapping_dir, "keyword_search/focus_topic_keyword_search_log.csv") # where to save copy of file locally
 # drive_download(file=keywordsearchlogfile,
 #                path=local_file,
 #                overwrite = TRUE)
+# -----------------------------------------------
 
 # -----------------------------------------------
 # FUNCTION
 # -----------------------------------------------
-
 # Function to read in detailed budgets and search through activities for keywords, could be saved in common_functions folder later on
 id_focus_topics <- function(country, include_module_intervention = FALSE) {
   
@@ -47,6 +49,8 @@ id_focus_topics <- function(country, include_module_intervention = FALSE) {
   # if (class(inFile)!='character') stop('Error: inFile argument must be a string!')
   # if (class(year)=='character') stop('Error: year argument must be a number!')
   # -----------------------------------------------------------------------------
+  outFile = paste0(dir, "/modular_framework_mapping/keyword_search/test_", tolower(country), "_focus_topic_search_", 
+                   month(Sys.Date()), "_", day(Sys.Date()), "_", year(Sys.Date()), ".csv")
   
   # step 1: read in data at activity level
   data <- as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas.csv'))) #make sure this can access the correct data source
@@ -89,8 +93,8 @@ id_focus_topics <- function(country, include_module_intervention = FALSE) {
   data[, topicAreaDesc := trimws(topicAreaDesc)]
   
   # save data in new folder - save a separate file for now on J
-  write.csv(data, file = paste0(dir, "/modular_framework_mapping/keyword_search/test_", tolower(country), "_focus_topic_search.csv"), row.names = FALSE)
-  print("Data saved on J drive")
+  write.csv(data, outFile, row.names = FALSE)
+  print(paste0("Data saved on J drive: ", outFile))
   
   # Step 4: check out the results compare to what the CEPs have ID'ed previously
   # which module/intervention pairs were identified that are also not currently being hand coded?
@@ -107,11 +111,11 @@ id_focus_topics <- function(country, include_module_intervention = FALSE) {
   print(paste0("There were ", length(unique(new_ids$gf_intervention)), " additional interventions identified as focus topics through keyword search."))
   print(paste0("There were ", length(unique(missing_ids$gf_intervention)), " interventions missing from what were originally ID'ed by CEPs."))
 }
+# -----------------------------------------------
 
-# -----
+# -----------------------------------------------
 # TEST on country data:
-# ----
-
+# -----------------------------------------------
 id_focus_topics("Senegal", include_module_intervention = TRUE)
 # for guatemala only run certain keywords on the HIV grant
 
@@ -119,33 +123,86 @@ id_focus_topics('Guatemala', include_module_intervention = TRUE)
 
 id_focus_topics('Uganda', include_module_intervention = TRUE)
 id_focus_topics('DRC', include_module_intervention = TRUE)
+# -----------------------------------------------
 
+# -----------------------------------------------
+# merge budget data to DRC data:
+# -----------------------------------------------
+# read in both key word searches
+dt1 = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_6_17_2020.csv')))
+dt2 = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_1_2020.csv')))
+dt1 = dt1[, -c('isTopicArea', 'topicAreaDesc')]
+dt2 = dt2[, -c('isTopicArea', 'topicAreaDesc')]
 
-# merging budget data and troubleshooting:
-dt = read_xlsx(paste0(dir, 'modular_framework_mapping/keyword_search/uganda_keyword_search_focus_topic_areas.xlsx'))
-dt = as.data.table(dt)
-nrow(unique(dt[,c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description")]))
-dt = unique(dt[,c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description")])
-setorderv(dt, c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
-dt[, id := .I]
+# compare the differences: 
+setnames(dt1, 'keyword_topic_area', 'keyword_ta_dt1')
+setnames(dt2, 'keyword_topic_area', 'keyword_ta_dt2')
 
-budget_rev = read.csv(paste0(box, 'tableau_data/all_budget_revisions_activityLevel.csv'))
-budget_rev = as.data.table(budget_rev)
-budget_rev = budget_rev[loc_name == 'Uganda', ]
+dt= merge(dt1, dt2, by = names(dt1)[!names(dt1)%in%c('keyword_ta_dt1')])
+make_false = dt[ keyword_ta_dt1 == TRUE & keyword_ta_dt2 == FALSE, ]
+make_true = dt[ keyword_ta_dt1 == FALSE & keyword_ta_dt2 == TRUE, ]
+
+# read in the budget revisions data set
+dt = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_1_2020.csv')))
+dt = dt[, -c('isTopicArea')]
+budget_rev = as.data.table(read.csv(paste0(box, 'tableau_data/all_budget_revisions_activityLevel.csv')))
+budget_rev = budget_rev[loc_name == 'DRC', ]
 budget_rev = budget_rev[, -c('isTopicArea', 'topicAreaDesc')]
-budget_rev = unique(budget_rev[,c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description")])
-budget_rev = budget_rev[, lapply(.SD, as.character), .SDcols = names(budget_rev)]
-budget_rev = budget_rev[, lapply(.SD, trimws), .SDcols = names(budget_rev)]
-budget_rev = budget_rev[, activity_description:=str_replace_all(x, "[\r\n]" , "")
 
-setorderv(budget_rev, c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
-budget_rev[, id := .I]
+ta_budget_dt = merge(dt, budget_rev, all = TRUE, by = c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
+dt = ta_budget_dt[, c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description", 'cep_topic_area', 'keyword_topic_area', 'topicAreaDesc', 'grant', 'budget_version', 'budget')]
 
-check = merge(dt, budget_rev, all = TRUE, by = c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
+dt = dt[!is.na(budget_version), ]
+by_cols = names(dt)[!names(dt) %in% 'budget']
+# sum over cost categories 
+dt = dt[, .(activity_budget = sum(budget)), by = by_cols]
+dt[, intervention_budget := sum(activity_budget), by = .(loc_name, gf_module, gf_intervention, grant, budget_version)]
+dt[, activity_percent_of_intervention := round((activity_budget/intervention_budget)*100, 2)]
 
+dt_act_number = dt[, .(loc_name, disease, gf_module, gf_intervention, activity_description, cep_topic_area, keyword_topic_area,
+                       topicAreaDesc, grant, budget_version, activity_budget)]
+dt_act_percent = dt[, .(loc_name, disease, gf_module, gf_intervention, activity_description, cep_topic_area, keyword_topic_area,
+                        topicAreaDesc, grant, budget_version, activity_percent_of_intervention)]
 
-budget_rev = budget_rev[grant_period == '2018-2020' & file_iteration %in% c('approved_gm', 'revision'),]
-budget_rev = budget_rev[, .(budget = sum(budget)), by = c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description", "grant", "budget_version")]
+dt_wide_number = dcast.data.table(dt_act_number, loc_name + disease + gf_module + gf_intervention + activity_description + cep_topic_area + keyword_topic_area + topicAreaDesc + grant ~ budget_version )
+dt_wide_percent = dcast.data.table(dt_act_percent, loc_name + disease + gf_module + gf_intervention + activity_description + cep_topic_area + keyword_topic_area + topicAreaDesc + grant ~ budget_version )
 
-budget_rev = dcast.data.table(budget_rev, loc_name + disease + gf_module + gf_intervention + activity_description + grant ~ budget_version)
+subset_for_writeup_number = dt_wide_number[keyword_topic_area==TRUE & topicAreaDesc=='DIGITAL_HEALTH_DHIS2' & gf_module != 'Health management information system and monitoring and evaluation'
+                            & gf_module != 'Vector control', ]
+write.csv(subset_for_writeup_number, paste0(dir, 'modular_framework_mapping/keyword_search/DRC/allocations_for_activities_identified_by_keywordsearch.csv'), row.names = FALSE)
 
+subset_for_writeup_percent = dt_wide_percent[keyword_topic_area==TRUE & topicAreaDesc=='DIGITAL_HEALTH_DHIS2' & gf_module != 'Health management information system and monitoring and evaluation'
+                                    & gf_module != 'Vector control', ]
+write.csv(subset_for_writeup_percent, paste0(dir, 'modular_framework_mapping/keyword_search/DRC/activity_percent_of_intervention.csv'), row.names = FALSE)
+# -----------------------------------------------
+
+# -----------------------------------------------
+# # merging budget data and troubleshooting:
+# -----------------------------------------------
+# dt = read_xlsx(paste0(dir, 'modular_framework_mapping/keyword_search/uganda_keyword_search_focus_topic_areas.xlsx'))
+# dt = as.data.table(dt)
+# nrow(unique(dt[,c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description")]))
+# dt = unique(dt[,c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description")])
+# setorderv(dt, c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
+# dt[, id := .I]
+# 
+# budget_rev = read.csv(paste0(box, 'tableau_data/all_budget_revisions_activityLevel.csv'))
+# budget_rev = as.data.table(budget_rev)
+# budget_rev = budget_rev[loc_name == 'Uganda', ]
+# budget_rev = budget_rev[, -c('isTopicArea', 'topicAreaDesc')]
+# budget_rev = unique(budget_rev[,c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description")])
+# budget_rev = budget_rev[, lapply(.SD, as.character), .SDcols = names(budget_rev)]
+# budget_rev = budget_rev[, lapply(.SD, trimws), .SDcols = names(budget_rev)]
+# budget_rev = budget_rev[, activity_description:=str_replace_all(x, "[\r\n]" , "")]
+# 
+# setorderv(budget_rev, c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
+# budget_rev[, id := .I]
+# 
+# check = merge(dt, budget_rev, all = TRUE, by = c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
+# 
+# 
+# budget_rev = budget_rev[grant_period == '2018-2020' & file_iteration %in% c('approved_gm', 'revision'),]
+# budget_rev = budget_rev[, .(budget = sum(budget)), by = c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description", "grant", "budget_version")]
+# 
+# budget_rev = dcast.data.table(budget_rev, loc_name + disease + gf_module + gf_intervention + activity_description + grant ~ budget_version)
+# -----------------------------------------------
