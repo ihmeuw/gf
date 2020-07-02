@@ -26,7 +26,7 @@ prep_impact_outcome_1A =  function(dir, inFile, sheet_name, language) {
   # }
   # inFile = file_list$file_name[i]
   # sheet_name = file_list$sheet_impact_outcome_1a[i]
-  # language = file_list$language_programmatic[i]
+  # language = file_list$language_1a[i]
 
   # Sanity check: Is this sheet name one you've checked before? 
   verified_sheet_names <- c('Impact Outcome Indicators_1A', 'Indicateurs Impact Effet_1A')

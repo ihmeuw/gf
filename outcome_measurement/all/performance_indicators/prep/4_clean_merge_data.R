@@ -27,7 +27,7 @@ dt <- dt[indicator!="0"]
 # clean special characters, blanks, and NAs # EMILY- how are you systematically testing for this? 
 #---------------------------------------------
 numVars = names(dt)[grepl("_value|_year|_n|_d|_pct|_achievement_ratio", names(dt))]
-numVars = numVars[!numVars%in%c('start_date_programmatic', 'end_date_programmatic', 'report_due_date', 'loc_name', 'file_name')]
+numVars = numVars[!numVars%in%c('start_date_programmatic', 'end_date_programmatic', 'report_due_date', 'loc_name', 'file_name', 'lfa_verified')]
 
 for (var in numVars) { 
   if (verbose){print(var)}
@@ -199,16 +199,62 @@ dt$sources_different <- NA
 dt$sources_different[which(dt$baseline_source_code!=dt$pr_result_source_code)] <- 1
 dt$sources_different[which(dt$baseline_source_code==dt$pr_result_source_code)] <- 0
 
-# calculate ihme_results_achievement_ratio
-dt$ihme_result_achievement_ratio <-NA
-dt$ihme_result_achievement_ratio <- dt$any_result_value/dt$target_value
+# # calculate ihme_results_achievement_ratio
+# dt$ihme_result_achievement_ratio <-NA
+# dt$ihme_result_achievement_ratio <- dt$any_result_value/dt$target_value
+# 
+# # create new variable to indicate whether target is being met
+# dt$target_met <- NA
+# dt$target_met[which(dt$reverse_indicator_final=="no" & dt$any_result_value >= dt$target_value)] <- "yes"
+# dt$target_met[which(dt$reverse_indicator_final=="no" & dt$any_result_value < dt$target_value)] <- "no"
+# dt$target_met[which(dt$reverse_indicator_final=="yes" & dt$any_result_value <= dt$target_value)] <- "yes"
+# dt$target_met[which(dt$reverse_indicator_final=="yes" & dt$any_result_value > dt$target_value)] <- "no"
 
-# create new variable to indicate whether target is being met
-dt$target_met <- NA
-dt$target_met[which(dt$reverse_indicator_final=="no" & dt$any_result_value >= dt$target_value)] <- "yes"
-dt$target_met[which(dt$reverse_indicator_final=="no" & dt$any_result_value < dt$target_value)] <- "no"
-dt$target_met[which(dt$reverse_indicator_final=="yes" & dt$any_result_value <= dt$target_value)] <- "yes"
-dt$target_met[which(dt$reverse_indicator_final=="yes" & dt$any_result_value > dt$target_value)] <- "no"
+# calculate the final_result_reporter based on numerator, denominator, and percentage values reported
+for(i in 1:nrow(dt)) {
+  if (is.na(dt$gf_result_n[i]) && is.na(dt$gf_result_d[i]) && is.na(dt$gf_result_pct[i])){
+    if (is.na(dt$lfa_result_n[i]) && is.na(dt$lfa_result_d[i]) && is.na(dt$lfa_result_pct[i])){
+      if (is.na(dt$pr_result_n[i]) && is.na(dt$pr_result_d[i]) && is.na(dt$pr_result_pct[i])){
+        dt[i, final_result_reporter:="None"]
+      } else {
+        dt[i, final_result_reporter:="PR"]
+      }
+    } else {
+      dt[i, final_result_reporter:="LFA"]
+    }
+  } else {
+    dt[i,final_result_reporter:="GF"]
+  }
+}
+
+# use final reporter data to fill in the final_result (numerator, denominator, and percentage)
+for (i in 1:nrow(dt)){
+  if(dt[i, final_result_reporter]=="GF"){
+    dt[i, final_result_n:=gf_result_n]
+    dt[i, final_result_d:=gf_result_d]
+    dt[i, final_result_pct:=gf_result_pct]
+    dt[i, final_result_year:=as.integer(NA)]
+    dt[i, final_result_source_code:="None reported"]
+  } else if (dt[i, final_result_reporter]=="LFA"){
+    dt[i, final_result_n:=lfa_result_n]
+    dt[i, final_result_d:=lfa_result_d]
+    dt[i, final_result_pct:=lfa_result_pct]
+    dt[i, final_result_year:=lfa_result_year]
+    dt[i, final_result_source_code:=lfa_result_source_code]
+  } else if (dt[i, final_result_reporter]=="PR"){
+    dt[i, final_result_n:=pr_result_n]
+    dt[i, final_result_d:=pr_result_d]
+    dt[i, final_result_pct:=pr_result_pct]
+    dt[i, final_result_year:=pr_result_year]
+    dt[i, final_result_source_code:=pr_result_source_code]
+  } else if (dt[i, final_result_reporter]=="None"){
+    dt[i, final_result_n:=as.numeric(NA)]
+    dt[i, final_result_d:=as.numeric(NA)]
+    dt[i, final_result_pct:=as.numeric(NA)]
+  }
+}
+
+# change new columns to numeric
 
 #-------------------------------------------------------------
 # Re-format data to make easier to visualize on tableau
@@ -218,13 +264,15 @@ dt[pudr_sheet=="coverage_indicators_disagg", indicator_type:="Coverage_disagg"]
 dt[pudr_sheet=="impact_outcome_indicators_main", indicator_type:="Impact"]
 
 # select columns to keep
-tableau.cols <- c('loc_name', 'grant', 'grant_period', 'grant_status', 'primary_recipient','start_date_programmatic', 'end_date_programmatic', 'disease', 'file_name',
+tableau.cols <- c('loc_name', 'grant', 'grant_period', 'grant_status', 'primary_recipient','start_date_programmatic', 'end_date_programmatic', 'disease', 'file_name', 'lfa_verified',
                   'indicator_code', 'indicator', 'full_description', 'brief_description',
                   'indicator_type', 'category', 'sub-category', 
                   'target_n', 'target_d', 'target_pct', 'target_year',
-                  'pr_result_n', 'pr_result_d', 'pr_result_pct', 'pr_result_year','pr_result_source_code',
-                  'lfa_result_n', 'lfa_result_d', 'lfa_result_pct', 'lfa_result_year', 'lfa_result_source_code',
-                  'gf_result_n', 'gf_result_d', 'gf_result_pct', 'gf_result_source',
+                  #'pr_result_n', 'pr_result_d', 'pr_result_pct', 'pr_result_year','pr_result_source_code',
+                  #'lfa_result_n', 'lfa_result_d', 'lfa_result_pct', 'lfa_result_year', 'lfa_result_source_code',
+                  #'gf_result_n', 'gf_result_d', 'gf_result_pct', 'gf_result_source',
+                  'final_result_reporter',
+                  'final_result_n', 'final_result_d', 'final_result_pct', 'final_result_year', 'final_result_source_code',
                   'module',
                   'cumulative_target', 
                   'reverse_indicator',
@@ -234,13 +282,13 @@ tableau.dt <- dt[,..tableau.cols]
 
 tableau.dt <- tableau.dt[completeness_rating %in% c("Both available", "Only Result", "Only Target")]
 
-# use an if statement to create the "final_result" categories
-# something like
-
-# tableau.dt$final_result_n <- with(tableau.dt, ifelse(is.na(gf_result_n),
-#                                                      )))
-# if is.na(gf_result_n)
-# if (is.na(tableau.cols$gf_result_n)
+# calculate a achievement ratio for values where result and target available
+for (i in 1:nrow(tableau.dt)){
+  if (tableau.dt[i, completeness_rating]=="Both available"){
+    tableau.dt[i, achievement_ratio_n:=as.numeric(final_result_n/target_n)]
+    tableau.dt[i, achievement_ratio_pct:=as.numeric(final_result_pct/target_pct)]
+  }
+}
 
 #------------------------------------------------------
 # SAVE FINAL DATA
@@ -250,3 +298,9 @@ write.csv(tableau.dt, paste0(box,"tableau_data/all_performance_indicators.csv"))
 saveRDS(dt, paste0(prepped_dir, "archive/cleaned_pfi_", Sys.Date(), ".rds"))
 
 print("Step 3: Clean and validated data completed. Validated data saved as cleaned_pfi.RDS in prepped_data folder.")
+
+#----------------------------------------------------------
+# SAVE COUNTRY SPECIFIC DATA
+write.csv(tableau.dt[loc_name==countries], paste0(box, countries, "/prepped_data", "/", countries, "_performance_indicators.csv"))
+
+print(paste0(countries, " country specific data saved on box folder"))

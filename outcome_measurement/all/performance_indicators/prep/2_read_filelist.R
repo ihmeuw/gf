@@ -77,7 +77,7 @@ if (prep_1a){
         tmpData = do.call(prep_impact_outcome_1A, args) 
         
         #Append important columns from the file list 
-        append_cols = file_list[i, .(loc_name, grant, grant_period, grant_status, file_name, disease, primary_recipient, start_date_programmatic, end_date_programmatic)]
+        append_cols = file_list[i, .(loc_name, grant, grant_period, grant_status, file_name, disease, primary_recipient, start_date_programmatic, end_date_programmatic, lfa_verified)]
         for (col in names(append_cols)){
           tmpData[, (col):=append_cols[, get(col)]]
         }  

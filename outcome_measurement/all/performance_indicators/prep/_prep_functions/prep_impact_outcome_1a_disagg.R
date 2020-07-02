@@ -9,24 +9,24 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   
   #TROUBLESHOOTING HELP
   # #Uncomment variables below and run line-by-line.
-  # folder = "budgets"
-  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-  # if (file_list$file_iteration[i]=="initial"){
-  #   version = "iterations"
-  # } else if (file_list$file_iteration[i]=="revision"){
-  #   version= "revisions"
-  # } else {
-  #   version = ""
-  # }
-  # grant_period = file_list$grant_period[i]
-  # 
-  # dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
-  # if (version != ""){
-  #   dir = paste0(dir, version, "/")
-  # }
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet_impact_outcome_1a_disagg[i]
-  # language = file_list$language_1a_disagg[i]
+  folder = "budgets"
+  folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  if (file_list$file_iteration[i]=="initial"){
+    version = "iterations"
+  } else if (file_list$file_iteration[i]=="revision"){
+    version= "revisions"
+  } else {
+    version = ""
+  }
+  grant_period = file_list$grant_period[i]
+
+  dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
+  if (version != ""){
+    dir = paste0(dir, version, "/")
+  }
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet_impact_outcome_1a_disagg[i]
+  language = file_list$language_1a_disagg[i]
 
   # Sanity check: Is this sheet name one you've checked before? 
   verified_sheet_names <- c('Disaggregation_1A', 'Ventilation_1A')
@@ -41,7 +41,10 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
                       "CORDAID_PUDR_S1 2019_not verified.xlsx", "Copy of LFA_COD-T-MOH_Progress Report_30Jun2019_CCF_Final_10092019.xlsx", 
                       "HIV_MOH_PUDR_S1 2019_not verified.xlsx", "Malaria_MOH_PUDR_S1 2019_LFA verified.xlsx", "Malaria_SANRU_PUDR S1 2019_LFA verified.xlsx", 
                       "COD-C-CORDAID_Progress Report_S1 2019_31082019_BrK.XLSX", "COD-M-SANRU_PU S1 2019 NMF2_Revue LFA_04Sep19_CTreview_25sept2019.xlsx", 
-                      "LFA_COD-H-MOH_Progress Report_30Jun2019_20190918-BrK.XLSX", "28 02 COD-C-CORDAID_Progress Report Disbursement_31Dec2019_v2.xlsx")
+                      "LFA_COD-H-MOH_Progress Report_30Jun2019_20190918-BrK.XLSX", "28 02 COD-C-CORDAID_Progress Report Disbursement_31Dec2019_v2.xlsx",
+                      "1 COD-M-MOH_Progress Report Disbursement_31Dec2019_30042020 VFF not yet LFA reviewed.xlsx", "COD-M-SANRU_PUDR S2 2019_REVUE LFA_16Avr20.xlsx",
+                      "LFA_COD-C-CORDAID_Progress Report Disbursement_31Dec2019_26032020.xlsx", "LFA_COD-H-MOH_Progress Report Disbursement_31Dec2019_v2_23042020.xlsx",
+                      "LFA_COD-T-MOH_Progress Report Disbursement_31Dec2019_CANEVAS_12042020.xlsx")
   
   # Load/prep data
   gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name, detectDates=TRUE))

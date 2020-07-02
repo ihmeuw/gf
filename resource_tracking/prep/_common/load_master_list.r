@@ -32,9 +32,11 @@ load_master_list = function(purpose=NULL) {
   #------------------------------------------------
   #Certain columns should never have missing values. 
   core_cols = c('loc_name', 'grant_period', 'grant_status', 'file_name', 'disease', 'data_source', 'primary_recipient', 
-                'file_currency', 'file_iteration') #Note that secondary_recipient and geography_detail aren't included in this list at the moment, 
+                'file_currency', 'file_iteration', 'grant') #Note that secondary_recipient and geography_detail aren't included in this list at the moment, 
                                                   # because they aren't really used in the prep pipeline at the moment. EL 9.9.2019
-  for (col in core_cols) {
+                                                  # I added 'grant' back into core_cols because it is necessary later in the prep code
+  
+  for (col in core_cols[1:9]) { # don't want to check for grant currently because we know some will be missing
     if ('verbose'%in%ls() & verbose){
       print(paste0('Checking for NAs in ', col))
     } 
@@ -114,12 +116,12 @@ load_master_list = function(purpose=NULL) {
   
   if (purpose=="performance indicators") {
     keep_cols = c('function_programmatic', 'sheet_impact_outcome_1a', 'sheet_impact_outcome_1a_disagg', 'sheet_coverage_1b', 'sheet_coverage_1b_disagg', 
-                  'start_date_programmatic', 'end_date_programmatic', 'language_1a', 'language_1a_disagg', 'language_1b', 'language_1b_disagg', 'pudr_semester_programmatic')
+                  'start_date_programmatic', 'end_date_programmatic', 'language_1a', 'language_1a_disagg', 'language_1b', 'language_1b_disagg', 'pudr_semester_programmatic', 'lfa_verified')
     keep_cols = c(core_cols, keep_cols)
     dt = dt[, c(keep_cols), with=F]
     
     for (col in names(dt)[!names(dt)%in%c('start_date_programmatic', 'end_date_programmatic', 'sheet_impact_outcome_1a_disagg', 
-                                          'sheet_coverage_1b_disagg')]){ #Check all applicable string columns. PUDR semester is OK to be NA if the line-item is a budget.  
+                                          'sheet_coverage_1b_disagg', 'lfa_verified')]){ #Check all applicable string columns. PUDR semester is OK to be NA if the line-item is a budget.  
       if ('verbose'%in%ls() & verbose){
         print(paste0("Checking for NA values in ", col))
       }
