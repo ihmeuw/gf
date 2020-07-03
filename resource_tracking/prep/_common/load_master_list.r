@@ -90,7 +90,7 @@ load_master_list = function(purpose=NULL) {
   # Financial 
   #-------------------------------
   if (purpose=="financial") {
-    keep_cols = c('grant', 'budget_version', 'revision_type', 'gf_revision_type', 'version_date', 'function_financial', 'sheet_financial', 'start_date_financial', 'period_financial', 'qtr_number_financial', 'language_financial', 
+    keep_cols = c('budget_version', 'revision_type', 'gf_revision_type', 'version_date', 'function_financial', 'sheet_financial', 'start_date_financial', 'period_financial', 'qtr_number_financial', 'language_financial', 
                   'pudr_semester_financial', 'update_date', 'mod_framework_format', 'cumul_exp_start_date', 'cumul_exp_end_date', 'lfa_verified')
     keep_cols = c(core_cols, keep_cols)
     dt = dt[, c(keep_cols), with=F]
