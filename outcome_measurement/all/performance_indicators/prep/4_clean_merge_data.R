@@ -38,15 +38,15 @@ for (var in numVars) {
   start_nas = nrow(dt[is.na(get(var))]) #Make sure that this numeric conversion doesn't accidentally introduce any NAs after this point.
   
   # LOOK FOR "E-" AND CONVERT SCIENTIFIC NOTATION
-  dt[grepl("E\\-", get(var)), neg_sci_notation:=TRUE]
-  dt[grepl("E\\+", get(var)), pos_sci_notation:=TRUE]
+  dt[grepl("E//-", get(var)), neg_sci_notation:=TRUE]
+  dt[grepl("E//+", get(var)), pos_sci_notation:=TRUE]
   if (nrow(dt[neg_sci_notation==TRUE | pos_sci_notation==TRUE])>0){
     if (verbose){
       print("These are the values that will be converted from scientific notation.")
       print(dt[pos_sci_notation==TRUE | neg_sci_notation, unique(get(var))])
     }
-    dt[neg_sci_notation==TRUE, c('value', 'rounding'):=tstrsplit(get(var), "E\\-", fixed=TRUE)]
-    dt[pos_sci_notation==TRUE, c('value', 'rounding'):=tstrsplit(get(var), "E\\+", fixed=TRUE)]
+    dt[neg_sci_notation==TRUE, c('value', 'rounding'):=tstrsplit(get(var), "E//-", fixed=TRUE)]
+    dt[pos_sci_notation==TRUE, c('value', 'rounding'):=tstrsplit(get(var), "E//+", fixed=TRUE)]
     dt[, value:=as.numeric(value)]
     dt[, rounding:=as.numeric(rounding)]
     if (verbose){
@@ -66,8 +66,8 @@ for (var in numVars) {
   if (nrow(dt[grepl("/", get(var))])>0){
     dt[grepl("/", get(var)), num:=tstrsplit(get(var), "/", keep=1)]
     dt[grepl("/", get(var)), denom:=tstrsplit(get(var), "/", keep=2)]
-    dt[!is.na(num), clean_num:=gsub(",", "\\.", num)][, clean_num:=as.numeric(clean_num)] #Replace commas with periods for these variables (denominator should be 100)
-    dt[!is.na(denom), clean_denom:=gsub(",", "\\.", denom)][, clean_denom:=as.numeric(clean_denom)]
+    dt[!is.na(num), clean_num:=gsub(",", "//.", num)][, clean_num:=as.numeric(clean_num)] #Replace commas with periods for these variables (denominator should be 100)
+    dt[!is.na(denom), clean_denom:=gsub(",", "//.", denom)][, clean_denom:=as.numeric(clean_denom)]
       if (verbose){
         print("These are the values that will be divided using new numerators and denominators.")
         print(unique(dt[grepl("/", get(var)), .(variable=get(var), num, clean_num, denom, clean_denom)]))
@@ -80,14 +80,14 @@ for (var in numVars) {
     print("These are the values that will have commas replaced with periods.") 
     print(dt[grepl(",", get(var)), unique(get(var))])
   }
-  dt[, (var):=gsub(",", "\\.", get(var))] #replace commas with periods.
+  dt[, (var):=gsub(",", "//.", get(var))] #replace commas with periods.
   
   #If values have multiple periods after this step, remove them.
-  if (verbose & nrow(dt[str_count(get(var), "\\.")>1])>0) {
+  if (verbose & nrow(dt[str_count(get(var), "//.")>1])>0) {
     print("These are the variables that have more than one period - these periods will be removed because they were likely commas that got converted in the last step.")
-    print(dt[str_count(get(var), "\\.")>1, unique(get(var))])
+    print(dt[str_count(get(var), "//.")>1, unique(get(var))])
   }
-  dt[str_count(get(var), "\\.")>1, (var):=gsub("\\.", "", get(var))] 
+  dt[str_count(get(var), "//.")>1, (var):=gsub("//.", "", get(var))] 
   
   #REMOVE PUNCTUATION # line 93 changes depending on the encoding of this file and results in not all of the punctuation getting properly cleaned.
   dt[, (var):=gsub("?|%|â|°|‰", "", get(var))]
@@ -301,6 +301,87 @@ print("Step 3: Clean and validated data completed. Validated data saved as clean
 
 #----------------------------------------------------------
 # SAVE COUNTRY SPECIFIC DATA
-write.csv(tableau.dt[loc_name==countries], paste0(box, countries, "/prepped_data", "/", countries, "_performance_indicators.csv"))
+write.csv(tableau.dt[loc_name==countries], paste0(box, countries, "/prepped_data", "/", countries, "_performance_indicators.csv"), row.names = FALSE)
 
 print(paste0(countries, " country specific data saved on box folder"))
+
+
+#----------------------------------------------------------
+# Make a spreadsheet for topic area identification and one for RSSH/equity identification
+all_dt = as.data.table(read.csv(paste0(box, 'tableau_data/all_performance_indicators.csv')))
+topic_areas = unique(all_dt[, .(loc_name, indicator, module)]) # unique by loc and indicator
+rssh_equity = unique(all_dt[, .(indicator, indicator_code, module)]) # unique indicators 
+  # some of the above are different indicators only because they are in a different language...
+  # use indicator code to translate all to English (might not be possible if uga doesn't have all the same inds as drc/gtm/sen?)? 
+
+# AB 7/2/20 quick changes for prep for Tableau
+dt = as.data.table(read.csv(paste0(box, 'UGA/prepped_data/uga_performance_indicators.csv')))
+
+# lfa verified? 
+merge_dt = master_file_list[, .(file_name, lfa_verified)]
+setnames(merge_dt, 'lfa_verified', 'is_pudr_lfa_verified')
+dt = merge(dt, merge_dt, all.x = TRUE, by = 'file_name')
+dt[, lfa_verified := NULL]
+setnames(dt, 'is_pudr_lfa_verified', 'lfa_verified')
+
+# label semesters
+dt[, start_date_programmatic := as.Date(start_date_programmatic)]
+dt[, end_date_programmatic := as.Date(end_date_programmatic)]
+sems = unique(dt[, .(start_date_programmatic, end_date_programmatic)])
+setorderv(sems, 'start_date_programmatic')
+sems[, semester:= .I]
+sems[, semester:= paste0('Semester ', semester)]
+dt = merge(dt, sems, by = c('start_date_programmatic', 'end_date_programmatic'))
+
+# label UGA topic areas indicators
+dt[ module == 'Prevention programs for adolescents and youth, in and out of school', unique(indicator)]
+dt[ module == 'Prevention programs for adolescents and youth, in and out of school', isTopicArea := TRUE]
+dt[ module == 'Prevention programs for adolescents and youth, in and out of school', topicAreaDesc := 'AGYW']
+dt[ module == 'Community responses and systems', unique(indicator)]
+dt[ module == 'Community responses and systems', isTopicArea := TRUE]
+dt[ module == 'Community responses and systems', topicAreaDesc := 'CSS']
+dt[ is.na(isTopicArea), isTopicArea := FALSE]
+
+# label equity/RSSH indicators
+# rssh = read_excel(paste0('J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/2018-2020 Modular Framework.xlsx'), sheet = 'RSSH Interventions')
+# rssh = as.data.table(rssh)
+# rssh_modules = unique(rssh$gf_module)
+# rssh_modules = rssh_modules[!rssh_modules %in% c('Program management', 'Performance Based Financing', 'Unspecified')]
+# dt[, module := as.character(module)]
+# dt[ module %in% rssh_modules, ]
+dt[ module == 'RSSH: Health management information systems and M&amp;E', module := 'RSSH: Health management information systems and M&E']
+dt[ module == 'RSSH: Health management information systems and M&E', isStrategicObjective := TRUE]
+dt[ module == 'RSSH: Health management information systems and M&E', strategicObjective := 'RSSH']
+
+dt[, indicator := as.character(indicator)]
+dt[grepl('KP', indicator, ignore.case = TRUE), isStrategicObjective := TRUE]
+dt[grepl('KP', indicator, ignore.case = TRUE), strategicObjective := 'Equity']
+dt[grepl('AGYW', indicator, ignore.case = TRUE), isStrategicObjective := TRUE]
+dt[grepl('AGYW', indicator, ignore.case = TRUE), strategicObjective := 'Equity']
+dt[grepl('pregnant', indicator, ignore.case = TRUE), isStrategicObjective := TRUE]
+dt[grepl('pregnant', indicator, ignore.case = TRUE), strategicObjective := 'Equity']
+dt[grepl('antenatal', indicator, ignore.case = TRUE), isStrategicObjective := TRUE]
+dt[grepl('antenatal', indicator, ignore.case = TRUE), strategicObjective := 'Equity']
+
+# generate a table for a codebook: 
+# reorder column names: 
+dt = dt[, .(loc_name, grant, grant_period, grant_status, primary_recipient, 
+       file_name, lfa_verified, start_date_programmatic, end_date_programmatic, semester,
+       module, disease, isTopicArea, topicAreaDesc, isStrategicObjective, strategicObjective, 
+       indicator_code, indicator, full_description, brief_description, indicator_type, category, sub_category,
+       target_n, target_d, target_pct, target_year, 
+       final_result_n, final_result_d, final_result_pct, final_result_year, final_result_reporter, final_result_source,
+       achievement_ratio_n, achievement_ratio_pct,
+       cumulative_target, reverse_indicator, completeness_rating)]
+cols = names(dt)
+codebook = data.table(Variable=cols)
+
+setnames(dt, 'final_result_source_code', 'final_result_source')
+setnames(dt, 'final_result_source', 'result_source')
+setnames(dt, 'final_result_n', 'result_n')
+setnames(dt, 'final_result_d', 'result_d')
+setnames(dt, 'final_result_pct', 'pct')
+setnames(dt, 'final_result_year', 'result_year')
+setnames(dt, 'final_result_reporter', 'result_reporter')
+write.csv(dt, paste0(box, 'UGA/prepped_data/uga_performance_indicators.csv'), row.names = FALSE)
+
