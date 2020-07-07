@@ -18,6 +18,12 @@ if (Sys.info()[1]=='Windows'){
 source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
 source("./resource_tracking/prep/gf_files_prep_functions/prep_fr_budgets.R", encoding="UTF-8")
+
+#Source document prep functions 
+doc_prep_functions = list.files(paste0(code_dir, "gf_files_prep_functions"), full.names=TRUE)
+for (file in doc_prep_functions){
+  source(file, encoding="UTF-8")
+}
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -79,3 +85,240 @@ for(i in 1:nrow(file_list)){
 }
 
 prepped_frs[, sum(budget, na.rm=TRUE), by = c('file_name', 'loc_name')]
+
+#------------------------------------------------------------------
+# 2. Run some checks to make sure this data was prepped correctly. 
+#-----------------------------------------------------------------
+
+original_db <- copy(prepped_frs)
+#Make sure all budget data pulled is actually numeric- this is an easy check to see if prep functions are working correctly. 
+verify_numeric_budget = prepped_frs[, .(budget=gsub("[[:digit:]]", "", budget))]
+verify_numeric_budget = verify_numeric_budget[, .(budget=gsub("[[:punct:]]", "", budget))]
+verify_numeric_budget = verify_numeric_budget[!is.na(budget) & budget != ""]
+stopifnot(nrow(verify_numeric_budget)==0)
+
+#Make sure you have all the files here that you started with in your filelist. 
+rt_files <- unique(prepped_frs$file_name)
+warning1 = (length(unique(file_list$file_name)) == length(rt_files))
+if (!warning1){
+  warning("The length of the original file list is not the same as the number of processed files.")
+}
+warning2 = sort(rt_files) == sort(unique(file_list$file_name))
+if (all(warning2)!=TRUE){
+  warning("The files in the processed data are not the same as the files in the file list.")
+}
+
+########################################
+# 3. Map prepped files to final mappings
+########################################
+
+# this bit of code will help map data, but I just realized that this includes code mapped to both the old (2018-2020) and new modular framework
+
+# split resource list into two and then combine together again at the end?
+
+prepped_frs_nfm2 <- prepped_frs[grant_period%in%c("2018-2020", "2019-2021")]
+prepped_frs_nfm3 <- prepped_frs[grant_period%in%c("2021-2023")]
+
+# source mapping file
+include_stops <- TRUE
+source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
+
+# prep raw data for mapping
+raw_data = copy(prepped_frs_nfm2)
+
+#Remove whitespaces, punctuation, and unwanted characters from module and intervention. 
+raw_data = strip_chars(raw_data)
+
+#Correct common acronyms in the resource database and the module map. 
+raw_data[, module:=replace_acronyms(module)]
+raw_data[, intervention:=replace_acronyms(intervention)]
+
+module_map[, module:=replace_acronyms(module)]
+module_map[, intervention:=replace_acronyms(intervention)]
+
+#Make some raw corrections here - These weren't accurate enough to put in the map, but we still need to account for them. 
+if (!'activity_description'%in%names(raw_data)){ #If this column doesn't exist, add it as 'NA' so the code below can run
+  raw_data[, activity_description:=NA]
+}
+
+raw_data = correct_modules_interventions(raw_data)
+
+#------------------------------------------------------------
+# Map budgets and PUDRs to module mapping framework 
+#------------------------------------------------------------
+
+# Check for unmapped modules/interventions before mapping
+gf_concat <- paste0(module_map$module, module_map$intervention)
+rt_concat <- paste0(raw_data$module, raw_data$intervention)
+unmapped_mods <- raw_data[!rt_concat%in%gf_concat]
+
+if(nrow(unmapped_mods)>0){
+  print(unique(unmapped_mods[, c("module", "intervention", "disease"), with= FALSE]))
+  print(unique(unmapped_mods$file_name)) #For documentation in the comments above. 
+  stop("You have unmapped original modules/interventions!")
+}
+
+##### HERE MAP BUDGETS from new MODULAR FRAMEwork and then rbind the data together again to finish mapping everything
+
+
+#------------------------------------------------------------
+# Remap diseases so they apply at the intervention level, 
+#   not the grant-level (assigned in the file list)  #THESE SHOULD BE REMOVED AND RESOLVED USING THE MODULE MAP EL 9/23/2019
+#------------------------------------------------------------
+
+#Correct all tb/hiv to hiv/tb
+raw_data[disease == 'tb/hiv', disease:='hiv/tb']
+
+#English corrections
+raw_data[module=='hivhealthsystemsstrengthening', disease:='hiv']
+raw_data[module=='malhealthsystemsstrengthening', disease:='malaria']
+raw_data[module=='tbhealthsystemsstrengthening', disease:='tb']
+
+#French corrections 
+raw_data[module == 'priseenchargeetpreventiondelatuberculose' & disease == 'hiv', disease:='tb']
+
+#----------------------------------------------------------------------------
+# Merge with module map on module, intervention, and disease to pull in code
+#----------------------------------------------------------------------------
+# if ('disbursement'%in%names(raw_data)){
+#   pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'lfa_exp_adjustment', 'disbursement')]
+# } else {
+#   pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'lfa_exp_adjustment')]
+#   pre_coeff_check[[1]] = round(pre_coeff_check[[1]])
+#   pre_coeff_check[[2]] = round(pre_coeff_check[[2]])
+# }
+
+mergeVars = c('disease', 'module', 'intervention')
+#module_map = unique(module_map)
+module_map = module_map[!is.na(code)]
+
+mapped_data <- merge(raw_data, module_map, by=mergeVars, all.x = TRUE, allow.cartesian = TRUE)
+dropped_mods <- mapped_data[is.na(mapped_data$gf_module), ]
+
+if(nrow(dropped_mods) >0){
+  # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
+  print(unique(dropped_mods[, c("module", "intervention", "disease"), with= FALSE]))
+  stop("Modules/interventions were dropped!")
+}
+
+#-------------------------------------------------------
+# #Remap all RSSH codes to the RSSH disease, and make sure 
+#there aren't any HSS diseases still hanging around. Remap all codes to their correct disease.  
+# ------------------------------------------------------
+mapped_data[substring(code, 1, 1)=='R', disease:='rssh']
+mapped_data[disease == 'hss', disease:='rssh']
+
+mapped_data[substring(code, 1, 1)=='H', disease:='hiv']
+mapped_data[substring(code, 1, 1)=='T', disease:='tb']
+mapped_data[substring(code, 1, 1)=='M', disease:='malaria']
+
+#-------------------------------------------------------
+# Split HIV/TB combined grants  
+# ------------------------------------------------------
+mapped_data = split_hiv_tb(mapped_data)
+
+#-----------------------------------------------------------
+# Add in a variable for 'includes RSSH'
+#-----------------------------------------------------------
+#By file and grant (to catch both budgets and GOS), should be "TRUE"
+#if there is at least one 'R' code. 
+mapped_data[, code_start:=substring(code, 1, 1)]
+codes = unique(mapped_data[, .(code_start, loc_name, file_name)])
+codes = dcast(codes, loc_name+file_name~code_start, value.var='file_name')
+codes[is.na(R), includes_rssh:=FALSE]
+codes[!is.na(R), includes_rssh:=TRUE]
+codes = codes[, .(loc_name, file_name, includes_rssh)]
+
+mapped_data = merge(mapped_data, codes, all.x=T, by=c('loc_name', 'file_name'))
+
+# --------------------------------------------------------
+# Convert currencies to USD 
+# --------------------------------------------------------
+stopifnot(mapped_data$file_currency%in%c("LOC","EUR","USD")) #After visual review, even local currencies (LOC) are actually Euros or USD. EL 11/19/2019. 
+
+needs_conversion = mapped_data[file_currency!='USD']
+if (nrow(needs_conversion)!=0){
+  in_USD = mapped_data[file_currency=="USD"]
+  converted_to_USD = convert_currency(needs_conversion, 'year', convertFrom="EUR", convertTo="USD", 
+                                      finVars=c('budget'))
+  mapped_data = rbind(in_USD, converted_to_USD, use.names=TRUE)
+}
+
+# --------------------------------------------------------
+#Validate the columns in final data and the storage types  
+# --------------------------------------------------------
+
+#Note that I'm dropping 'module' and 'intervention' - which were corrected from the original text, but are just used for mapping. EKL 1/29/19
+# Only keep the variable names that are in the codebook for consistency. This should constantly be reviewed. 
+dropped_vars = names(mapped_data)[!names(mapped_data)%in%codebook$Variable]
+if (length(dropped_vars)!=0){
+  print("Some variables are being dropped because they aren't in the codebook - Review to make sure these shouldn't be in the final data.")
+  print(dropped_vars)
+}
+mapped_data = mapped_data[, names(mapped_data)%in%codebook$Variable, with=FALSE]
+
+#After variables are removed, collapse dataset to simplify
+byVars <- colnames(mapped_data)
+byVars = byVars[byVars != 'budget']
+mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget'), by=byVars]
+
+#Reorder data 
+mapped_data = mapped_data[order(start_date, year, gf_module, gf_intervention, loc_name, 
+                                budget, orig_module, orig_intervention, file_name)]
+# 
+# setcolorder(mapped_data, 
+#             c("loc_name", "disease", "file_name", 
+#               "gf_module", "gf_intervention", "activity_description", "cost_category", "implementer", "budget",
+#               "start_date", "year", "quarter", "data_source","grant_period","grant_status",
+#               "file_iteration","budget_version","version_date", "update_date",
+#               "language_financial","period_financial","orig_module","orig_intervention","code",
+#               "rssh","kp","equity",
+#               "gf_module_fr","gf_intervention_fr",  
+#               "gf_module_esp","gf_intervention_esp",
+#               "abbrev_mod","abbrev_int","includes_rssh"))
+
+#------------------------------------------------------------
+# Remove any special characters so .csv will store correctly 
+#------------------------------------------------------------
+mapped_data$activity_description <- str_replace_all(mapped_data$activity_description, "[^[:alnum:]]", " ")
+mapped_data$orig_module <- str_replace_all(mapped_data$orig_module, "[^[:alnum:]]", " ")
+mapped_data$orig_intervention <- str_replace_all(mapped_data$orig_intervention, "[^[:alnum:]]", " ")
+
+
+#########################################
+# Do we want to split the dataset into different components? maybe 2017 or 2020 files? or maybe not necessary? 
+# here we can also specificy which columns we want to keep??? 
+gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date',
+             'current_grant', 'data_source', 'file_iteration', 'budget_version', 'revision_type', 'version_date',
+             'abbrev_mod', 'code','grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date')
+             # 'isMostRecentRevision', 'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent', 'isStrategicObjective', 'SO')
+cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 
+             'file_iteration', 'budget_version', 'revision_type', 'gf_revision_type', 'version_date')
+             # 'isMostRecentRevision', 
+             # 'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent', 'kp', 'rssh', 'equity', 'update_date',
+             # 'isStrategicObjective', 'SO')
+
+
+fr_budgets <- mapped_data
+
+
+# Subset columns to GEP and CEP variables. 
+fr_budgets_gep = all_budgets[, .(budget=sum(budget, na.rm=T)), by=gep_cols]
+fr_budgets_cep = all_budgets[, .(budget=sum(budget, na.rm=T)), by=cep_cols]
+
+#------------------------------------------------------########################################
+# Save file into different country folders
+# based on last portion of 2c
+# # First, delete the currently saved files (these are all archived so we don't need these copies)
+# update so that it only deletes the funding request data
+# saved_files = list.files(export_dir, full.names=TRUE, pattern=".csv") # Only find the .csv files - these are the prepped data files. As of 3/18/20, there is one RDS 'raw bound files' from step 2B. EL
+# stopifnot(length(saved_files)==7) # There should be exactly 6 files you're going to delete. FRC 5/20/2020 added one in
+# sapply(saved_files, unlink) # Delete the five files in this folder.
+
+# save file of funding request data on box
+
+###
+## change into a loop so it updates all country folders
+write.csv(approved_budgets_cep, paste0(export_dir, "approved_budgets_", country, "_", Sys.Date(), ".csv"), row.names=F)
+
+
