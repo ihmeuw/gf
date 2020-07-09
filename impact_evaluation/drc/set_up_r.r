@@ -49,8 +49,7 @@ library(splitstackshape)
 # switch J for portability to cluster
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
-# directories
-dir = paste0(j, '/Project/Evaluation/GF/')
+# directories (root directories obscured for public use)
 ieDir = paste0(dir, 'impact_evaluation/cod/prepped_data/')
 rtDir = paste0(dir, 'resource_tracking/_gf_files_gos/combined_prepped_data/')
 odahDir = paste0(dir, 'resource_tracking/_odah/prepped_data/')
@@ -58,7 +57,6 @@ gheDir = paste0(dir, 'resource_tracking/_ghe/')
 mapDir = paste0(dir, '/mapping/multi_country/intervention_categories')
 pnlpDir = paste0(dir, 'outcome_measurement/cod/prepped_data/PNLP/post_imputation/')
 dhisDir = paste0(dir, 'outcome_measurement/cod/dhis_data/prepped/')
-lbdDir = paste0(j, '/WORK/11_geospatial/01_covariates/00_MBG_STANDARD/')
 # ---------------------------------------------------------------------------------
 
 
