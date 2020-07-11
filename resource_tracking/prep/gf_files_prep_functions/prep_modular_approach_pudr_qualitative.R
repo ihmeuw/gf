@@ -33,9 +33,7 @@ prep_modular_approach_pudr_qualitative =  function(dir, inFile, sheet_name, star
   # }
   # dir = file_dir
   # inFile = file_list$file_name[i]
-  
   # sheet_name = file_list$sheet_financial[i] # change manually if prepping the PR Expenditure sheets
-  
   # start_date = file_list$start_date_financial[i]
   # period = file_list$period[i]
   # disease = file_list$disease[i]
@@ -66,14 +64,14 @@ prep_modular_approach_pudr_qualitative =  function(dir, inFile, sheet_name, star
   # 1. Subset columns.
   #-------------------------------------
   #Find the correct column indices based on a grep condition.
-  module_col <- grep("Modular Approach - Modules|Démarche modulaire - Modules", gf_data)
-  intervention_col <- grep("Modular Approach - Interventions|Démarche modulaire - Interventions", gf_data)
-  budget_col <- grep("Budget for Reporting Period", gf_data)
-  expenditure_col <- grep("Actual Expenditure", gf_data)
+  module_col <- grep("Modular Approach - Modules|Démarche modulaire - Modules|Enfoque modular: módulos", gf_data)
+  intervention_col <- grep("Modular Approach - Interventions|Démarche modulaire - Interventions|modular: intervenciones", gf_data)
+  budget_col <- grep("Budget for Reporting Period|Budget pour la période de rapport|Presupuesto para el periodo del informe", gf_data)
+  expenditure_col <- grep("Actual Expenditure|Dépenses réelles|Gastos reales", gf_data)
   lfa_adjustment_col <- grep("Local Fund Agent Adjustment on Expenditures", gf_data)
-  cumulative_budget_col = grep("Cumulative Budget", gf_data)
-  cumulative_expenditure_col = grep("Cumulative Expenditure|Cumulative Actual Expenditure", gf_data)
-  absorption_col = grep("Absorption|absorción", gf_data)
+  cumulative_budget_col = grep("Cumulative Budget|Dépenses réelles cumulées|Presupuesto acumulativo", gf_data)
+  cumulative_expenditure_col = grep("Cumulative Expenditure|Cumulative Actual Expenditure|Gasto real acumulativo", gf_data)
+  absorption_col = grep("Absorption|absorción|absorption", gf_data)
   
   if (sheet_name == "LFA Expenditure_7B"){
     lfa_comment_col <- grep("comments|commentaires|comentarios", gf_data)
@@ -105,7 +103,7 @@ prep_modular_approach_pudr_qualitative =  function(dir, inFile, sheet_name, star
 
   #Remove the 'cumulative expenditure' and 'cumulative budget' columns and the 'cumulative absorption rate'
   if (length(expenditure_col)!=1){
-    cumulative_expenditure_drop <- grep("Cumulative Expenditure|Cumulative Actual Expenditure", gf_data) #Remove the 'cumulative expenditure' column.
+    cumulative_expenditure_drop <- grep("Cumulative Expenditure|Cumulative Actual Expenditure|Dépenses réelles cumulées", gf_data) #Remove the 'cumulative expenditure' column.
     for (i in 1:length(expenditure_col)){
       if (expenditure_col[i] %in% cumulative_expenditure_drop){
         expenditure_col = expenditure_col[-i]
@@ -253,7 +251,7 @@ prep_modular_approach_pudr_qualitative =  function(dir, inFile, sheet_name, star
   # create an indicator for sheet_name as well as the breakdown_type ("Costing Dimension" or "Modular Approach" or "Implementing Entity")
   
   ######### Select the section of the excel that's broken up by module ########################################
-  start_row_m <- grep("modular approach|démarche modulaire", tolower(gf_data$module))
+  start_row_m <- grep("modular approach|démarche modulaire|enfoque modular", tolower(gf_data$module))
   end_row_m <- grep("grand total|total général", tolower(gf_data$module))
 
   if (sheet_name == "ALF RFR_7"){
@@ -277,7 +275,7 @@ prep_modular_approach_pudr_qualitative =  function(dir, inFile, sheet_name, star
   #### Cost category   ########################################################
   
   #Select the section of the excel that's broken up by cost category
-  start_row_c <- grep("costing dimension|évaluation des coûts", tolower(gf_data$module))
+  start_row_c <- grep("costing dimension|évaluation des coûts|grupos de costos", tolower(gf_data$module))
   end_row_c <- grep("grand total|total général", tolower(gf_data$module))
   
   # if (sheet_name == "ALF RFR_7"){
@@ -286,6 +284,10 @@ prep_modular_approach_pudr_qualitative =  function(dir, inFile, sheet_name, star
   #   end_row2_m = grep("Veuillez sélectionner...", gf_data$intervention)
   #   end_row_m = end_row1_m[end_row1_m%in%end_row2_m]
   # }
+  
+  if (length(start_row_c!=1)){
+    start_row_c <- start_row_c[1]
+  }
   
   x = 1
   while (end_row_c[x] < start_row_c){
@@ -300,8 +302,12 @@ prep_modular_approach_pudr_qualitative =  function(dir, inFile, sheet_name, star
   
   #### Implementing entity ########################################################
   #Select the section of the excel that's broken up by cost category
-  start_row_i <- grep("implementing", tolower(gf_data$module))
+  start_row_i <- grep("implementing| de mise en |ntidad ejecutora", tolower(gf_data$module))
   end_row_i <- grep("grand total|total général", tolower(gf_data$module))
+  
+  if (length(start_row_i)!=1) {
+    start_row_i = start_row_i[2]
+  }
   
   # if (sheet_name == "ALF RFR_7"){
   #   start_row_c = grep("Macrocatégorie", gf_data$module)
