@@ -72,8 +72,7 @@ txSuccessVars = c("MDR_Probably_Cured_rate_imp", "Treatment_Success_Rate_imp", "
 # switch J for portability to cluster
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
-# directories
-dir = paste0(j, '/Project/Evaluation/GF/')
+# directories (root directories obscured for public use)
 box = "C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/" #Adding new file path to pull latest files from Box account EL 10/2/2019
 ieDir = paste0(dir, 'impact_evaluation/gtm/')
 rawIeDir = paste0(ieDir, 'raw_data/')
@@ -84,7 +83,6 @@ fghDir = paste0(dir, 'resource_tracking/_odah/prepped_data/')
 whoDir = paste0(dir, 'resource_tracking/_ghe/who/prepped_data/')
 mapDir = paste0(dir, '/mapping/multi_country/intervention_categories')
 sicoinDir = paste0(dir, 'resource_tracking/_ghe/sicoin_gtm/prepped_data/')
-lbdDir = paste0(j, '/WORK/11_geospatial/01_covariates/00_MBG_STANDARD/')
 # ---------------------------------------------------------------------------------
 
 

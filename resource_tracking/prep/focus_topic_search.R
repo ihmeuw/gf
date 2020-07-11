@@ -126,35 +126,29 @@ id_focus_topics('DRC', include_module_intervention = TRUE)
 # -----------------------------------------------
 
 # -----------------------------------------------
-# merge budget data to DRC data:
+# merge budget data to all country data:
 # -----------------------------------------------
-# read in both key word searches
-dt1 = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_6_17_2020.csv')))
-dt2 = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_1_2020.csv')))
-dt1 = dt1[, -c('isTopicArea', 'topicAreaDesc')]
-dt2 = dt2[, -c('isTopicArea', 'topicAreaDesc')]
+drc = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_8_2020.csv')))
+uga = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/UGA/test_uganda_focus_topic_search.csv')))
+gtm = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/test_guatemala_focus_topic_search.csv')))
+sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/test_senegal_focus_topic_search.csv')))
 
-# compare the differences: 
-setnames(dt1, 'keyword_topic_area', 'keyword_ta_dt1')
-setnames(dt2, 'keyword_topic_area', 'keyword_ta_dt2')
+dt = rbindlist(list(drc,uga,gtm,sen), use.names = TRUE, fill = TRUE)
 
-dt= merge(dt1, dt2, by = names(dt1)[!names(dt1)%in%c('keyword_ta_dt1')])
-make_false = dt[ keyword_ta_dt1 == TRUE & keyword_ta_dt2 == FALSE, ]
-make_true = dt[ keyword_ta_dt1 == FALSE & keyword_ta_dt2 == TRUE, ]
-
-# read in the budget revisions data set
-dt = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_1_2020.csv')))
-dt = dt[, -c('isTopicArea')]
 budget_rev = as.data.table(read.csv(paste0(box, 'tableau_data/all_budget_revisions_activityLevel.csv')))
-budget_rev = budget_rev[loc_name == 'DRC', ]
 budget_rev = budget_rev[, -c('isTopicArea', 'topicAreaDesc')]
+budget_rev = budget_rev[ file_iteration %in% c('revision', 'approved_gm')]
 
-ta_budget_dt = merge(dt, budget_rev, all = TRUE, by = c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
-dt = ta_budget_dt[, c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description", 'cep_topic_area', 'keyword_topic_area', 'topicAreaDesc', 'grant', 'budget_version', 'budget')]
+budget_dt = merge(dt, budget_rev, all.y = TRUE, by = c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
 
+# # check that there's one file per budget version/grant
+# budget_dt[, length(unique(file_name)), by = c('grant', 'budget_version')]
+
+dt = budget_dt[, c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description", 'cep_topic_area', 'keyword_topic_area', 'topicAreaDesc', 'grant', 'budget_version', 'budget')]
 dt = dt[!is.na(budget_version), ]
-by_cols = names(dt)[!names(dt) %in% 'budget']
+
 # sum over cost categories 
+by_cols = names(dt)[!names(dt) %in% 'budget']
 dt = dt[, .(activity_budget = sum(budget)), by = by_cols]
 dt[, intervention_budget := sum(activity_budget), by = .(loc_name, gf_module, gf_intervention, grant, budget_version)]
 dt[, activity_percent_of_intervention := round((activity_budget/intervention_budget)*100, 2)]
@@ -167,13 +161,64 @@ dt_act_percent = dt[, .(loc_name, disease, gf_module, gf_intervention, activity_
 dt_wide_number = dcast.data.table(dt_act_number, loc_name + disease + gf_module + gf_intervention + activity_description + cep_topic_area + keyword_topic_area + topicAreaDesc + grant ~ budget_version )
 dt_wide_percent = dcast.data.table(dt_act_percent, loc_name + disease + gf_module + gf_intervention + activity_description + cep_topic_area + keyword_topic_area + topicAreaDesc + grant ~ budget_version )
 
-subset_for_writeup_number = dt_wide_number[keyword_topic_area==TRUE & topicAreaDesc=='DIGITAL_HEALTH_DHIS2' & gf_module != 'Health management information system and monitoring and evaluation'
-                            & gf_module != 'Vector control', ]
+write.csv(dt_wide_number, paste0(dir, 'modular_framework_mapping/keyword_search/combined_keyword_search_results_activity_budgets.csv'), row.names = FALSE)
+write.csv(dt_wide_percent, paste0(dir, 'modular_framework_mapping/keyword_search/combined_keyword_search_results_activity_percent_of_intervention.csv'), row.names = FALSE)
+# -----------------------------------------------
+
+# -----------------------------------------------
+# merge budget data to DRC data:
+# -----------------------------------------------
+# read in the budget revisions data set
+dt = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_8_2020.csv')))
+dt = dt[, -c('isTopicArea')]
+# read in the budger revisions dataset and subset to just DRC
+budget_rev = as.data.table(read.csv(paste0(box, 'tableau_data/all_budget_revisions_activityLevel.csv')))
+budget_rev = budget_rev[loc_name == 'DRC', ]
+budget_rev = budget_rev[, -c('isTopicArea', 'topicAreaDesc')]
+
+# merge the data sets
+ta_budget_dt = merge(dt, budget_rev, all = TRUE, by = c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
+dt = ta_budget_dt[, c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description", 'cep_topic_area', 'keyword_topic_area', 'topicAreaDesc', 'grant', 'budget_version', 'budget')]
+dt = dt[!is.na(budget_version), ]
+
+# sum over cost categories 
+by_cols = names(dt)[!names(dt) %in% 'budget']
+dt = dt[, .(activity_budget = sum(budget)), by = by_cols]
+dt[, intervention_budget := sum(activity_budget), by = .(loc_name, gf_module, gf_intervention, grant, budget_version)]
+dt[, activity_percent_of_intervention := round((activity_budget/intervention_budget)*100, 2)]
+
+dt_act_number = dt[, .(loc_name, disease, gf_module, gf_intervention, activity_description, cep_topic_area, keyword_topic_area,
+                       topicAreaDesc, grant, budget_version, activity_budget)]
+dt_act_percent = dt[, .(loc_name, disease, gf_module, gf_intervention, activity_description, cep_topic_area, keyword_topic_area,
+                        topicAreaDesc, grant, budget_version, activity_percent_of_intervention)]
+
+dt_wide_number = dcast.data.table(dt_act_number, loc_name + disease + gf_module + gf_intervention + activity_description + cep_topic_area + keyword_topic_area + topicAreaDesc + grant ~ budget_version )
+dt_wide_percent = dcast.data.table(dt_act_percent, loc_name + disease + gf_module + gf_intervention + activity_description + cep_topic_area + keyword_topic_area + topicAreaDesc + grant ~ budget_version )
+
+subset_for_writeup_number = dt_wide_number[keyword_topic_area==TRUE,]
 write.csv(subset_for_writeup_number, paste0(dir, 'modular_framework_mapping/keyword_search/DRC/allocations_for_activities_identified_by_keywordsearch.csv'), row.names = FALSE)
 
-subset_for_writeup_percent = dt_wide_percent[keyword_topic_area==TRUE & topicAreaDesc=='DIGITAL_HEALTH_DHIS2' & gf_module != 'Health management information system and monitoring and evaluation'
-                                    & gf_module != 'Vector control', ]
+subset_for_writeup_percent = dt_wide_percent[keyword_topic_area==TRUE,]
 write.csv(subset_for_writeup_percent, paste0(dir, 'modular_framework_mapping/keyword_search/DRC/activity_percent_of_intervention.csv'), row.names = FALSE)
+# -----------------------------------------------
+
+# -----------------------------------------------
+# Compare key word search versions: 
+## MAKE THIS A FUNCTION TO COMPARE ANY TWO? 
+# -----------------------------------------------
+# read in both key word searches
+dt1 = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_6_17_2020.csv')))
+dt2 = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_1_2020.csv')))
+dt1 = dt1[, -c('isTopicArea', 'topicAreaDesc')]
+dt2 = dt2[, -c('isTopicArea', 'topicAreaDesc')]
+
+# compare the differences: 
+setnames(dt1, 'keyword_topic_area', 'keyword_ta_dt1')
+setnames(dt2, 'keyword_topic_area', 'keyword_ta_dt2')
+
+dt= merge(dt1, dt2, by = names(dt1)[!names(dt1)%in%c('keyword_ta_dt1')])
+now_false = dt[ keyword_ta_dt1 == TRUE & keyword_ta_dt2 == FALSE, ]
+now_true = dt[ keyword_ta_dt1 == FALSE & keyword_ta_dt2 == TRUE, ]
 # -----------------------------------------------
 
 # -----------------------------------------------

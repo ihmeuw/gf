@@ -58,8 +58,7 @@ START_YEAR = 2014 #If available, what's the earliest year you should model data 
 # switch J for portability to cluster
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
-# directories
-dir = paste0(j, '/Project/Evaluation/GF/')
+# directories (root directories obscured for public use)
 ieDir = paste0(dir, 'impact_evaluation/sen/')
 rawIeDir = paste0(ieDir, 'raw_data/')
 preppedIeDir =  paste0(ieDir, 'prepped_data/')
@@ -70,7 +69,6 @@ whoDir = paste0(dir, 'resource_tracking/_ghe/who/prepped_data/')
 #mapDir = paste0(dir, '/mapping/multi_country/intervention_categories')
 #pnlpDir = paste0(dir, 'outcome_measurement/sen/prepped_data/PNLP/post_imputation/')
 #dhisDir = paste0(dir, 'outcome_measurement/sen/dhis_data/prepped/')
-#lbdDir = paste0(j, '/WORK/11_geospatial/01_covariates/00_MBG_STANDARD/')
 # ---------------------------------------------------------------------------------
 
 
