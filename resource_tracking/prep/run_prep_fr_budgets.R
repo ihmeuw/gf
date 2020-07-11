@@ -292,27 +292,56 @@ mapped_data$orig_intervention <- str_replace_all(mapped_data$orig_intervention, 
 # ----------------------------------------------
 # Do we want to split the dataset into different components? maybe 2017 or 2020 files? or maybe not necessary? 
 
+# add a disease column for the file as a whole
+fr_budgets[grepl(file_name, pattern = 'C_DB'), fr_disease := 'hiv/tb']
+fr_budgets[grepl(file_name, pattern = 'M_DB'), fr_disease := 'malaria']
+fr_budgets[grepl(file_name, pattern = 'H_DB'), fr_disease := 'hiv']
+fr_budgets[grepl(file_name, pattern = 'T_Full'), fr_disease := 'tb']
+fr_budgets[grepl(file_name, pattern = 'TB-SSRP'), fr_disease := 'tb']
+
 # add a column for PR:
-mapped_data[ implementer == 'Ministry of Finance, Planning and Economic Development of the Government of the Republic of Uganda', pr := 'MoFPED']
-mapped_data[ implementer == 'The AIDS Support Organisation (Uganda) Limited', pr := 'TASO']
-mapped_data[ implementer == 'Ministry of Health and Population of the Government of the Democratic Republic of Congo', pr := 'MOH']
-mapped_data[ implementer == 'PR Societe Civile', pr := 'SANRU/CORDAID']
-mapped_data[ implementer == 'INCAP', pr := 'INCAP']
-mapped_data[ implementer == 'SR', pr := 'SR']
-mapped_data[ implementer == 'Organizacion Panamericana de la Salud (OPS/OMS)', pr := 'Organizacion Panamericana de la Salud (OPS/OMS)']
-mapped_data[ implementer == 'Ministry of Health and Social Assistance of the Republic of Guatemala', pr := 'MSPAS']
-mapped_data[ implementer == 'Ministry of Health and Social Action of the Government of the Republic of Senegal', pr := 'MOH']
-mapped_data[ implementer == 'Plan International, Inc.', pr := 'Plan International, Inc.']
+# UGA
+fr_budgets[ implementer == 'Ministry of Finance, Planning and Economic Development of the Government of the Republic of Uganda', pr := 'MoFPED']
+fr_budgets[ implementer == 'The AIDS Support Organisation (Uganda) Limited', pr := 'TASO']
+# DRC
+fr_budgets[ implementer == 'Ministry of Health and Population of the Government of the Democratic Republic of Congo', pr := 'MOH']
+fr_budgets[ implementer == 'PR Societe Civile' & fr_disease == 'hiv/tb', pr := 'CORDAID']
+# GTM
+fr_budgets[ loc_name == 'Guatemala' & fr_disease == 'tb', pr := 'MSPAS']
+fr_budgets[ loc_name == 'Guatemala' & fr_disease == 'hiv', pr := 'INCAP']
+fr_budgets[ loc_name == 'Guatemala' & fr_disease == 'malaria', pr := 'MSPAS']
+# SEN
+fr_budgets[ loc_name == 'Senegal' & fr_disease == 'tb', pr := 'MOH']
 
 # specify the columns to keep in the output:
 keep_cols = c('file_name', 'loc_name', 'gf_module', 'gf_intervention', 'activity_description', 'cost_category', 
               'disease', 'implementer', 'pr', 'budget',  
               'start_date', 'quarter', 'year', 
               'data_source', 'grant_period', 'grant_status', 
-              'budget_version', 'version_date',
+              'budget_version', 'version_date', 'update_date', 
               'kp', 'rssh', 'equity')
 
 fr_budgets = mapped_data[, .(budget=sum(budget, na.rm=T)), by=keep_cols]
+
+# Add equity/SO to FR budgets:
+fr_budgets[, isStrategicObjective := ifelse((equity == TRUE | rssh == TRUE), TRUE, FALSE)]
+fr_budgets[, SO := '']
+fr_budgets[rssh == TRUE, SO := paste0(SO, 'rssh')]
+fr_budgets[equity == TRUE, SO := paste0(SO, 'equity')] 
+# doing it this weird way would make it so if something was BOTH RSSH and equity, it would have both, and not simply overwrite 
+# one with the other.
+fr_budgets[SO == '', SO := NA]
+
+fr_budgets[loc_name == 'cod', loc_name := 'DRC']
+fr_budgets[loc_name == 'uga', loc_name := 'Uganda']
+fr_budgets[loc_name == 'sen', loc_name := 'Senegal']
+fr_budgets[loc_name == 'gtm', loc_name := 'Guatemala']
+# -----------------------------------------------
+# sum FR budgets to grant level
+# -----------------------------------------------
+by_cols = names(fr_budgets)[!names(fr_budgets) %in% c('start_date', 'quarter', 'year', 'data_source', 'grant_status')]
+fr_budgets = fr_budgets[,.(budget = sum(budget)), by = by_cols]                       
+# -----------------------------------------------
 
 write.csv(fr_budgets, paste0(box, "tableau_data/fr_budgets_nfm2.csv"), row.names=FALSE)
 # ----------------------------------------------
