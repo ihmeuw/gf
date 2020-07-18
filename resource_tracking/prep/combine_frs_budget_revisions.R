@@ -1,5 +1,5 @@
 # -----------------------------------------------
-# AUTHOR: Audrey
+# AUTHOR: Audrey Batzel
 # PURPOSE: Combine prepped FR budget data with the budget revisions data set
 # DATE: July 2020
 
@@ -34,10 +34,11 @@ names(fr_budgets)[!names(fr_budgets) %in% names(budget_rev)]
 # -----------------------------------------------
 
 # -----------------------------------------------
-# merge the topic areas to FRs
+# merge the intervention level topic areas to FRs
 # -----------------------------------------------
 # load spreadsheet to merge onto data to identify topic areas
-topic_areas = as.data.table(read.xlsx(paste0(dir, 'modular_framework_mapping/identifyTopicAreas_PCE2020_forSubsetting.xlsx')))
+topic_areas = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/archive/identifyTopicAreas_PCE2020_forSubsetting.csv')))
+topic_areas[topicAreaDesc == '', topicAreaDesc := NA]
 # checks on topic areas manual entry
 if(nrow(topic_areas[isTopicArea == TRUE & is.na(topicAreaDesc) ])!=0) stop('You need to enter a value for topicAreaDesc where isTopicArea = TRUE.')
 if(nrow(topic_areas[isTopicArea == FALSE & !is.na(topicAreaDesc) ])!=0) stop('You should not have value for topicAreaDesc where isTopicArea = FALSE.')
