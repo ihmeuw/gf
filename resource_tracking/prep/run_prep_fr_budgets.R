@@ -88,6 +88,12 @@ for(i in 1:nrow(file_list)){
 # ----------------------------------------------
 
 # ----------------------------------------------
+# save raw output
+# ----------------------------------------------
+write.csv(prepped_frs, paste0(box, 'tableau_data/raw_extracted_fr_budget_data.csv'), row.names = FALSE)
+# ----------------------------------------------
+
+# ----------------------------------------------
 # 2. Run some checks to make sure this data was prepped correctly. 
 # ----------------------------------------------
 # check the totals
@@ -124,6 +130,7 @@ prepped_frs_nfm3 <- prepped_frs[grant_period%in%c("2021-2023")]
 # source mapping file
 include_stops = TRUE
 source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
+# ----------------------------------------------
 
 # ----------------------------------------------
 # Prep raw data for mapping
@@ -143,11 +150,9 @@ if (!'activity_description'%in%names(raw_data)){ #If this column doesn't exist, 
   raw_data[, activity_description:=NA]
 }
 
+# Map budgets and PUDRs to module mapping framework 
 raw_data = correct_modules_interventions(raw_data)
 
-# ----------------------------------------------
-# Map budgets and PUDRs to module mapping framework 
-# ----------------------------------------------
 # Check for unmapped modules/interventions before mapping
 gf_concat <- paste0(module_map$module, module_map$intervention)
 rt_concat <- paste0(raw_data$module, raw_data$intervention)
@@ -287,10 +292,22 @@ mapped_data$orig_module <- str_replace_all(mapped_data$orig_module, "[^[:alnum:]
 mapped_data$orig_intervention <- str_replace_all(mapped_data$orig_intervention, "[^[:alnum:]]", " ")
 # ----------------------------------------------
 
-# ----------------------------------------------
-# Save data:
-# ----------------------------------------------
-# Do we want to split the dataset into different components? maybe 2017 or 2020 files? or maybe not necessary? 
+# -----------------------------------------------
+# sum FR budgets to grant level and add addtional columns
+# -----------------------------------------------
+fr_budgets= copy(mapped_data)
+
+# specify the columns to keep in the output:
+keep_cols = c('file_name', 'loc_name', 'gf_module', 'gf_intervention', 'activity_description', 'cost_category', 
+              'disease', 'implementer',
+              'data_source', 'grant_period', 'grant_status', 
+              'budget_version', 'version_date', 'update_date', 
+              'kp', 'rssh', 'equity')
+
+fr_budgets = fr_budgets[, .(budget=sum(budget)), by=keep_cols]
+
+# # visual check that totals are still right - AB 7/17/2020 fixed the problem, which was from including 'budget' in the keep_cols
+# fr_budgets[loc_name == 'cod', sum(budget), by = .(file_name, implementer)]
 
 # add a disease column for the file as a whole
 fr_budgets[grepl(file_name, pattern = 'C_DB'), fr_disease := 'hiv/tb']
@@ -307,21 +324,11 @@ fr_budgets[ implementer == 'The AIDS Support Organisation (Uganda) Limited', pr 
 fr_budgets[ implementer == 'Ministry of Health and Population of the Government of the Democratic Republic of Congo', pr := 'MOH']
 fr_budgets[ implementer == 'PR Societe Civile' & fr_disease == 'hiv/tb', pr := 'CORDAID']
 # GTM
-fr_budgets[ loc_name == 'Guatemala' & fr_disease == 'tb', pr := 'MSPAS']
-fr_budgets[ loc_name == 'Guatemala' & fr_disease == 'hiv', pr := 'INCAP']
-fr_budgets[ loc_name == 'Guatemala' & fr_disease == 'malaria', pr := 'MSPAS']
+fr_budgets[ loc_name == 'gtm' & fr_disease == 'tb', pr := 'MSPAS']
+fr_budgets[ loc_name == 'gtm' & fr_disease == 'hiv', pr := 'INCAP']
+fr_budgets[ loc_name == 'gtm' & fr_disease == 'malaria', pr := 'MSPAS']
 # SEN
-fr_budgets[ loc_name == 'Senegal' & fr_disease == 'tb', pr := 'MOH']
-
-# specify the columns to keep in the output:
-keep_cols = c('file_name', 'loc_name', 'gf_module', 'gf_intervention', 'activity_description', 'cost_category', 
-              'disease', 'implementer', 'pr', 'budget',  
-              'start_date', 'quarter', 'year', 
-              'data_source', 'grant_period', 'grant_status', 
-              'budget_version', 'version_date', 'update_date', 
-              'kp', 'rssh', 'equity')
-
-fr_budgets = mapped_data[, .(budget=sum(budget, na.rm=T)), by=keep_cols]
+fr_budgets[ loc_name == 'sen' & fr_disease == 'tb', pr := 'MOH']
 
 # Add equity/SO to FR budgets:
 fr_budgets[, isStrategicObjective := ifelse((equity == TRUE | rssh == TRUE), TRUE, FALSE)]
@@ -336,12 +343,12 @@ fr_budgets[loc_name == 'cod', loc_name := 'DRC']
 fr_budgets[loc_name == 'uga', loc_name := 'Uganda']
 fr_budgets[loc_name == 'sen', loc_name := 'Senegal']
 fr_budgets[loc_name == 'gtm', loc_name := 'Guatemala']
-# -----------------------------------------------
-# sum FR budgets to grant level
-# -----------------------------------------------
-by_cols = names(fr_budgets)[!names(fr_budgets) %in% c('start_date', 'quarter', 'year', 'data_source', 'grant_status')]
-fr_budgets = fr_budgets[,.(budget = sum(budget)), by = by_cols]                       
-# -----------------------------------------------
+# ----------------------------------------------
 
+# ----------------------------------------------
+# Save data:
+# ----------------------------------------------
+# Do we want to split the dataset into different components? maybe 2017 or 2020 files? or maybe not necessary? 
+# save data
 write.csv(fr_budgets, paste0(box, "tableau_data/fr_budgets_nfm2.csv"), row.names=FALSE)
 # ----------------------------------------------
