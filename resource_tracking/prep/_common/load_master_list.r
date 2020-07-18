@@ -105,7 +105,7 @@ load_master_list = function(purpose=NULL) {
     
     #Check date variables, and special string variables. 
     stopifnot(nrow(dt[is.na(start_date_financial)])==0)
-    stopifnot(nrow(dt[is.na(update_date) & file_iteration=="revision"])==0)
+    stopifnot(nrow(dt[is.na(version_date) & is.na(update_date) & file_iteration=="revision"])==0)
     stopifnot(nrow(dt[data_source=="pudr" & (pudr_semester_financial=="NA" | is.na(pudr_semester_financial))])==0) #Check PUDR semester. 
   }
   
