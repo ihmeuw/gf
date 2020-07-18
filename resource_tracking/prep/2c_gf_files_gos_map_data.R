@@ -321,6 +321,7 @@ if (prep_files){
   write.csv(all_absorption, paste0(export_dir, "all_absorption_", country, "_", Sys.Date(), ".csv"), row.names=F)
   
   # Save admin-level files on J. 
+  dir = 'J:/Project/Evaluation/GF/resource_tracking/'
   saveRDS(approved_budgets_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/approved_budgets_", country, "_", Sys.Date(), ".rds"))
   saveRDS(most_recent_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/most_recent_budgets_", country, "_", Sys.Date(), ".rds"))
   saveRDS(revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/all_budget_revisions_", country, "_", Sys.Date(), ".rds"))
