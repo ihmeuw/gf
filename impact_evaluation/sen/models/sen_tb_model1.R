@@ -1,6 +1,7 @@
 # model: sen_tb_model_1
-# purpose: This code defines the model object for the Senegal TB model 
-# described in the publication by Phillips, et al. 
+# purpose: final version of the model object
+
+# This code defines the model object for the Senegal TB model described in the publication by Phillips, et al. 
 
 model = '
     # linkage 1 regressions
