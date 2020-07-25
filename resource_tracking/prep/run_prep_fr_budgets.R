@@ -90,8 +90,13 @@ for(i in 1:nrow(file_list)){
 # ----------------------------------------------
 # save raw output
 # ----------------------------------------------
-write.csv(prepped_frs, paste0(box, 'tableau_data/raw_extracted_fr_budget_data.csv'), row.names = FALSE)
+# write.csv(prepped_frs, paste0(box, 'tableau_data/raw_extracted_fr_budget_data.csv'), row.names = FALSE)
 # ----------------------------------------------
+
+# -----------------------------------------------
+# read in raw output previously saved
+# ----------------------------------------------
+prepped_frs <- fread(paste0(box, 'tableau_data/raw_extracted_fr_budget_data.csv'))
 
 # ----------------------------------------------
 # 2. Run some checks to make sure this data was prepped correctly. 
@@ -115,17 +120,18 @@ warning2 = sort(rt_files) == sort(unique(file_list$file_name))
 if (all(warning2)!=TRUE){
   warning("The files in the processed data are not the same as the files in the file list.")
 }
+
+
 # ----------------------------------------------
 
 # ----------------------------------------------
 # 3. Map prepped files to final mappings
 # ----------------------------------------------
-# this bit of code will help map data, but I just realized that this includes code mapped to both the old (2018-2020) and 
-# new modular framework
+
+# NFM2 modular framework
 
 # split resource list into two and then combine together again at the end?
 prepped_frs_nfm2 <- prepped_frs[grant_period%in%c("2018-2020", "2019-2021")]
-prepped_frs_nfm3 <- prepped_frs[grant_period%in%c("2021-2023")]
 
 # source mapping file
 include_stops = TRUE
@@ -133,8 +139,9 @@ source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
 # ----------------------------------------------
 
 # ----------------------------------------------
-# Prep raw data for mapping
+# Prep raw data for mapping of NFM2
 # ----------------------------------------------
+
 raw_data = copy(prepped_frs_nfm2)
 # Remove whitespaces, punctuation, and unwanted characters from module and intervention. 
 raw_data = strip_chars(raw_data)
@@ -164,37 +171,6 @@ if(nrow(unmapped_mods)>0){
   stop("You have unmapped original modules/interventions!")
 }
 
-# ----------------------------------------------
-##### HERE MAP BUDGETS from new MODULAR FRAMEwork and then rbind the data together again to finish mapping everything
-
-# ----------------------------------------------
-
-# ----------------------------------------------
-# Remap diseases so they apply at the intervention level, 
-#   not the grant-level (assigned in the file list)  #THESE SHOULD BE REMOVED AND RESOLVED USING THE MODULE MAP EL 9/23/2019
-# ----------------------------------------------
-# Correct all tb/hiv to hiv/tb
-raw_data[disease == 'tb/hiv', disease:='hiv/tb']
-
-# English corrections
-raw_data[module=='hivhealthsystemsstrengthening', disease:='hiv']
-raw_data[module=='malhealthsystemsstrengthening', disease:='malaria']
-raw_data[module=='tbhealthsystemsstrengthening', disease:='tb']
-
-#French corrections 
-raw_data[module == 'priseenchargeetpreventiondelatuberculose' & disease == 'hiv', disease:='tb']
-
-# ----------------------------------------------
-# Merge with module map on module, intervention, and disease to pull in code
-# ----------------------------------------------
-# if ('disbursement'%in%names(raw_data)){
-#   pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'lfa_exp_adjustment', 'disbursement')]
-# } else {
-#   pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'lfa_exp_adjustment')]
-#   pre_coeff_check[[1]] = round(pre_coeff_check[[1]])
-#   pre_coeff_check[[2]] = round(pre_coeff_check[[2]])
-# }
-
 mergeVars = c('disease', 'module', 'intervention')
 #module_map = unique(module_map)
 module_map = module_map[!is.na(code)]
@@ -207,6 +183,87 @@ if(nrow(dropped_mods) >0){
   print(unique(dropped_mods[, c("module", "intervention", "disease"), with= FALSE]))
   stop("Modules/interventions were dropped!")
 }
+
+# ----------------------------------------------
+# NFM3
+# ----------------------------------------------
+
+# source the new file that verifies the new modular framework
+include_stops = TRUE
+source(paste0(code_dir, "nfm3_verify_mapping.R"))
+
+### Map 2020 FR budgets using the new modular framework
+prepped_frs_nfm3 <- prepped_frs[grant_period%in%c("2021-2023")]
+raw_data2 = copy(prepped_frs_nfm3)
+# Remove whitespaces, punctuation, and unwanted characters from module and intervention. 
+raw_data2 = strip_chars(raw_data2)
+# Correct common acronyms in the resource database and the module map. 
+raw_data2[, module:=replace_acronyms(module)]
+raw_data2[, intervention:=replace_acronyms(intervention)]
+
+module_map[, module:=replace_acronyms(module)]
+module_map[, intervention:=replace_acronyms(intervention)]
+
+# Make some raw corrections here - These weren't accurate enough to put in the map, but we still need to account for them. 
+if (!'activity_description'%in%names(raw_data2)){ #If this column doesn't exist, add it as 'NA' so the code below can run
+  raw_data[, activity_description:=NA]
+}
+
+# Map budgets and PUDRs to module mapping framework 
+raw_data2 = correct_modules_interventions(raw_data2)
+
+# Check for unmapped modules/interventions before mapping
+gf_concat2 <- paste0(module_map$module, module_map$intervention)
+rt_concat2 <- paste0(raw_data2$module, raw_data2$intervention)
+unmapped_mods2 <- raw_data2[!rt_concat2%in%gf_concat2]
+
+if(nrow(unmapped_mods2)>0){
+  print(unique(unmapped_mods2[, c("module", "intervention", "disease"), with= FALSE]))
+  print(unique(unmapped_mods2$file_name)) #For documentation in the comments above. 
+  stop("You have unmapped original modules/interventions!")
+}
+
+mergeVars = c('disease', 'module', 'intervention')
+#module_map = unique(module_map)
+module_map = module_map[!is.na(code)]
+
+mapped_data2 <- merge(raw_data2, module_map, by=mergeVars, all.x = TRUE)
+dropped_mods2 <- mapped_data2[is.na(mapped_data2$gf_module), ]
+
+if(nrow(dropped_mods2) >0){
+  # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
+  print(unique(dropped_mods2[, c("module", "intervention", "disease"), with= FALSE]))
+  stop("Modules/interventions were dropped!")
+}
+# ----------------------------------------------
+# combine fr 2017 and fr 2020 files together
+mapped_data <- rbind(mapped_data, mapped_data2, fill=TRUE)
+
+# ----------------------------------------------
+# Remap diseases so they apply at the intervention level, 
+#   not the grant-level (assigned in the file list)  #THESE SHOULD BE REMOVED AND RESOLVED USING THE MODULE MAP EL 9/23/2019
+# ----------------------------------------------
+# Correct all tb/hiv to hiv/tb
+mapped_data[disease == 'tb/hiv', disease:='hiv/tb']
+
+# English corrections
+mapped_data[module=='hivhealthsystemsstrengthening', disease:='hiv']
+mapped_data[module=='malhealthsystemsstrengthening', disease:='malaria']
+mapped_data[module=='tbhealthsystemsstrengthening', disease:='tb']
+
+#French corrections 
+mapped_data[module == 'priseenchargeetpreventiondelatuberculose' & disease == 'hiv', disease:='tb']
+
+# ----------------------------------------------
+# Merge with module map on module, intervention, and disease to pull in code
+# ----------------------------------------------
+# if ('disbursement'%in%names(raw_data)){
+#   pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'lfa_exp_adjustment', 'disbursement')]
+# } else {
+#   pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'lfa_exp_adjustment')]
+#   pre_coeff_check[[1]] = round(pre_coeff_check[[1]])
+#   pre_coeff_check[[2]] = round(pre_coeff_check[[2]])
+# }
 
 # ----------------------------------------------
 # Remap all RSSH codes to the RSSH disease, and make sure 
@@ -298,7 +355,8 @@ mapped_data$orig_intervention <- str_replace_all(mapped_data$orig_intervention, 
 fr_budgets= copy(mapped_data)
 
 # specify the columns to keep in the output:
-keep_cols = c('file_name', 'loc_name', 'gf_module', 'gf_intervention', 'activity_description', 'cost_category', 
+keep_cols = c('file_name', 'loc_name', 'gf_module', 'gf_intervention', 
+              'orign_module', 'orig_intervention', 'activity_description', 'cost_category', 
               'disease', 'implementer',
               'data_source', 'grant_period', 'grant_status', 
               'budget_version', 'version_date', 'update_date', 
@@ -315,13 +373,20 @@ fr_budgets[grepl(file_name, pattern = 'M_DB'), fr_disease := 'malaria']
 fr_budgets[grepl(file_name, pattern = 'H_DB'), fr_disease := 'hiv']
 fr_budgets[grepl(file_name, pattern = 'T_Full'), fr_disease := 'tb']
 fr_budgets[grepl(file_name, pattern = 'TB-SSRP'), fr_disease := 'tb']
+fr_budgets[grepl(file_name, pattern = 'TB SSRP'), fr_disease := 'tb']
+fr_budgets[grepl(file_name, pattern = 'TB_VIH'), fr_disease := 'hiv/tb']
+fr_budgets[grepl(file_name, pattern = 'C_NSP'), fr_disease := 'hiv/tb']
+fr_budgets[file_name=="05.Presupuesto_detallado_final.xlsx", fr_disease := 'hiv']
 
 # add a column for PR:
 # UGA
 fr_budgets[ implementer == 'Ministry of Finance, Planning and Economic Development of the Government of the Republic of Uganda', pr := 'MoFPED']
 fr_budgets[ implementer == 'The AIDS Support Organisation (Uganda) Limited', pr := 'TASO']
+fr_budgets[ implementer == 'Ministry of Finance, Planning and Economic Development of the Republic of Uganda', pr := 'MoFPED']
+
 # DRC
 fr_budgets[ implementer == 'Ministry of Health and Population of the Government of the Democratic Republic of Congo', pr := 'MOH']
+fr_budgets[ implementer == 'Ministry of Health and Population of the Democratic Republic of Congo', pr := 'MOH']
 fr_budgets[ implementer == 'PR Societe Civile' & fr_disease == 'hiv/tb', pr := 'CORDAID']
 # GTM
 fr_budgets[ loc_name == 'gtm' & fr_disease == 'tb', pr := 'MSPAS']
@@ -350,5 +415,5 @@ fr_budgets[loc_name == 'gtm', loc_name := 'Guatemala']
 # ----------------------------------------------
 # Do we want to split the dataset into different components? maybe 2017 or 2020 files? or maybe not necessary? 
 # save data
-write.csv(fr_budgets, paste0(box, "tableau_data/fr_budgets_nfm2.csv"), row.names=FALSE)
+write.csv(fr_budgets, paste0(box, "tableau_data/fr_budgets_all.csv"), row.names=FALSE)
 # ----------------------------------------------

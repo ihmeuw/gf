@@ -9,7 +9,7 @@
 
 prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num, language) {
   
-  #TROUBLESHOOTING HELP
+  # TROUBLESHOOTING HELP
   # dir = file_dir
   # inFile = file_list$file_name[i]
   # sheet_name = file_list$sheet[i]
@@ -106,7 +106,7 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   
   #Grab implementer column 
   if (language=="eng" | language == "fr"){
-    implementer_col = grep("implementer|entite de mise en", names)
+    implementer_col = grep("implementer|entite de mise en|maitre d'œuvre", names)
     if (length(implementer_col)==0){
       implementer_col = grep("recipient", names)
     }
@@ -114,7 +114,7 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
       implementer_col = grep("recipiendaire", names)
     }
   } else {
-    implementer_col = grep("implementador|receptor", names)
+    implementer_col = grep("implementador|receptor|entidad ejecutora", names)
   }
   
   drop_implementer_col = grep("conditional formatting", names) #Drop extra implementer columns
@@ -191,6 +191,9 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
     if (inFile == "COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisé 2018.xlsx"){ # added in to check specific file
       old_names = c("intervention revise", "description de l'activite", "element de cout", "entite de mise en œuvre", old_qtr_names)
       new_names = c("intervention", "activity_description", "cost_category", "implementer", new_qtr_names)
+    } else if ("maitre d'œuvre"%in%names){
+      old_names = c("description de l'activite", "element de cout", "maitre d'œuvre", old_qtr_names)
+      new_names = c("activity_description", "cost_category", "implementer", new_qtr_names)
     } else if ("recipiendaire"%in%names){
       old_names = c("description de l'activite", "element de cout", "recipiendaire", old_qtr_names)
       new_names = c('activity_description', 'cost_category', "implementer", new_qtr_names)
@@ -202,7 +205,10 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
     if ('implementador'%in% names){
       old_names = c('modulo', 'intervencion', 'descripcion de la actividad', 'categoria de gastos', "implementador", old_qtr_names)
       new_names = c('module', 'intervention', 'activity_description', 'cost_category', "implementer", new_qtr_names)
-    } else {
+    } else if ('entidad ejecutora'%in%names){
+      old_names = c('modulo', 'intervencion', 'descripcion de la actividad', 'categoria de gastos', "entidad ejecutora", old_qtr_names)
+      new_names = c('module', 'intervention', 'activity_description', 'cost_category', "implementer", new_qtr_names)
+    } else{
       old_names = c('modulo', 'intervencion', 'descripcion de la actividad', 'categoria de gastos', "receptor", old_qtr_names)
       new_names = c('module', 'intervention', 'activity_description', 'cost_category', "implementer", new_qtr_names)
     }
@@ -236,9 +242,31 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   }
   gf_data = gf_data[!(is.na(module) & is.na(intervention) & is.na(activity_description) & is.na(cost_category))]
   
+  # this Guatemala and Senegal file have extra blank row with only an activity description but that activity description already has a budget item (with mod and interv elsewhere)
+  if (inFile%in%c("05.Presupuesto_detallado_final.xlsx", "FR909-SEN-H_DB_template_Master_conso   Version finale du  29062020.xlsx")){
+    gf_data = gf_data[!(is.na(module) & is.na(intervention))]
+  }
+  
+  # this file has a blank row with a module and intervention filled in (as unspecified so I am removing)
+  if (inFile%in%c("FR909-SEN-H_DB_template_Master_conso   Version finale du  29062020.xlsx")){
+    gf_data = gf_data[!is.na(activity_description)]
+  }
+  
   #Replace any modules or interventions that didn't have a pair with "Unspecified".
   gf_data[is.na(module) & !is.na(intervention), module:="Unspecified"]
   gf_data[!is.na(module) & is.na(intervention), intervention:="Unspecified"]
+  
+  #Some datasets have an extra title row with "[Module]" in the module column.
+  #It's easier to find this by grepping the module column, though.
+  extra_module_row <- grep("module", tolower(gf_data$module))
+  if (length(extra_module_row) > 0){
+    if (verbose == TRUE){
+      print(paste0("Extra rows being dropped in FR prep function. First column: ", gf_data[extra_module_row, 1]))
+    }
+    gf_data <- gf_data[-extra_module_row, ,drop = FALSE]
+  }
+  
+  
   
   #-------------------------------------
   # 3. Reshape data long

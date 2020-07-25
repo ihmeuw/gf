@@ -33,5 +33,5 @@ dt_merge[, cep_topic_area := TRUE]
 dt_unique = merge(dt_unique, dt_merge, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
 dt_unique[is.na(cep_topic_area), cep_topic_area := FALSE]
 
-write.csv(dt_unique, paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas_activityLevel_wFRs.csv'))
+write.csv(dt_unique, paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas_activityLevel_wFRs_23jul2020.csv'))
 # -----------------------------------------------
