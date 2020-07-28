@@ -128,18 +128,50 @@ for (var in numVars) {
 #-----------------------------------------------------
 # Merge/map additional values
 #-----------------------------------------------------
-stdnames_cb <- fread(paste0(book_dir, "indicators_codebook.csv")) # adds standardized names and SOME information on equity and RSSH and focus topics
+stdnames_cb <- fread(paste0(book_dir, "indicators_codebook.csv")) # adds standardized names and SOME information on equity and RSSH
 sources_cb <- fread(paste0(book_dir, "data_source_codebook.csv"), header = TRUE) # lists data sources
 reverse_cb <- fread(paste0(book_dir, "indicators_codebook_reverse.csv")) # reverse indicator variable
+focus_topic_cb <-fread(paste0(book_dir, 'indicator_ft_codebook.csv')) # adds the focus topic information for each country
 
-# clean indicators before merging
-dt[, indicator:=gsub("&amp;", "&", indicator)] #Clean indicators before merging with codebook 
+# create variable indicator_code from the text name
+dt[, indicator:=gsub("&amp;", "&", indicator)] 
 dt = dt[, indicator_code:=tstrsplit(indicator, ":", keep=1)] # create variable with indicator code for merging
+
+#Clean indicators of errors manually before merging with codebook 
 dt[indicator_code=="GP other-2 Nombre de SVS ayant recu le kit PEP dans les 72h", 
    indicator_code:="GP other-2"]
+dt[loc_name=="cod" & indicator=="Nombre et pourcentage de structures de santé (CDT) qui ont connu une rupture de stock des tests de VIH", 
+   indicator_code:="TCS other-1"]
+dt[loc_name=="cod" & indicator=="TCS other-3: Nombre et pourcentage de structures de santé (Centres de Dépistage et de Traitement) qui rapporte une rupture de stock des tests de VIH", 
+   indicator_code:="TCS other-1"]
+dt[loc_name=="cod" & indicator_code=="TCS other- 1", 
+   indicator_code:="TCS other-1"]
+
+dt[loc_name=="cod" & indicator=="Nombre et pourcentage de structures de santé (Centres de Santé intégrés) qui rapporte une rupture de stock des tests de diagnostic rapide (TDR) malaria	", 
+   indicator_code:="CM-Other"]
+dt[loc_name=="cod" & indicator=="Number and percentage of health facilities (Integrated health facilities) reporting stock out of malaria rapid diagnostic test (RDT)",
+   indicator_code:="CM-Other"]
+dt[loc_name=="cod" & indicator=="Nombre et pourcentage de structures de santé (Centres de Santé intégrés) qui rapporte une rupture de stock des tests de diagnostic rapide (TDR) malaria",
+   indicator_code:="CM-Other"]
+
+dt[loc_name=="cod" & indicator=="Parmi l'ensemble des nouveaux cas de tuberculose (toutes formes confondues) ayant recu un soutien à l'observance de la part des agents de santé ou des bénévoles, nombre et pourcentage de ceux traités avec succès (traitement achevé et guérison)",
+   indicator_code:="TCP-Other"]
 
 #-------------------------------------
 # add standardized name variables
+
+# make sure all indicator codes in data are in the codebook
+cb_concat <- paste0(stdnames_cb$indicator_code)
+dt_concat <- paste0(dt$indicator_code)
+unmapped_codes <- dt[!dt_concat%in%cb_concat]
+
+if(nrow(unmapped_codes)>0){
+  print(unique(unmapped_codes[, c("indicator_code", "indicator", "loc_name", "grant"), with= FALSE]))
+  print(unique(unmapped_codes$file_name)) #For documentation in the comments above. 
+  stop("You have unmapped original codes!")
+}
+
+# add standardized names
 dt <- merge(dt, stdnames_cb, by="indicator_code", all.x = TRUE)
 
 #-------------------------------------
@@ -162,12 +194,40 @@ dt <- dt[,source_code:=NULL]
 # add reverse indicator variable
 dt <- merge(dt, reverse_cb, by.x="indicator_code", by.y = "indicator_code", all.x = TRUE, all.y = FALSE)
 
+#------------------------------------------------
+# add focus topic indicator information
+
+# break data into four
+# break focus topic codebook into four
+# merge onto each country's data
+# rbind the four countries data together
+dt_uga <- dt[loc_name=="uga"]
+cb_uga <- focus_topic_cb[topicAreaLoc=="uga", .(indicator_code, isFocusTopic, topicAreaDesc)]
+
+dt_sen <- dt[loc_name=="sen"]
+cb_sen <- focus_topic_cb[topicAreaLoc=="sen", .(indicator_code, isFocusTopic, topicAreaDesc)]
+
+dt_cod <- dt[loc_name=="cod"]
+cb_cod <- focus_topic_cb[topicAreaLoc=="cod", .(indicator_code, isFocusTopic, topicAreaDesc)]
+
+dt_gtm <- dt[loc_name=="gtm"]
+# cb_gtm <- focus_topic_cb[topicAreaLoc=="gtm", .(indicator_code, isFocusTopic, topicAreaDesc)]
+
+dt_uga <- merge(dt_uga, cb_uga, by="indicator_code", all.x=TRUE, all.y=FALSE)
+dt_sen <- merge(dt_sen, cb_sen, by="indicator_code", all.x=TRUE, all.y=FALSE)
+dt_cod <- merge(dt_cod, cb_cod, by="indicator_code", all.x=TRUE, all.y=FALSE)
+# dt_gtm <- merge(dt_uga, cb_uga, by="indicator_code", all.x=TRUE, all.y=FALSE)
+
+dt <- rbind(dt_uga, dt_sen, dt_cod, dt_gtm, fill=TRUE)
+
+# mark the other focus topic indicators as false
+dt[!isFocusTopic==TRUE, isFocusTopic:=FALSE]
 
 #########################################################
 ## TYPOS
 #########################################################
 
-# verified by looking in Uganda PU/DRs--PR filled out the percetage sheet incorrectly, resulting in decimals in the wrong place
+# verified by looking in Uganda PU/DRs--PR filled out the percentage sheet incorrectly, resulting in decimals in the wrong place
 dt$target_pct[which(dt$loc_name=="uga" & dt$target_pct==1)] <- 100
 dt$target_pct[which(dt$loc_name=="uga" & dt$target_pct==0.5)] <- 50
 dt$target_pct[which(dt$loc_name=="uga" & dt$target_pct==0.85)] <- 85
@@ -311,7 +371,7 @@ for (i in 1:nrow(dt)){
 # # calculate a achievement ratio using percentage values
 for (i in 1:nrow(dt)){
   if (dt[i, result_reporter=="GF"]){
-    dt[i, achievement_ratio_pct:=as.numeric(gf_result_pct/target_n)]
+    dt[i, achievement_ratio_pct:=as.numeric(gf_result_pct/target_pct)]
   } else if (dt[i, result_reporter=="LFA"]){
     dt[i, achievement_ratio_pct:=as.numeric(lfa_result_pct/target_n)]
   } else if (dt[i, result_reporter=="PR"]){
@@ -360,7 +420,7 @@ dt = merge(dt, merge_dt, all.x = TRUE, by = 'file_name')
 dt[, lfa_verified := NULL]
 setnames(dt, 'is_pudr_lfa_verified', 'lfa_verified')
 
-# label semesters
+# label semesters -- include semesters from the PUDR file
 dt[, start_date_programmatic := as.Date(start_date_programmatic)]
 dt[, end_date_programmatic := as.Date(end_date_programmatic)]
 sems = unique(dt[, .(start_date_programmatic, end_date_programmatic)])
@@ -373,10 +433,10 @@ dt = merge(dt, sems, by = c('start_date_programmatic', 'end_date_programmatic'))
 # dt[ module == 'Prevention programs for adolescents and youth, in and out of school', unique(indicator)]
 # dt[ module == 'Prevention programs for adolescents and youth, in and out of school', isTopicArea := TRUE]
 # dt[ module == 'Prevention programs for adolescents and youth, in and out of school', topicAreaDesc := 'AGYW']
-dt[ loc_name=="uga" & module == 'Community responses and systems', unique(indicator)]
-dt[ loc_name=="uga" &  module == 'Community responses and systems', isTopicArea := TRUE]
-dt[ loc_name == "uga" & module == 'Community responses and systems', topicAreaDesc := 'CSS']
-dt[ loc_name == "uga" & is.na(isTopicArea), isTopicArea := FALSE]
+# dt[ loc_name=="uga" & module == 'Community responses and systems', unique(indicator)]
+# dt[ loc_name=="uga" &  module == 'Community responses and systems', isTopicArea := TRUE]
+# dt[ loc_name == "uga" & module == 'Community responses and systems', topicAreaDesc := 'CSS']
+# dt[ loc_name == "uga" & is.na(isTopicArea), isTopicArea := FALSE]
 
 # label equity/RSSH indicators
 # rssh = read_excel(paste0('J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/2018-2020 Modular Framework.xlsx'), sheet = 'RSSH Interventions')
