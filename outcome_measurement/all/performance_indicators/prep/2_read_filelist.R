@@ -77,7 +77,7 @@ if (prep_1a){
         tmpData = do.call(prep_impact_outcome_1A, args) 
         
         #Append important columns from the file list 
-        append_cols = file_list[i, .(loc_name, grant, grant_period, grant_status, file_name, disease, primary_recipient, start_date_programmatic, end_date_programmatic, lfa_verified)]
+        append_cols = file_list[i, .(loc_name, grant, grant_period, grant_status, file_name, disease, primary_recipient, start_date_programmatic, end_date_programmatic, lfa_verified, pudr_semester_programmatic)]
         for (col in names(append_cols)){
           tmpData[, (col):=append_cols[, get(col)]]
         }  
@@ -144,7 +144,7 @@ if (prep_1a_disagg){
         tmpData = do.call(prep_impact_outcome_1A_disagg, args) 
         
         #Append important columns from the file list 
-        append_cols = file_list[i, .(loc_name, grant, grant_period, grant_status, file_name, disease, primary_recipient, start_date_programmatic, end_date_programmatic)]
+        append_cols = file_list[i, .(loc_name, grant, grant_period, grant_status, file_name, disease, primary_recipient, start_date_programmatic, end_date_programmatic, lfa_verified, pudr_semester_programmatic)]
         for (col in names(append_cols)){
           tmpData[, (col):=append_cols[, get(col)]]
         }  
@@ -211,7 +211,7 @@ if (prep_1b){
       tmpData = do.call(prep_coverage_1B, args) 
       
       #Append important columns from the file list 
-      append_cols = file_list[i, .(loc_name, grant, grant_period, grant_status, file_name, disease, primary_recipient, start_date_programmatic, end_date_programmatic)]
+      append_cols = file_list[i, .(loc_name, grant, grant_period, grant_status, file_name, disease, primary_recipient, start_date_programmatic, end_date_programmatic, lfa_verified, pudr_semester_programmatic)]
       for (col in names(append_cols)){
         tmpData[, (col):=append_cols[, get(col)]]
       }  
@@ -278,7 +278,7 @@ if (prep_1b_disagg){
         tmpData = do.call(prep_coverage_1B_disagg, args) 
         
         #Append important columns from the file list 
-        append_cols = file_list[i, .(loc_name, grant, grant_period, grant_status, file_name, disease, primary_recipient, start_date_programmatic, end_date_programmatic)]
+        append_cols = file_list[i, .(loc_name, grant, grant_period, grant_status, file_name, disease, primary_recipient, start_date_programmatic, end_date_programmatic, lfa_verified, pudr_semester_programmatic)]
         for (col in names(append_cols)){
           tmpData[, (col):=append_cols[, get(col)]]
         }  

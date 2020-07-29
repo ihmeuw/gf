@@ -7,17 +7,19 @@
 
 #----------------------------------------------
 # TO-DO list for this code: 
-# - Need to reshape wide based off of the most "final" indicator (PR, LFA, GF)
-# - systematically test for strange data formats. 
+# # - systematically test for strange data formats. 
+# # - Fix last remaining data extraction issues in lines 22-24
 #----------------------------------------------
 
 #  Read in data, and correct names 
 dt = readRDS(paste0(prepped_dir, "all_prepped_data.rds"))
+
 #Make sure that nothing is a factor. 
 names(dt) = gsub("%", "pct", names(dt)) #EMILY THIS SHOULD BE CORRECTED IN PREP CODE
+names(dt) = gsub("-", "_", names(dt)) # this might also need to be fixed in the prep code...
 
 #--------------------------------------------------
-# Remove unnecessary rows - #EMILY this may be a data extraction issue. Mostly they are hidden rows in GTM PU/DRs
+# Remove unnecessary rows - #EMILY this may be a data extraction issue. Mostly they are hidden rows in GTM PU/DRs. Review 
 #--------------------------------------------------
 dt <- dt[indicator!="[Impact Indicator Name]"]
 dt <- dt[indicator!="[Outcome Indicator Name]"]
@@ -202,16 +204,16 @@ dt <- merge(dt, reverse_cb, by.x="indicator_code", by.y = "indicator_code", all.
 # merge onto each country's data
 # rbind the four countries data together
 dt_uga <- dt[loc_name=="uga"]
-cb_uga <- focus_topic_cb[topicAreaLoc=="uga", .(indicator_code, isFocusTopic, topicAreaDesc)]
+cb_uga <- focus_topic_cb[topicAreaLoc=="uga", .(indicator_code, isTopicArea, topicAreaDesc)]
 
 dt_sen <- dt[loc_name=="sen"]
-cb_sen <- focus_topic_cb[topicAreaLoc=="sen", .(indicator_code, isFocusTopic, topicAreaDesc)]
+cb_sen <- focus_topic_cb[topicAreaLoc=="sen", .(indicator_code, isTopicArea, topicAreaDesc)]
 
 dt_cod <- dt[loc_name=="cod"]
-cb_cod <- focus_topic_cb[topicAreaLoc=="cod", .(indicator_code, isFocusTopic, topicAreaDesc)]
+cb_cod <- focus_topic_cb[topicAreaLoc=="cod", .(indicator_code, isTopicArea, topicAreaDesc)]
 
 dt_gtm <- dt[loc_name=="gtm"]
-# cb_gtm <- focus_topic_cb[topicAreaLoc=="gtm", .(indicator_code, isFocusTopic, topicAreaDesc)]
+# cb_gtm <- focus_topic_cb[topicAreaLoc=="gtm", .(indicator_code, isTopicArea, topicAreaDesc)]
 
 dt_uga <- merge(dt_uga, cb_uga, by="indicator_code", all.x=TRUE, all.y=FALSE)
 dt_sen <- merge(dt_sen, cb_sen, by="indicator_code", all.x=TRUE, all.y=FALSE)
@@ -221,7 +223,8 @@ dt_cod <- merge(dt_cod, cb_cod, by="indicator_code", all.x=TRUE, all.y=FALSE)
 dt <- rbind(dt_uga, dt_sen, dt_cod, dt_gtm, fill=TRUE)
 
 # mark the other focus topic indicators as false
-dt[!isFocusTopic==TRUE, isFocusTopic:=FALSE]
+dt[!isTopicArea==TRUE, isTopicArea:=FALSE]
+dt[is.na(isTopicArea), isTopicArea:=FALSE]
 
 #########################################################
 ## TYPOS
@@ -246,23 +249,23 @@ dt[grepl("Reported malaria cases", full_description , ignore.case = TRUE), value
 
 # Remove rows that are missing values for any of the result columns--there are usually blanks reported in the PUDR
 # usually the values that are blank are from the disaggregated data
-# these might have baseline or target values but we are not going to need these for visualizations
-
-check_na = dt[is.na(pr_result_n) & is.na(lfa_result_n) & is.na(gf_result_n) & 
-                     is.na(pr_result_pct) & is.na(lfa_result_pct) & is.na(lfa_result_pct) & 
-                     is.na(pr_result_value) & is.na(lfa_result_value) & is.na(gf_result_value) &
-                     is.na(lfa_result_achievement_ratio) & is.na(pr_result_achievement_ratio) & is.na(gf_result_achievement_ratio)]
-
-# this was the original code that was adapted --leaving in in case we want to create a table that visualizes what is getting dropped
-# na_budget = check_na_sum[, sum(budget, na.rm = TRUE)]
-# if (na_budget!=0){
-#   stop("Budgeted line items have NA for all key variables - review drop conditions before dropping NAs in module and intervention")
-# }
-
-dt = dt[!(is.na(pr_result_n) & is.na(lfa_result_n) & is.na(gf_result_n) & 
-                      is.na(pr_result_pct) & is.na(lfa_result_pct) & is.na(lfa_result_pct) & 
-                      is.na(pr_result_value) & is.na(lfa_result_value) & is.na(gf_result_value) &
-                      is.na(lfa_result_achievement_ratio) & is.na(pr_result_achievement_ratio) & is.na(gf_result_achievement_ratio))]
+# # these might have baseline or target values but we are not going to need these for visualizations
+# 
+# check_na = dt[is.na(pr_result_n) & is.na(lfa_result_n) & is.na(gf_result_n) &
+#                      is.na(pr_result_pct) & is.na(lfa_result_pct) & is.na(lfa_result_pct) &
+#                      is.na(pr_result_value) & is.na(lfa_result_value) & is.na(gf_result_value) &
+#                      is.na(lfa_result_achievement_ratio) & is.na(pr_result_achievement_ratio) & is.na(gf_result_achievement_ratio)]
+# # 
+# # # this was the original code that was adapted --leaving in in case we want to create a table that visualizes what is getting dropped
+# # # na_budget = check_na_sum[, sum(budget, na.rm = TRUE)]
+# # # if (na_budget!=0){
+# # #   stop("Budgeted line items have NA for all key variables - review drop conditions before dropping NAs in module and intervention")
+# # # }
+# # 
+# dt = dt[!(is.na(pr_result_n) & is.na(lfa_result_n) & is.na(gf_result_n) &
+#                       is.na(pr_result_pct) & is.na(lfa_result_pct) & is.na(lfa_result_pct) &
+#                       is.na(pr_result_value) & is.na(lfa_result_value) & is.na(gf_result_value) &
+#                       is.na(lfa_result_achievement_ratio) & is.na(pr_result_achievement_ratio) & is.na(gf_result_achievement_ratio))]
 
 # # Calculate an internal verified achievement ratio.
 # dt[, any_achievement_ratio:=gf_result_achievement_ratio]
@@ -313,11 +316,11 @@ dt = dt[!(is.na(pr_result_n) & is.na(lfa_result_n) & is.na(gf_result_n) &
 # dt$target_met[which(dt$reverse_indicator_final=="yes" & dt$any_result_value <= dt$target_value)] <- "yes"
 # dt$target_met[which(dt$reverse_indicator_final=="yes" & dt$any_result_value > dt$target_value)] <- "no"
 
-# calculate the result_reporter based on numerator, denominator, and percentage values reported
+# calculate the result_reporter based on numerator, denominator, and percentage, and other result values
 for(i in 1:nrow(dt)) {
-  if (is.na(dt$gf_result_n[i]) && is.na(dt$gf_result_d[i]) && is.na(dt$gf_result_pct[i])){
-    if (is.na(dt$lfa_result_n[i]) && is.na(dt$lfa_result_d[i]) && is.na(dt$lfa_result_pct[i])){
-      if (is.na(dt$pr_result_n[i]) && is.na(dt$pr_result_d[i]) && is.na(dt$pr_result_pct[i])){
+  if (is.na(dt$gf_result_n[i]) && is.na(dt$gf_result_d[i]) && is.na(dt$gf_result_pct[i]) && is.na(dt$gf_result_value[i])){
+    if (is.na(dt$lfa_result_n[i]) && is.na(dt$lfa_result_d[i]) && is.na(dt$lfa_result_pct[i]) && is.na(dt$lfa_result_value[i])){
+      if (is.na(dt$pr_result_n[i]) && is.na(dt$pr_result_d[i]) && is.na(dt$pr_result_pct[i]) && is.na(dt$pr_result_value[i])){
         dt[i, result_reporter:="None"]
       } else {
         dt[i, result_reporter:="PR"]
@@ -338,22 +341,26 @@ for (i in 1:nrow(dt)){
     dt[i, result_pct:=gf_result_pct]
     dt[i, result_year:=as.integer(NA)]
     dt[i, result_source_code:="None reported"]
+    dt[i, result_value:=gf_result_value]
   } else if (dt[i, result_reporter]=="LFA"){
     dt[i, result_n:=lfa_result_n]
     dt[i, result_d:=lfa_result_d]
     dt[i, result_pct:=lfa_result_pct]
     dt[i, result_year:=lfa_result_year]
     dt[i, result_source_code:=lfa_result_source_code]
+    dt[i, result_value:=lfa_result_value]
   } else if (dt[i, result_reporter]=="PR"){
     dt[i, result_n:=pr_result_n]
     dt[i, result_d:=pr_result_d]
     dt[i, result_pct:=pr_result_pct]
     dt[i, result_year:=pr_result_year]
     dt[i, result_source_code:=pr_result_source_code]
+    dt[i, result_value:=pr_result_value]
   } else if (dt[i, result_reporter]=="None"){
     dt[i, result_n:=as.numeric(NA)]
     dt[i, result_d:=as.numeric(NA)]
     dt[i, result_pct:=as.numeric(NA)]
+    dt[i, result_value:=as.numeric(NA)]
   }
 }
 
@@ -390,17 +397,62 @@ for (i in 1:nrow(dt)){
   }
 }
 
+### achievement ratio result
+for (i in 1:nrow(dt)){
+  if (is.na(dt[i, reported_achievement_ratio])){
+    if(dt[i, value_type=="percentage"]){
+      dt[i, achievement_ratio_result:=as.numeric(result_pct/target_pct)]
+      dt[i, achievement_ratio_result_source:="calculated using result pct & target pct"]
+      } else if (dt[i, value_type=="number"]){
+      dt[i, achievement_ratio_result:=as.numeric(result_pct/target_pct)]
+      dt[i, achievement_ratio_result_source:="calculated using result n & target n"]
+      } else if (dt[i, value_type=="rate"]){
+      dt[i, achievement_ratio_result:=as.numeric(result_n/target_n)]
+      dt[i, achievement_ratio_result_source:="calcualted using result n & target n"]
+      } else if (dt[i, value_type=="number and percentage"]){
+        dt[i, achievement_ratio_result:=as.numeric(result_pct/target_pct)]
+        dt[i, achievement_ratio_result_source:="calculated using result pct & target pct"]
+      }
+  } else {
+      dt[i, achievement_ratio_result:=reported_achievement_ratio]
+      dt[i, achievement_ratio_result_source:="reported in PUDR"]
+  }
+}
+
+# there could be more checks to calculate our own achievement ratio but it is complicated due to the fact that sometimes its calculated using a pct, sometimes a N (count)
+
+# fix achievement_ratio_result_source when it's incorrect
+for (i in 1:nrow(dt)){
+  if (is.na(dt[i, achievement_ratio_result])){
+    dt[i, achievement_ratio_result_source:="NA"]
+  }
+}
+# cap achievement_ratio_result at 1.2
+dt[achievement_ratio_result>=1.2, achievement_ratio_result:=1.2]
+
+# drop rows where there is no value reported
+dt <- dt[!result_reporter=="None"]
+
 #-------------------------------------------------------------
 # Re-format data to make easier to visualize on tableau
 #-------------------------------------------------------------
 dt[pudr_sheet=="coverage_indicators_main", indicator_type:="Coverage"]
 dt[pudr_sheet=="coverage_indicators_disagg", indicator_type:="Coverage_disagg"]
-dt[pudr_sheet=="impact_outcome_indicators_main", indicator_type:="Impact"]
+dt[pudr_sheet=="impact_outcome_indicators_main", indicator_type:="Impact_Outcome"]
+dt[pudr_sheet=="impact_outcome_indicators_disagg", indicator_type:="Impact_Outcome_Disagg"]
 
-# tableau.dt <- tableau.dt[completeness_rating %in% c("Both available", "Only Result", "Only Target")]
+### -------------------------------------------------------------------
+# add in the semester
+pudr_labels = read.xlsx(paste0(j, "Project/Evaluation/GF/resource_tracking/documentation/PUDR Semester Labeling.xlsx"))
+setDT(pudr_labels)
+setnames(dt, "pudr_semester_programmatic", "pudr_code")
+pudr_label_merge = unique(pudr_labels[,.(pudr_code, semester)])
+dt <- merge(dt, pudr_label_merge, by=c('pudr_code'), all.x=TRUE)
 
-
-
+if (nrow(dt[is.na(semester)])>0){
+  print(unique(dt[is.na(semester), .(pudr_code)]))
+  stop("Values of pudr_code did not merge correctly.")
+}
 #----------------------------------------------------------
 # # Make a spreadsheet for topic area identification and one for RSSH/equity identification
 # all_dt = as.data.table(read.csv(paste0(box, 'tableau_data/all_performance_indicators.csv')))
@@ -412,22 +464,22 @@ dt[pudr_sheet=="impact_outcome_indicators_main", indicator_type:="Impact"]
 # # AB 7/2/20 quick changes for prep for Tableau
 # dt = as.data.table(read.csv(paste0(box, 'UGA/prepped_data/uga_performance_indicators.csv')))
 
-# lfa verified? not sure why this wasn't saving correctly before must be a data prep issue
-master_file_list <- as.data.table(read.xlsx(paste0(box,"master_file_list.xlsx")))
-merge_dt = master_file_list[, .(file_name, lfa_verified)]
-setnames(merge_dt, 'lfa_verified', 'is_pudr_lfa_verified')
-dt = merge(dt, merge_dt, all.x = TRUE, by = 'file_name')
-dt[, lfa_verified := NULL]
-setnames(dt, 'is_pudr_lfa_verified', 'lfa_verified')
+# # lfa verified? not sure why this wasn't saving correctly before must be a data prep issue
+# master_file_list <- as.data.table(read.xlsx(paste0(box,"master_file_list.xlsx")))
+# merge_dt = master_file_list[, .(file_name, lfa_verified)]
+# setnames(merge_dt, 'lfa_verified', 'is_pudr_lfa_verified')
+# dt = merge(dt, merge_dt, all.x = TRUE, by = 'file_name')
+# dt[, lfa_verified := NULL]
+# setnames(dt, 'is_pudr_lfa_verified', 'lfa_verified')
 
-# label semesters -- include semesters from the PUDR file
-dt[, start_date_programmatic := as.Date(start_date_programmatic)]
-dt[, end_date_programmatic := as.Date(end_date_programmatic)]
-sems = unique(dt[, .(start_date_programmatic, end_date_programmatic)])
-setorderv(sems, 'start_date_programmatic')
-sems[, semester:= .I]
-sems[, semester:= paste0('Semester ', semester)]
-dt = merge(dt, sems, by = c('start_date_programmatic', 'end_date_programmatic'))
+# # label semesters -- include semesters from the PUDR file
+# dt[, start_date_programmatic := as.Date(start_date_programmatic)]
+# dt[, end_date_programmatic := as.Date(end_date_programmatic)]
+# sems = unique(dt[, .(start_date_programmatic, end_date_programmatic)])
+# setorderv(sems, 'start_date_programmatic')
+# sems[, semester:= .I]
+# sems[, semester:= paste0('Semester ', semester)]
+# dt = merge(dt, sems, by = c('start_date_programmatic', 'end_date_programmatic'))
 
 # # label UGA topic areas indicators
 # dt[ module == 'Prevention programs for adolescents and youth, in and out of school', unique(indicator)]
@@ -472,16 +524,38 @@ dt = merge(dt, sems, by = c('start_date_programmatic', 'end_date_programmatic'))
 # cols = names(dt)
 # codebook = data.table(Variable=cols)
 #----------------------------------------------------------
+# clean variables: category and sub-category
+category_labels <- read.csv(paste0(book_dir, "category_codebook.csv"))
+sub_category_labels <- read.csv(paste0(book_dir, "sub_category_codebook.csv"))
+
+setDT(category_labels)
+setDT(sub_category_labels)
+
+category_labels <- unique(category_labels[,.(category, category_cleaned)])
+sub_category_labels <- unique(sub_category_labels[,.(sub_category, sub_category_cleaned)])
+
+dt <- merge(dt, category_labels, by=c('category'), all.x = TRUE)
+dt <- merge(dt, sub_category_labels, by=c('sub_category'), all.x = TRUE)
+
+# delete the old columns
+dt[,c("category", "sub_category"):=NULL]
+
+setnames(dt, 
+         old=c('indicator', 'full_description', 'result_source_code', 'category_cleaned', 'sub_category_cleaned'),
+         new=c('original_indicator', 'gf_indicator', 'result_source', 'category', 'sub_category'))
 
 # select columns to keep
 tableau.cols <- c('loc_name', 'grant', 'grant_period', 'grant_status', 'primary_recipient',
                   'file_name', 'lfa_verified', 'start_date_programmatic', 'end_date_programmatic', 'semester',
                   'module', 'disease', 'isTopicArea', 'topicAreaDesc', 'isStrategicObjective', 'strategicObjective',
-                  'indicator_code', 'indicator', 'full_description', 'brief_description', 'indicator_type', 'category', 'sub-category', 
+                  'indicator_code', 'gf_indicator', 'original_indicator', 'indicator_type', 'category', 'sub_category', 
                   'target_n', 'target_d', 'target_pct', 'target_year',
-                  'result_n', 'result_d', 'result_pct', 'result_year', 'result_reporter', 'result_source_code',
-                  'achievement_ratio_n', 'achievement_ratio_pct', 'reported_achievement_ratio',
-                  'cumulative_target', 'reverse_indicator', 'value_type')
+                  'result_n', 'result_d', 'result_pct', 'result_year', 
+                  'value_type', 'result_value', 'result_reporter', 'result_source',
+                  'reported_achievement_ratio',
+                  'achievement_ratio_result', 'achievement_ratio_result_source', 
+                  'cumulative_target', 'reverse_indicator')
+
 
 # oc_name, grant, grant_period, grant_status, primary_recipient, 
 #        file_name, lfa_verified, start_date_programmatic, end_date_programmatic, semester,
@@ -493,9 +567,6 @@ tableau.cols <- c('loc_name', 'grant', 'grant_period', 'grant_status', 'primary_
 #        cumulative_target, reverse_indicator, completeness_rating
 
 tableau.dt <- dt[,..tableau.cols]
-
-# this codebook should be updated as well as the source code should match the result reporter
-setnames(tableau.dt, old=c('result_source_code'), new=c('result_source'))
 
 # there are some duplicated values in the data
 tableau.dt <- unique(tableau.dt)
@@ -512,7 +583,7 @@ for (c in countries){
 # SAVE FINAL DATA
 # -----------------------------------------------------
 # saveRDS(dt, paste0(prepped_dir, "cleaned_pfi.rds"))
-write.csv(tableau.dt, paste0(box,"tableau_data/all_performance_indicators.csv"))
+write.csv(tableau.dt, paste0(box,"tableau_data/all_perf_indic_data.csv"))
 saveRDS(dt, paste0(prepped_dir, "archive/cleaned_pfi_", Sys.Date(), ".rds"))
 
 print("Step 3: Clean and validated data completed. Validated data saved as cleaned_pfi.RDS in prepped_data folder.")
