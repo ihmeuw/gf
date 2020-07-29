@@ -31,7 +31,7 @@ source("./resource_tracking/prep/gf_files_prep_functions/id_focus_topics.R")
 # inFile = paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas.csv')
 # activity level data including the 2017 FR budgets (eventually include the 2020 FR budgets)
 
-inFile = paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas_activityLevel_wFRs.csv')
+inFile = paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas_activityLevel_wFRs_23jul2020.csv')
 
 id_focus_topics("Senegal", include_module_intervention = TRUE, inFile)
 # for guatemala only run certain keywords on the HIV grant

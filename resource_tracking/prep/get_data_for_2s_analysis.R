@@ -13,7 +13,7 @@ user=as.character(Sys.info()[7])
 box = paste0("C:/Users/",user,"/Box Sync/Global Fund Files/")
 
 inFile = paste0(box, 'tableau_data/all_budget_revisions_activityLevel.csv')
-inFile_frs = paste0(box, 'tableau_data/raw_extracted_fr_budget_data.csv')
+inFile_frs = paste0(box, 'tableau_data/fr_budgets_all.csv')
 
 outFile = paste0(box, 'tableau_data/rssh_2s_analysis_data_', Sys.Date(), '.csv')
 outFile = gsub('-', '_', outFile)
@@ -49,27 +49,28 @@ dt2 = dt2[grant_period == '2021-2023']
 
 # clean implementer
 dt2[ implementer == 'Ministry of Finance, Planning and Economic Development of the Government of the Republic of Uganda', pr := 'MoFPED']
+dt2[ implementer == 'Ministry of Finance, Planning and Economic Development of the Republic of Uganda', pr := 'MoFPED']
 dt2[ implementer == 'The AIDS Support Organisation (Uganda) Limited', pr := 'TASO']
 dt2[ implementer == 'Ministry of Health and Population of the Government of the Democratic Republic of Congo', pr := 'MOH']
 dt2[ implementer == 'PR Societe Civile' & fr_disease == 'hiv/tb', pr := 'CORDAID']
 
-# clean loc name 
-dt2[loc_name == 'cod', loc_name := 'DRC']
-dt2[loc_name == 'uga', loc_name := 'Uganda']
-dt2[loc_name == 'sen', loc_name := 'Senegal']
-dt2[loc_name == 'gtm', loc_name := 'Guatemala']
+# # clean loc name 
+# dt2[loc_name == 'cod', loc_name := 'DRC']
+# dt2[loc_name == 'uga', loc_name := 'Uganda']
+# dt2[loc_name == 'sen', loc_name := 'Senegal']
+# dt2[loc_name == 'gtm', loc_name := 'Guatemala']
+
+# subset to just RSSH activities
+dt2 = dt2[rssh==TRUE]
 
 # sum to activity/cost category level 
-dt2 = dt2[, .(budget = sum(budget, na.rm = TRUE)), by = c('loc_name', 'budget_version', 'implementer', 'grant_period', 'module', 
-                                                          'intervention', 'activity_description', 'cost_category')]
+dt2 = dt2[, .(budget = sum(budget, na.rm = TRUE)), by = c('loc_name', 'budget_version', 'implementer', 'grant_period', 'gf_module', 
+                                                          'gf_intervention','orig_module', 'orig_intervention',  'activity_description', 'cost_category')]
 
-# subset to just RSSH activities -- NEED TO FIGURE OUT HOW TO GET THESE WITHOUT THE MAPPING
-
-# set language/translations for module and intervention
 # -----------------------------------------------
 
 # -----------------------------------------------
 # combine and save data - should these actually be combined? implementer could go where grant goes? 
 # -----------------------------------------------
-write.csv(dt, outFile, row.names = FALSE)
+write.csv(dt2, outFile, row.names = FALSE)
 # -----------------------------------------------

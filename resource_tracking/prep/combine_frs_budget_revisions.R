@@ -27,7 +27,7 @@ file_list = load_master_list(purpose = 'financial')
 # read in data
 # -----------------------------------------------
 budget_rev = as.data.table(read.csv(paste0(box, 'tableau_data/all_budget_revisions_activityLevel.csv')))
-fr_budgets = as.data.table(read.csv(paste0(box, "tableau_data/fr_budgets_nfm2.csv")))
+fr_budgets = as.data.table(read.csv(paste0(box, "tableau_data/fr_budgets_all.csv"))) # changed this to read in the file with both nfm2 and nfm3 funding requests
 
 names(budget_rev)[!names(budget_rev) %in% names(fr_budgets)]
 names(fr_budgets)[!names(fr_budgets) %in% names(budget_rev)]

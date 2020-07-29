@@ -9,6 +9,7 @@
 # -----------------------------------------------
 # set up r
 # -----------------------------------------------
+library(data.table)
 user=as.character(Sys.info()[7])
 # source files with other functions and common resource tracking filepaths
 source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
@@ -18,10 +19,10 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # merge approved and revised budget data to keyword search results for all countries:
 # -----------------------------------------------
 # update these files with the keyword serach runs to use:
-drc = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_17_2020.csv')))
-uga = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/UGA/test_uganda_focus_topic_search_7_17_2020.csv')))
-gtm = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/GTM/test_guatemala_focus_topic_search_7_17_2020.csv')))
-sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/SEN/test_senegal_focus_topic_search_7_17_2020.csv')))
+drc = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_23_2020.csv')))
+uga = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/UGA/test_uganda_focus_topic_search_7_23_2020.csv')))
+gtm = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/GTM/test_guatemala_focus_topic_search_7_23_2020.csv')))
+sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/SEN/test_senegal_focus_topic_search_7_23_2020.csv')))
 # combine keyword search results
 dt = rbindlist(list(drc,uga,gtm,sen), use.names = TRUE, fill = TRUE)
 
@@ -67,10 +68,10 @@ write.csv(dt_wide_percent, paste0(dir, 'modular_framework_mapping/keyword_search
 # merge fr budget data to keyword search results for all countries:
 # -----------------------------------------------
 # update these files with the keyword serach runs to use:
-drc = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_17_2020.csv')))
-uga = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/UGA/test_uganda_focus_topic_search_7_17_2020.csv')))
-gtm = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/GTM/test_guatemala_focus_topic_search_7_17_2020.csv')))
-sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/SEN/test_senegal_focus_topic_search_7_17_2020.csv')))
+drc = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_23_2020.csv')))
+uga = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/UGA/test_uganda_focus_topic_search_7_23_2020.csv')))
+gtm = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/GTM/test_guatemala_focus_topic_search_7_23_2020.csv')))
+sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/SEN/test_senegal_focus_topic_search_7_23_2020.csv')))
 # combine keyword search results
 dt = rbindlist(list(drc,uga,gtm,sen), use.names = TRUE, fill = TRUE)
 
@@ -79,6 +80,10 @@ dt_fr = as.data.table(read.csv(paste0(box, 'tableau_data/budgetRevisions_with_fr
 dt_fr = dt_fr[, -c('isTopicArea', 'topicAreaDesc')]
 dt_fr = dt_fr[ !budget_version %in% c('initial')]
 dt_fr = dt_fr[ !is.na(budget_version)]
+
+# distinguish between 2017 FRs and 2020 FRs
+dt_fr <- dt_fr[grant_period=="2021-2023" & budget_version=="funding_request", budget_version:="funding_request_20"]
+dt_fr <- dt_fr[!grant_period%in%c("2021-2023") & budget_version=="funding_request", budget_version:="funding_request_17"]
 
 # merge by the unique id's in the keyword search set
 budget_dt = merge(dt, dt_fr, all.y = TRUE, by = c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
@@ -105,9 +110,9 @@ dt_wide_percent = dcast.data.table(dt_act_percent, loc_name + pr + fr_disease + 
 
 #reorder columns
 dt_wide_number = dt_wide_number[, .(loc_name, pr, fr_disease, gf_module, gf_intervention, activity_description, cep_topic_area, keyword_topic_area,
-                               topicAreaDesc, funding_request, approved, revision1, revision2, revision3, revision4, unknown)]
+                               topicAreaDesc, funding_request_17, funding_request_20, approved, revision1, revision2, revision3, revision4, unknown)]
 dt_wide_percent = dt_wide_percent[, .(loc_name, pr, fr_disease, gf_module, gf_intervention, activity_description, cep_topic_area, keyword_topic_area,
-                                 topicAreaDesc, funding_request, approved, revision1, revision2, revision3, revision4, unknown)]
+                                 topicAreaDesc, funding_request_17, funding_request_20, approved, revision1, revision2, revision3, revision4, unknown)]
 
 write.csv(dt_wide_number, paste0(dir, 'modular_framework_mapping/keyword_search/combined_keyword_search_results_activity_budgets_withFRs_byPR.csv'), row.names = FALSE)
 write.csv(dt_wide_percent, paste0(dir, 'modular_framework_mapping/keyword_search/combined_keyword_search_results_activity_percent_of_intervention_withFRs_byPR.csv'), row.names = FALSE)
