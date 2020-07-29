@@ -19,7 +19,7 @@
 # gtm_tb_first_half11 - transforming some outcome and output variables to be log-transformed, and adding a relationship between cases notified and cases started tx. 
 #gtm_tb_first_half11_rssh_interaction: Added a RSSH interaction term. 
 # gtm_tb_first_half11_rssh_interaction1: same as RSSH interaction, but changed from just an interaction effect to a main effect as well (replaced colons with asterisks)
-# gtm_tb_pub: same as gtm_tb_first_half11_rssh_interaction1 but with this chronology removed
+# gtm_tb_pub: same as gtm_tb_first_half11_rssh_interaction but with this chronology removed
 #
 # In-process regression equations are indicated with the #, which I remove once variable names are formalized
 # My current convention is to group funding by module ordered within module by GF, GHE, and DAH
