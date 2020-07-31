@@ -90,13 +90,13 @@ for(i in 1:nrow(file_list)){
 # ----------------------------------------------
 # save raw output
 # ----------------------------------------------
-# write.csv(prepped_frs, paste0(box, 'tableau_data/raw_extracted_fr_budget_data.csv'), row.names = FALSE)
+write.csv(prepped_frs, paste0(box, 'tableau_data/raw_extracted_fr_budget_data.csv'), row.names = FALSE)
 # ----------------------------------------------
 
 # -----------------------------------------------
 # read in raw output previously saved
 # ----------------------------------------------
-prepped_frs <- fread(paste0(box, 'tableau_data/raw_extracted_fr_budget_data.csv'))
+# prepped_frs <- fread(paste0(box, 'tableau_data/raw_extracted_fr_budget_data.csv'))
 
 # ----------------------------------------------
 # 2. Run some checks to make sure this data was prepped correctly. 
@@ -356,7 +356,7 @@ fr_budgets= copy(mapped_data)
 
 # specify the columns to keep in the output:
 keep_cols = c('file_name', 'loc_name', 'gf_module', 'gf_intervention', 
-              'orign_module', 'orig_intervention', 'activity_description', 'cost_category', 
+              'orig_module', 'orig_intervention', 'activity_description', 'cost_category', 
               'disease', 'implementer',
               'data_source', 'grant_period', 'grant_status', 
               'budget_version', 'version_date', 'update_date', 

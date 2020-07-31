@@ -10,14 +10,14 @@
 prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num, language) {
   
   # TROUBLESHOOTING HELP
-  # dir = file_dir
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet[i]
-  # start_date = file_list$start_date_financial[i]
-  # period = file_list$period_financial[i]
-  # disease = file_list$disease[i]
-  # qtr_num = file_list$qtr_number[i]
-  # language = file_list$language_financial[i]
+  dir = file_dir
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet[i]
+  start_date = file_list$start_date_financial[i]
+  period = file_list$period_financial[i]
+  disease = file_list$disease[i]
+  qtr_num = file_list$qtr_number[i]
+  language = file_list$language_financial[i]
   # -------------------------------------
   #Sanity check: Is this sheet name one you've checked before? 
   verified_sheet_names <- c('Detailed Budget', 'Detailed budget')
@@ -243,13 +243,21 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   gf_data = gf_data[!(is.na(module) & is.na(intervention) & is.na(activity_description) & is.na(cost_category))]
   
   # this Guatemala and Senegal file have extra blank row with only an activity description but that activity description already has a budget item (with mod and interv elsewhere)
-  if (inFile%in%c("05.Presupuesto_detallado_final.xlsx", "FR909-SEN-H_DB_template_Master_conso   Version finale du  29062020.xlsx")){
+  if (inFile%in%c("05.Presupuesto_detallado_final.xlsx", "FR909-SEN-H_DB_template_Master_conso   Version finale du  29062020.xlsx",
+                  "FR909-SEN-H_DB_template_Master_conso   Version finale du   07072020   - VF090720_19H30.xlsx")){
     gf_data = gf_data[!(is.na(module) & is.na(intervention))]
   }
   
   # this file has a blank row with a module and intervention filled in (as unspecified so I am removing)
-  if (inFile%in%c("FR909-SEN-H_DB_template_Master_conso   Version finale du  29062020.xlsx")){
+  if (inFile%in%c("FR909-SEN-H_DB_template_Master_conso   Version finale du  29062020.xlsx", 
+                  "FR909-SEN-H_DB_template_Master_conso   Version finale du   07072020   - VF090720_19H30.xlsx")){
     gf_data = gf_data[!is.na(activity_description)]
+  }
+  
+# check empty module and interventions
+  check_empty <- nrow(gf_data[is.na(module) & is.na(intervention)])
+  if (check_empty>0){
+    stop("Some Funding Requests are contain missing data check the module and intervention columns should both be blank.")
   }
   
   #Replace any modules or interventions that didn't have a pair with "Unspecified".
@@ -265,8 +273,7 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
     }
     gf_data <- gf_data[-extra_module_row, ,drop = FALSE]
   }
-  
-  
+
   
   #-------------------------------------
   # 3. Reshape data long
