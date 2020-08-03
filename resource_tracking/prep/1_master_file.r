@@ -41,10 +41,10 @@ include_stops = TRUE #Set to TRUE if you would like scripts to stop when errors 
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
 rerun_filelist = TRUE  #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist = TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
-only_new_files = TRUE # Set to TRUE if, when you re-run file list, you only want to process files that are additional. TRUE is the default. 
-include_zero_pudrs = FALSE # Set to TRUE if when you re-run file list, the final data set will include PUDRs with zero expenditure, if FALSE the PUDRs will not be included. FALSE is default
+only_new_files = FALSE # Set to TRUE if, when you re-run file list, you only want to process files that are additional. TRUE is the default. 
+include_zero_pudrs = TRUE # Set to TRUE if when you re-run file list, the final data set will include PUDRs with zero expenditure, if FALSE the PUDRs will not be included. FALSE is default
 
-country = "cod" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga". 
+country = "gtm" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga". 
 
 # ----------------------------------------------
 # STEP 2: PREP GF FILES AND GOS DATA 

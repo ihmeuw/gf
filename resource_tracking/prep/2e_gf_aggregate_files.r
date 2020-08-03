@@ -33,8 +33,8 @@ final_write = paste0(box, "tableau_data/")
 # write.csv(dt_unique, paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas.csv'))
 
 # load spreadsheet to merge onto data to identify topic areas
-topic_areas_activity = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas_activityLevel_wFRs.csv')))
-topic_areas = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/archive/identifyTopicAreas_PCE2020_forSubsetting.csv')))
+topic_areas_activity = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas_activityLevel_wFRs.csv'), na.strings=c("")))
+topic_areas = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/archive/identifyTopicAreas_PCE2020_forSubsetting.csv'), na.strings=c("")))
 # checks on topic areas manual entry
 if(nrow(topic_areas[isTopicArea == TRUE & is.na(topicAreaDesc) ])!=0) stop('You need to enter a value for topicAreaDesc where isTopicArea = TRUE.')
 if(nrow(topic_areas[isTopicArea == FALSE & !is.na(topicAreaDesc) ])!=0) stop('You should not have value for topicAreaDesc where isTopicArea = FALSE.')
@@ -84,7 +84,7 @@ sen3[, loc_name:="Senegal"]
 
 all_budget_revisions = rbindlist(list(cod3, gtm3, uga3, sen3), use.names = TRUE, fill = TRUE)
 
-# # added this code below in order to have clearer undrestanding of which modules are added in between revisions *FRC 6/4/2020
+# # added this code below in order to have clearer understanding of which modules are added in between revisions *FRC 6/4/2020
 # all_budget_revisions_long = all_budget_revisions[,.(grant, grant_period, gf_module, gf_intervention, disease, start_date, budget, budget_version, loc_name)] # subset to key variables
 # dcast(all_budget_revisions_long, grant + grant_period + gf_module + gf_intervention + disease + start_date + loc_name ~ budget_version, value.var = "budget" ) # cast wide
 
@@ -137,6 +137,10 @@ sen5 = fread(paste0(sen_prepped, list.files(sen_prepped, pattern="cumulative_abs
 sen5[, loc_name:="Senegal"]
 
 cumulative_absorption = rbindlist(list(cod5, gtm5, uga5, sen5))
+
+# add focus topic mapping to the cumulative absorption files FRC
+cumulative_absorption = merge(cumulative_absorption, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
+
 write.csv(cumulative_absorption, paste0(final_write, "cumulative_absorption.csv"), row.names=F)
 #---------------------------------------------
 # 6. ALL ABSORPTION (historica data from past PUDRs) --Added by FRC on 5/18/2020

@@ -571,11 +571,12 @@ tableau.dt <- dt[,..tableau.cols]
 # there are some duplicated values in the data
 tableau.dt <- unique(tableau.dt)
 
-# SAVE COUNTRY SPECIFIC DATA
-for (c in countries){
-  write.csv(tableau.dt[loc_name==c], paste0(box, c, "/prepped_data", "/", c, "_performance_indicators.csv"), row.names = FALSE)
-  print(paste0(c, " country specific data saved on box folder"))
-}
+# NOt currently saving country specific data because the resource tracking prep code doesn't work with the additoinal files saved in the same folder
+# # SAVE COUNTRY SPECIFIC DATA
+# for (c in countries){
+#   write.csv(tableau.dt[loc_name==c], paste0(box, c, "/prepped_data", "/", c, "_performance_indicators.csv"), row.names = FALSE)
+#   print(paste0(c, " country specific data saved on box folder"))
+# }
 
 # write.csv(dt, paste0(box, 'UGA/prepped_data/uga_performance_indicators.csv'), row.names = FALSE)
 
