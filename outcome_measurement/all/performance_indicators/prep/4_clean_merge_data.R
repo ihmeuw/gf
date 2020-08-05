@@ -36,7 +36,7 @@ for (var in numVars) {
   #Do an overall check - how many rows have at least one digit for this value (numeric information?) Is it the same at the end? 
   start_numeric = nrow(dt[grepl("[[:digit:]]", get(var))])
   # REMOVE NAs
-  dt[get(var)=="N/A" | get(var)=="ND" | get(var)==" " | get(var)=="No disaggregation" | get(var)=="No disagregation" | get(var)=="qu " | get(var)=="i" | get(var)=="The PR did not report any result" | get(var)=="Sin dato" | get(var)=="Not reported" | get(var)=="Pendiente de recibir la info del PNS" | get(var)==".", (var):=NA]
+  dt[get(var)=="N/A" | get(var)=="ND" | get(var)==" " | get(var)=="No disaggregation" | get(var)=="No disagregation" | get(var)=="qu " | get(var)=="i" | get(var)=="The PR did not report any result" | get(var)=="Sin dato" | get(var)=="sin dato" | get(var)=="Not reported" | get(var)=="Pendiente de recibir la info del PNS" | get(var)==".", (var):=NA]
   start_nas = nrow(dt[is.na(get(var))]) #Make sure that this numeric conversion doesn't accidentally introduce any NAs after this point.
   
   # LOOK FOR "E-" AND CONVERT SCIENTIFIC NOTATION
@@ -587,5 +587,5 @@ tableau.dt <- unique(tableau.dt)
 write.csv(tableau.dt, paste0(box,"tableau_data/all_perf_indic_data.csv"))
 saveRDS(dt, paste0(prepped_dir, "archive/cleaned_pfi_", Sys.Date(), ".rds"))
 
-print("Step 3: Clean and validated data completed. Validated data saved as cleaned_pfi.RDS in prepped_data folder.")
+print("Step 3: Clean and validated data completed. Validated data saved as cleaned_pfi.RDS in prepped_data folder and as all_perf_indic_data.csv in tableau data folder.")
 
