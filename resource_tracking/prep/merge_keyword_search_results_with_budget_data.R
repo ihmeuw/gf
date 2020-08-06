@@ -22,7 +22,7 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 drc = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_23_2020.csv')))
 uga = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/UGA/test_uganda_focus_topic_search_7_23_2020.csv')))
 gtm = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/GTM/test_guatemala_focus_topic_search_7_23_2020.csv')))
-sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/SEN/test_senegal_focus_topic_search_7_23_2020.csv')))
+sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/SEN/test_senegal_focus_topic_search_7_31_2020.csv')))
 # combine keyword search results
 dt = rbindlist(list(drc,uga,gtm,sen), use.names = TRUE, fill = TRUE)
 
@@ -71,7 +71,7 @@ write.csv(dt_wide_percent, paste0(dir, 'modular_framework_mapping/keyword_search
 drc = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_23_2020.csv')))
 uga = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/UGA/test_uganda_focus_topic_search_7_23_2020.csv')))
 gtm = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/GTM/test_guatemala_focus_topic_search_7_23_2020.csv')))
-sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/SEN/test_senegal_focus_topic_search_7_23_2020.csv')))
+sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/SEN/test_senegal_focus_topic_search_7_31_2020.csv')))
 # combine keyword search results
 dt = rbindlist(list(drc,uga,gtm,sen), use.names = TRUE, fill = TRUE)
 
@@ -110,9 +110,9 @@ dt_wide_percent = dcast.data.table(dt_act_percent, loc_name + pr + fr_disease + 
 
 #reorder columns
 dt_wide_number = dt_wide_number[, .(loc_name, pr, fr_disease, gf_module, gf_intervention, activity_description, cep_topic_area, keyword_topic_area,
-                               topicAreaDesc, funding_request_17, funding_request_20, approved, revision1, revision2, revision3, revision4, unknown)]
+                               topicAreaDesc, funding_request_17, funding_request_20, approved, revision1, revision2, revision3)]
 dt_wide_percent = dt_wide_percent[, .(loc_name, pr, fr_disease, gf_module, gf_intervention, activity_description, cep_topic_area, keyword_topic_area,
-                                 topicAreaDesc, funding_request_17, funding_request_20, approved, revision1, revision2, revision3, revision4, unknown)]
+                                 topicAreaDesc, funding_request_17, funding_request_20, approved, revision1, revision2, revision3)]
 
 write.csv(dt_wide_number, paste0(dir, 'modular_framework_mapping/keyword_search/combined_keyword_search_results_activity_budgets_withFRs_byPR.csv'), row.names = FALSE)
 write.csv(dt_wide_percent, paste0(dir, 'modular_framework_mapping/keyword_search/combined_keyword_search_results_activity_percent_of_intervention_withFRs_byPR.csv'), row.names = FALSE)
