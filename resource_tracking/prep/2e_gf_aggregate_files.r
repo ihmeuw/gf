@@ -37,7 +37,7 @@ topic_areas_activity = as.data.table(read.csv(paste0(dir, 'modular_framework_map
 topic_areas = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/archive/identifyTopicAreas_PCE2020_forSubsetting.csv')))
 # checks on topic areas manual entry
 if(nrow(topic_areas[isTopicArea == TRUE & is.na(topicAreaDesc) ])!=0) stop('You need to enter a value for topicAreaDesc where isTopicArea = TRUE.')
-if(nrow(topic_areas[isTopicArea == FALSE & !is.na(topicAreaDesc) ])!=0) stop('You should not have value for topicAreaDesc where isTopicArea = FALSE.')
+if(nrow(topic_areas[isTopicArea == FALSE & (!is.na(topicAreaDesc) | topicAreaDesc != '')])!=0) stop('You should not have value for topicAreaDesc where isTopicArea = FALSE.')
 #---------------------------------------------
 # 1. APPROVED BUDGETS 
 #---------------------------------------------
