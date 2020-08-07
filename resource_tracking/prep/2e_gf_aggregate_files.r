@@ -37,12 +37,16 @@ topic_areas = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/PCE2
 
 # checks on topic areas manual entry
 if(nrow(topic_areas[isTopicArea == TRUE & is.na(topicAreaDesc) ])!=0) stop('You need to enter a value for topicAreaDesc where isTopicArea = TRUE.')
+<<<<<<< HEAD
 if(nrow(topic_areas[isTopicArea == FALSE & !is.na(topicAreaDesc) ])!=0) stop('You should not have value for topicAreaDesc where isTopicArea = FALSE.')
 
 # subset
 topic_areas_activity = topic_areas[,.(loc_name, gf_module, gf_intervention, activity_description, disease, isTopicArea, topicAreaDesc, isTopicAreaActivity, topicAreaActivityDesc)]
 topic_areas_intervention = unique(topic_areas[,.(loc_name, gf_module, gf_intervention, disease, isTopicArea, topicAreaDesc)])
 
+=======
+if(nrow(topic_areas[isTopicArea == FALSE & (!is.na(topicAreaDesc) | topicAreaDesc != '')])!=0) stop('You should not have value for topicAreaDesc where isTopicArea = FALSE.')
+>>>>>>> 2554ba781bc7b6935da25bc11643703f8f91dde2
 #---------------------------------------------
 # 1. APPROVED BUDGETS 
 #---------------------------------------------
