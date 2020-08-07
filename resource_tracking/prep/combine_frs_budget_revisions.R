@@ -34,19 +34,19 @@ names(fr_budgets)[!names(fr_budgets) %in% names(budget_rev)]
 # -----------------------------------------------
 
 # -----------------------------------------------
-# merge the intervention level topic areas to FRs
+# merge the intervention level and activity level topic areas to FRs
 # -----------------------------------------------
 # load spreadsheet to merge onto data to identify topic areas
-topic_areas = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/archive/identifyTopicAreas_PCE2020_forSubsetting.csv')))
+topic_areas = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas_activityLevel_wFRs_FINAL.csv')))
 topic_areas[topicAreaDesc == '', topicAreaDesc := NA]
 # checks on topic areas manual entry
 if(nrow(topic_areas[isTopicArea == TRUE & is.na(topicAreaDesc) ])!=0) stop('You need to enter a value for topicAreaDesc where isTopicArea = TRUE.')
 if(nrow(topic_areas[isTopicArea == FALSE & !is.na(topicAreaDesc) ])!=0) stop('You should not have value for topicAreaDesc where isTopicArea = FALSE.')
 
-topic_areas = topic_areas[isTopicArea == TRUE,]
-topic_areas = topic_areas[, -c('disease')]
+# topic_areas = topic_areas[isTopicArea == TRUE,]
+topic_areas = topic_areas[, -c('disease', 'X')]
 
-fr_budgets = merge(fr_budgets, topic_areas, all.x = TRUE, by = c('loc_name', 'gf_module', 'gf_intervention'))
+fr_budgets = merge(fr_budgets, topic_areas, all.x = TRUE, by = c('loc_name', 'gf_module', 'gf_intervention', 'activity_description'))
 # check = merge(fr_budgets[, -c('isTopicArea', 'topicAreaDesc')], topic_areas, all = TRUE, by = c('loc_name', 'gf_module', 'gf_intervention'))
 # some of the interventions identified in the spreadsheet are not in the fr_budgets - did a visual check of this and it makes sense.
 fr_budgets[is.na(isTopicArea), isTopicArea := FALSE]

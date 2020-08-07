@@ -33,11 +33,16 @@ final_write = paste0(box, "tableau_data/")
 # write.csv(dt_unique, paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas.csv'))
 
 # load spreadsheet to merge onto data to identify topic areas
-topic_areas_activity = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas_activityLevel_wFRs.csv'), na.strings=c("")))
-topic_areas = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/archive/identifyTopicAreas_PCE2020_forSubsetting.csv'), na.strings=c("")))
+topic_areas = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas_activityLevel_wFRs_FINAL.csv'), na.strings=c("", "NA")))
+
 # checks on topic areas manual entry
 if(nrow(topic_areas[isTopicArea == TRUE & is.na(topicAreaDesc) ])!=0) stop('You need to enter a value for topicAreaDesc where isTopicArea = TRUE.')
 if(nrow(topic_areas[isTopicArea == FALSE & !is.na(topicAreaDesc) ])!=0) stop('You should not have value for topicAreaDesc where isTopicArea = FALSE.')
+
+# subset
+topic_areas_activity = topic_areas[,.(loc_name, gf_module, gf_intervention, activity_description, disease, isTopicArea, topicAreaDesc, isTopicAreaActivity, topicAreaActivityDesc)]
+topic_areas_intervention = unique(topic_areas[,.(loc_name, gf_module, gf_intervention, disease, isTopicArea, topicAreaDesc)])
+
 #---------------------------------------------
 # 1. APPROVED BUDGETS 
 #---------------------------------------------
@@ -51,7 +56,7 @@ sen1 = fread(paste0(sen_prepped, list.files(sen_prepped, pattern="approved_budge
 sen1[, loc_name:="Senegal"]
 
 approved_budgets = rbindlist(list(cod1, gtm1, uga1, sen1), use.names = TRUE, fill = TRUE)
-approved_budgets = merge(approved_budgets, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
+approved_budgets = merge(approved_budgets, topic_areas_intervention, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
 
 write.csv(approved_budgets, paste0(final_write, "approved_budgets.csv"), row.names=F)
 #---------------------------------------------
@@ -67,7 +72,7 @@ sen2 = fread(paste0(sen_prepped, list.files(sen_prepped, pattern="most_recent_bu
 sen2[, loc_name:="Senegal"]
 
 most_recent_budgets = rbindlist(list(cod2, gtm2, uga2, sen2), use.names = TRUE, fill = TRUE)
-most_recent_budgets = merge(most_recent_budgets, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
+most_recent_budgets = merge(most_recent_budgets, topic_areas_intervention, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
 
 write.csv(most_recent_budgets, paste0(final_write, "most_recent_budgets.csv"), row.names=F)
 #---------------------------------------------
@@ -88,7 +93,7 @@ all_budget_revisions = rbindlist(list(cod3, gtm3, uga3, sen3), use.names = TRUE,
 # all_budget_revisions_long = all_budget_revisions[,.(grant, grant_period, gf_module, gf_intervention, disease, start_date, budget, budget_version, loc_name)] # subset to key variables
 # dcast(all_budget_revisions_long, grant + grant_period + gf_module + gf_intervention + disease + start_date + loc_name ~ budget_version, value.var = "budget" ) # cast wide
 
-all_budget_revisions = merge(all_budget_revisions, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
+all_budget_revisions = merge(all_budget_revisions, topic_areas_intervention, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
 
 write.csv(all_budget_revisions, paste0(final_write, "all_budget_revisions.csv"), row.names=F)
 
@@ -105,7 +110,7 @@ sen3_act[, loc_name:="Senegal"]
 
 all_budget_revisions_act = rbindlist(list(cod3_act, gtm3_act, uga3_act, sen3_act), use.names = TRUE, fill = TRUE)
 
-all_budget_revisions_act = merge(all_budget_revisions_act, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
+all_budget_revisions_act = merge(all_budget_revisions_act, topic_areas_activity, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention', 'activity_description'))
 
 all_budget_revisions_act = add_fr_es_to_dt(all_budget_revisions_act)
 
@@ -139,7 +144,7 @@ sen5[, loc_name:="Senegal"]
 cumulative_absorption = rbindlist(list(cod5, gtm5, uga5, sen5))
 
 # add focus topic mapping to the cumulative absorption files FRC
-cumulative_absorption = merge(cumulative_absorption, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
+cumulative_absorption = merge(cumulative_absorption, topic_areas_intervention, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
 
 write.csv(cumulative_absorption, paste0(final_write, "cumulative_absorption.csv"), row.names=F)
 #---------------------------------------------
@@ -155,7 +160,7 @@ sen6 = fread(paste0(sen_prepped, list.files(sen_prepped, pattern="all_absorption
 sen6[, loc_name:="Senegal"]
 
 all_absorption = rbindlist(list(cod6, gtm6, uga6, sen6))
-all_absorption = merge(all_absorption, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
+all_absorption = merge(all_absorption, topic_areas_intervention, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
 
 write.csv(all_absorption, paste0(final_write, "all_absorption.csv"), row.names=F)
 
