@@ -44,8 +44,8 @@ primary_focus_topics <- merge(all_data_subset, primary_id, by=c('loc_name', 'dis
 
 # Country-specific edits to since some of the module names changed in the FR and approved budgets causing a few errors in the mapping--need to implement this as a fix throuhgout the code
 
-primary_focus_topics <- primary_focus_topics[gf_module=="Health management information systems and M&E" & loc_name=="Senegal", isTopicArea:=TRUE]
-primary_focus_topics <- primary_focus_topics[gf_module=="Health management information systems and M&E" & loc_name=="Senegal", topicAreaDesc:="DHIS2"]
+primary_focus_topics <- primary_focus_topics[gf_module=="Health management information systems and monitoring and evaluation" & loc_name=="Senegal", isTopicArea:=TRUE]
+primary_focus_topics <- primary_focus_topics[gf_module=="Health management information systems and monitoring and evaluation" & loc_name=="Senegal", topicAreaDesc:="DHIS2"]
 
 primary_focus_topics <- primary_focus_topics[gf_intervention=="Analysis, evaluations, reviews and transparency" & loc_name=="DRC", isTopicArea:=TRUE]
 primary_focus_topics <- primary_focus_topics[gf_intervention=="Analysis, evaluations, reviews and transparency" & loc_name=="DRC", topicAreaDesc:="DHIS2 and Data Quality"]
