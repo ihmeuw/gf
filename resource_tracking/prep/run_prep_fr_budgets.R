@@ -298,15 +298,15 @@ mapped_data = merge(mapped_data, codes, all.x=T, by=c('loc_name', 'file_name'))
 # ----------------------------------------------
 # Convert currencies to USD 
 # ----------------------------------------------
-stopifnot(mapped_data$file_currency%in%c("LOC","EUR","USD")) #After visual review, even local currencies (LOC) are actually Euros or USD. EL 11/19/2019. 
-
-needs_conversion = mapped_data[file_currency!='USD']
-if (nrow(needs_conversion)!=0){
-  in_USD = mapped_data[file_currency=="USD"]
-  converted_to_USD = convert_currency(needs_conversion, 'year', convertFrom="EUR", convertTo="USD", 
-                                      finVars=c('budget'))
-  mapped_data = rbind(in_USD, converted_to_USD, use.names=TRUE)
-}
+# stopifnot(mapped_data$file_currency%in%c("LOC","EUR","USD")) #After visual review, even local currencies (LOC) are actually Euros or USD. EL 11/19/2019. 
+# 
+# # needs_conversion = mapped_data[file_currency!='USD']
+# # if (nrow(needs_conversion)!=0){
+# #   in_USD = mapped_data[file_currency=="USD"]
+# #   converted_to_USD = convert_currency(needs_conversion, 'year', convertFrom="EUR", convertTo="USD", 
+# #                                       finVars=c('budget'))
+# #   mapped_data = rbind(in_USD, converted_to_USD, use.names=TRUE)
+# # }
 
 # ----------------------------------------------
 # Validate the columns in final data and the storage types  
@@ -376,6 +376,7 @@ fr_budgets[grepl(file_name, pattern = 'TB-SSRP'), fr_disease := 'tb']
 fr_budgets[grepl(file_name, pattern = 'TB SSRP'), fr_disease := 'tb']
 fr_budgets[grepl(file_name, pattern = 'TB_VIH'), fr_disease := 'hiv/tb']
 fr_budgets[grepl(file_name, pattern = 'C_NSP'), fr_disease := 'hiv/tb']
+fr_budgets[grepl(file_name, pattern = 'SEN-Z'), fr_disease := 'tb']
 fr_budgets[file_name=="05.Presupuesto_detallado_final.xlsx", fr_disease := 'hiv']
 
 # add a column for PR:
@@ -394,6 +395,7 @@ fr_budgets[ loc_name == 'gtm' & fr_disease == 'hiv', pr := 'INCAP']
 fr_budgets[ loc_name == 'gtm' & fr_disease == 'malaria', pr := 'MSPAS']
 # SEN
 fr_budgets[ loc_name == 'sen' & fr_disease == 'tb', pr := 'MOH']
+fr_budgets[ loc_name == 'sen' & fr_disease == 'malaria', pr := 'MOH']
 
 # Add equity/SO to FR budgets:
 fr_budgets[, isStrategicObjective := ifelse((equity == TRUE | rssh == TRUE), TRUE, FALSE)]
