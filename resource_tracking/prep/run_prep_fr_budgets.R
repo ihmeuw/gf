@@ -4,6 +4,8 @@
 # DATE: Last updated June 2020.
 
 # TO DO: 
+# - add checks to the data extraction
+# - also prep "initial" FRs so we can do comparison of those submitted to CT and to TRP for 2020? 
 # ----------------------------------------------
 rm(list=ls())
 
@@ -32,7 +34,9 @@ for (file in doc_prep_functions){
 verbose = FALSE 
 # load files to loop through for FR prep:
 file_list = load_master_list(purpose = "financial") #This function is sourced from the _common folder in master script. 
-file_list = file_list[data_source == 'funding_request' & file_iteration == 'approved_gm',] # here, 'approved_gm' is a misnomer, but we used it to fit in with the naming schema that had already been used for the file list
+file_list = file_list[data_source == 'funding_request' & file_iteration == 'approved_gm',] # note: here, 'approved_gm' is 
+# a misnomer, but we used it to fit in with the naming schema that had already been used for the file list - will want to add "initial"
+# in this subset when we compare to 
 # ----------------------------------------------
 
 # ----------------------------------------------
