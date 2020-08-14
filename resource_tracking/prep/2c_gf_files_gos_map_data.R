@@ -232,16 +232,17 @@ stopifnot(unique(mapped_data$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 
 # --------------------------------------------------------
 # Convert currencies to USD 
 # --------------------------------------------------------
-stopifnot(mapped_data$file_currency%in%c("LOC","EUR","USD")) #After visual review, even local currencies (LOC) are actually Euros or USD. EL 11/19/2019. 
-
-needs_conversion = mapped_data[file_currency!='USD']
-if (nrow(needs_conversion)!=0){
-  in_USD = mapped_data[file_currency=="USD"]
-  converted_to_USD = convert_currency(needs_conversion, 'year', convertFrom="EUR", convertTo="USD", 
-                                      finVars=c('budget', 'expenditure', 'disbursement', 'lfa_exp_adjustment'))
-  mapped_data = rbind(in_USD, converted_to_USD, use.names=TRUE)
-}
-
+# stopifnot(mapped_data$file_currency%in%c("LOC","EUR","USD")) #After visual review, even local currencies (LOC) are actually Euros or USD. EL 11/19/2019. 
+# 
+# needs_conversion = mapped_data[file_currency!='USD']
+# if (nrow(needs_conversion)!=0){
+#   in_USD = mapped_data[file_currency=="USD"]
+#   converted_to_USD = convert_currency(needs_conversion, 'year', convertFrom="EUR", convertTo="USD", 
+#                                       finVars=c('budget', 'expenditure', 'disbursement', 'lfa_exp_adjustment'))
+#   mapped_data = rbind(in_USD, converted_to_USD, use.names=TRUE)
+# }
+ 
+# Removing this piece of code becase we no longer want to convert Senegal's data to USD
 #-----------------------------------------------
 # Add in a variable for PR type 
 #-----------------------------------------------

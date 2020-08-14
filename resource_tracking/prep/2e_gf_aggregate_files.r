@@ -37,16 +37,13 @@ topic_areas = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/PCE2
 
 # checks on topic areas manual entry
 if(nrow(topic_areas[isTopicArea == TRUE & is.na(topicAreaDesc) ])!=0) stop('You need to enter a value for topicAreaDesc where isTopicArea = TRUE.')
-<<<<<<< HEAD
 if(nrow(topic_areas[isTopicArea == FALSE & !is.na(topicAreaDesc) ])!=0) stop('You should not have value for topicAreaDesc where isTopicArea = FALSE.')
+if(nrow(topic_areas[isTopicArea == FALSE & (!is.na(topicAreaDesc) | topicAreaDesc != '')])!=0) stop('You should not have value for topicAreaDesc where isTopicArea = FALSE.')
 
 # subset
 topic_areas_activity = topic_areas[,.(loc_name, gf_module, gf_intervention, activity_description, disease, isTopicArea, topicAreaDesc, isTopicAreaActivity, topicAreaActivityDesc)]
 topic_areas_intervention = unique(topic_areas[,.(loc_name, gf_module, gf_intervention, disease, isTopicArea, topicAreaDesc)])
 
-=======
-if(nrow(topic_areas[isTopicArea == FALSE & (!is.na(topicAreaDesc) | topicAreaDesc != '')])!=0) stop('You should not have value for topicAreaDesc where isTopicArea = FALSE.')
->>>>>>> 2554ba781bc7b6935da25bc11643703f8f91dde2
 #---------------------------------------------
 # 1. APPROVED BUDGETS 
 #---------------------------------------------
@@ -114,6 +111,11 @@ sen3_act[, loc_name:="Senegal"]
 
 all_budget_revisions_act = rbindlist(list(cod3_act, gtm3_act, uga3_act, sen3_act), use.names = TRUE, fill = TRUE)
 
+# trim whitespace from merging columns
+cols_trim <- c("loc_name","gf_module","gf_intervention","activity_description")
+all_budget_revisions_act[,(cols_trim) :=lapply(.SD,trimws),.SDcols = cols_trim]
+
+# this merge is adding in extra rows for some reason
 all_budget_revisions_act = merge(all_budget_revisions_act, topic_areas_activity, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention', 'activity_description'))
 
 all_budget_revisions_act = add_fr_es_to_dt(all_budget_revisions_act)

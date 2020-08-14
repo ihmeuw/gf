@@ -45,7 +45,7 @@ prep_1a_disagg = TRUE #Set to true if you want to extract disaggregated impact o
 prep_1b = TRUE #Set to true if you want to extract coverage indicators 1B. 
 prep_1b_disagg = TRUE #Set to true if you want to extract disaggregated coverage indicators 1B. 
 
-verbose = TRUE #Set to true if you want to print more detailed error messages. 
+verbose = FALSE #Set to true if you want to print more detailed error messages. 
 
 #-----------------------------------------------
 # 1. Prep individual countries 
