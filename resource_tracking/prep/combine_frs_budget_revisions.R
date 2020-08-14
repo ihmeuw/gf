@@ -33,6 +33,10 @@ names(budget_rev)[!names(budget_rev) %in% names(fr_budgets)]
 names(fr_budgets)[!names(fr_budgets) %in% names(budget_rev)]
 # -----------------------------------------------
 
+# trim whitespace from merging columns
+cols_trim <- c("loc_name","gf_module","gf_intervention","activity_description")
+fr_budgets[,(cols_trim) :=lapply(.SD,trimws),.SDcols = cols_trim]
+
 # -----------------------------------------------
 # merge the intervention level and activity level topic areas to FRs
 # -----------------------------------------------

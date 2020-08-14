@@ -111,6 +111,11 @@ sen3_act[, loc_name:="Senegal"]
 
 all_budget_revisions_act = rbindlist(list(cod3_act, gtm3_act, uga3_act, sen3_act), use.names = TRUE, fill = TRUE)
 
+# trim whitespace from merging columns
+cols_trim <- c("loc_name","gf_module","gf_intervention","activity_description")
+all_budget_revisions_act[,(cols_trim) :=lapply(.SD,trimws),.SDcols = cols_trim]
+
+# this merge is adding in extra rows for some reason
 all_budget_revisions_act = merge(all_budget_revisions_act, topic_areas_activity, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention', 'activity_description'))
 
 all_budget_revisions_act = add_fr_es_to_dt(all_budget_revisions_act)

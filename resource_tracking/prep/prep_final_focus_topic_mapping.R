@@ -64,7 +64,7 @@ primary_focus_topics <- merge(all_data_subset, primary_id, by=c('loc_name', 'dis
 # primary_focus_topics <- primary_focus_topics[gf_intervention=="Surveys" & loc_name=="Guatemala", topicAreaDesc:="Health Information System"]
 
 #-------------------------------
-##### SECONDARY ###############
+##### SECONDARY: activity level ###############
 #-------------------------------
 # merge onto this master file new activities that are identified by each of the four PCE countries
 
@@ -72,18 +72,17 @@ primary_focus_topics <- merge(all_data_subset, primary_id, by=c('loc_name', 'dis
 ################ GUATEMALA
 ###############----------------------
 
-# guatemala can be done with a merging onto the FR comments they sent
-
-# bind together guatemala fr 2017, fr 2020, and other budgets together
+# read in Guatemala files where focus topic activities are selected
 gtm_fr_17 <- fread(paste0(dir, "modular_framework_mapping/keyword_search/GTM/Guatemala_fr17_additional_ft_activities_073120_final.csv"))
-gtm_fr_17 <- gtm_fr_17[,.(loc_name, gf_module, gf_intervention, activity_description, final_decision, topicAreaDesc)]
-
 gtm_fr_18 <- fread(paste0(dir, "modular_framework_mapping/keyword_search/GTM/Guatemala_fr20_additional_ft_activities_prelimdecisions_final.csv"))
-gtm_fr_18 <- gtm_fr_18[,.(loc_name, gf_module, gf_intervention, activity_description, final_decision, topicAreaDesc)]
-
 gtm_all <- fread(paste0(dir, "modular_framework_mapping/keyword_search/GTM/gtm_focus_topic_activities_10jul2020.csv"))
+
+# subset files to only necessary columns
+gtm_fr_17 <- gtm_fr_17[,.(loc_name, gf_module, gf_intervention, activity_description, final_decision, topicAreaDesc)]
+gtm_fr_18 <- gtm_fr_18[,.(loc_name, gf_module, gf_intervention, activity_description, final_decision, topicAreaDesc)]
 gtm_all <- gtm_all[,.(loc_name, gf_module, gf_intervention, activity_description, final_decision, topicAreaDesc)]
 
+# bind files together
 gtm_secondary <- rbind(gtm_fr_17, gtm_fr_18, gtm_all)
 
 setnames(gtm_secondary, old=c('final_decision', 'topicAreaDesc'), new=c('isTopicAreaActivity', 'topicAreaActivityDesc'))
@@ -92,6 +91,8 @@ gtm_ft_selection <- merge(primary_focus_topics[loc_name=="Guatemala"], gtm_secon
 ###############----------------------
 ################ SENEGAL
 ###############----------------------
+
+
 
 ## bind all countries data together
 ft_selection_codebook <- rbind(gtm_ft_selection, primary_focus_topics[loc_name%in%c('Uganda', 'Senegal', 'DRC')], fill=TRUE)
@@ -102,5 +103,14 @@ ft_selection_codebook[isTopicArea==FALSE, topicAreaDesc:=NA]
 ft_selection_codebook[is.na(isTopicAreaActivity), isTopicAreaActivity:=FALSE]
 ft_selection_codebook[isTopicAreaActivity==FALSE, topicAreaActivityDesc:=NA]
 
+# trim white space
+cols_trim <- c("loc_name","gf_module","gf_intervention","activity_description")
+ft_selection_codebook[,(cols_trim) :=lapply(.SD,trimws),.SDcols = cols_trim]
+
+# remove duplicates from the codebook
+codebook_final <- unique(ft_selection_codebook)
+
+# test2 <- codebook_final[activity_description=="Adquisicion de diseoo  diagramacion e impresion de material de Informacion  para Cambio de Comportamiento  poblacion PPL"]
+
 ## save the final file that will be read in to select focus topics in all of Tableau data
-write.csv(ft_selection_codebook, paste0(dir, "modular_framework_mapping/PCE2020_FocusTopicAreas_activityLevel_wFRs_FINAL.csv"))
+write.csv(codebook_final, paste0(dir, "modular_framework_mapping/PCE2020_FocusTopicAreas_activityLevel_wFRs_FINAL.csv"))
