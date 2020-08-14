@@ -36,7 +36,9 @@ for (var in numVars) {
   #Do an overall check - how many rows have at least one digit for this value (numeric information?) Is it the same at the end? 
   start_numeric = nrow(dt[grepl("[[:digit:]]", get(var))])
   # REMOVE NAs
-  dt[get(var)=="N/A" | get(var)=="ND" | get(var)==" " | get(var)=="No disaggregation" | get(var)=="No disagregation" | get(var)=="qu " | get(var)=="i" | get(var)=="The PR did not report any result" | get(var)=="Sin dato" | get(var)=="sin dato" | get(var)=="Not reported" | get(var)=="Pendiente de recibir la info del PNS" | get(var)==".", (var):=NA]
+  dt[get(var)=="N/A" | get(var)=="ND" | get(var)==" " | get(var)=="No disaggregation" | get(var)=="No disagregation" | get(var)=="qu " | get(var)=="i" | 
+       get(var)=="The PR did not report any result" | get(var)=="Sin dato" | get(var)=="sin dato" | get(var)=="Not reported" | 
+       get(var)=="Pendiente de recibir la info del PNS" | get(var)=="." | get(var)=='[Baseline Value]', (var):=NA]
   start_nas = nrow(dt[is.na(get(var))]) #Make sure that this numeric conversion doesn't accidentally introduce any NAs after this point.
   
   # LOOK FOR "E-" AND CONVERT SCIENTIFIC NOTATION
@@ -106,7 +108,7 @@ for (var in numVars) {
   dt[str_count(get(var), "\\.")>1, (var):=gsub("\\.", "", get(var))] 
   
   #REMOVE PUNCTUATION # line 93 changes depending on the encoding of this file and results in not all of the punctuation getting properly cleaned.
-  dt[, (var):=gsub("?|%|â|°|‰", "", get(var))]
+  dt[, (var):=gsub("?|%|‰|Ã¢|Â°|â°", "", get(var))]
   
   # REMOVE SPACE BETWEEN NUMBERS
   dt[, (var):=gsub("[[:space:]]", "", get(var))] 
@@ -142,21 +144,21 @@ dt = dt[, indicator_code:=tstrsplit(indicator, ":", keep=1)] # create variable w
 #Clean indicators of errors manually before merging with codebook 
 dt[indicator_code=="GP other-2 Nombre de SVS ayant recu le kit PEP dans les 72h", 
    indicator_code:="GP other-2"]
-dt[loc_name=="cod" & indicator=="Nombre et pourcentage de structures de santé (CDT) qui ont connu une rupture de stock des tests de VIH", 
+dt[loc_name=="cod" & indicator=="Nombre et pourcentage de structures de santÃ© (CDT) qui ont connu une rupture de stock des tests de VIH", 
    indicator_code:="TCS other-1"]
-dt[loc_name=="cod" & indicator=="TCS other-3: Nombre et pourcentage de structures de santé (Centres de Dépistage et de Traitement) qui rapporte une rupture de stock des tests de VIH", 
+dt[loc_name=="cod" & indicator=="TCS other-3: Nombre et pourcentage de structures de santÃ© (Centres de DÃ©pistage et de Traitement) qui rapporte une rupture de stock des tests de VIH", 
    indicator_code:="TCS other-1"]
 dt[loc_name=="cod" & indicator_code=="TCS other- 1", 
    indicator_code:="TCS other-1"]
 
-dt[loc_name=="cod" & indicator=="Nombre et pourcentage de structures de santé (Centres de Santé intégrés) qui rapporte une rupture de stock des tests de diagnostic rapide (TDR) malaria	", 
+dt[loc_name=="cod" & indicator=="Nombre et pourcentage de structures de santÃ© (Centres de SantÃ© intÃ©grÃ©s) qui rapporte une rupture de stock des tests de diagnostic rapide (TDR) malaria	", 
    indicator_code:="CM-Other"]
 dt[loc_name=="cod" & indicator=="Number and percentage of health facilities (Integrated health facilities) reporting stock out of malaria rapid diagnostic test (RDT)",
    indicator_code:="CM-Other"]
-dt[loc_name=="cod" & indicator=="Nombre et pourcentage de structures de santé (Centres de Santé intégrés) qui rapporte une rupture de stock des tests de diagnostic rapide (TDR) malaria",
+dt[loc_name=="cod" & indicator=="Nombre et pourcentage de structures de santÃ© (Centres de SantÃ© intÃ©grÃ©s) qui rapporte une rupture de stock des tests de diagnostic rapide (TDR) malaria",
    indicator_code:="CM-Other"]
 
-dt[loc_name=="cod" & indicator=="Parmi l'ensemble des nouveaux cas de tuberculose (toutes formes confondues) ayant recu un soutien à l'observance de la part des agents de santé ou des bénévoles, nombre et pourcentage de ceux traités avec succès (traitement achevé et guérison)",
+dt[loc_name=="cod" & indicator=="Parmi l'ensemble des nouveaux cas de tuberculose (toutes formes confondues) ayant recu un soutien Ã  l'observance de la part des agents de santÃ© ou des bÃ©nÃ©voles, nombre et pourcentage de ceux traitÃ©s avec succÃ¨s (traitement achevÃ© et guÃ©rison)",
    indicator_code:="TCP-Other"]
 
 #-------------------------------------
