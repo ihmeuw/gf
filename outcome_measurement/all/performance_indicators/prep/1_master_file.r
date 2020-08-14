@@ -21,7 +21,10 @@ rm(list=ls())
 # run setup code (load file paths and packages)
 user=as.character(Sys.info()[7])
 if (Sys.info()[1]=='Windows'){
-  repo_root = paste0("C:/Users/", user, "/Documents/gf/") #Change to the root of your repository
+  if(user == 'abatzel'){ 
+    repo_root = "C:/local/gf/"
+  } else {
+    repo_root = paste0("C:/Users/", user, "/Documents/gf/")} #Change to the root of your repository
   setwd(repo_root)
 } else {
   setwd(paste0("/ihme/homes/",user,"/gf/"))
@@ -35,7 +38,7 @@ source('./resource_tracking/prep/_common/load_master_list.r', encoding="UTF-8")
 # Set boolean switches
 # ---------------------------------------
 # What countries do you want to run? 
-countries = c('gtm') #Add country codes to this list to prep them. Possible choices are 'cod', 'gtm', 'sen', and 'uga'. 
+countries = c('gtm', 'cod', 'uga', 'sen') #Add country codes to this list to prep them. Possible choices are 'cod', 'gtm', 'sen', and 'uga'. 
 
 prep_1a = TRUE #Set to true if you want to extract impact outcome indicators 1A. 
 prep_1a_disagg = TRUE #Set to true if you want to extract disaggregated impact outcome indicators 1A.
