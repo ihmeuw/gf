@@ -23,12 +23,21 @@ if (prep_files == TRUE){
   file_list = file_list[grant!="unknown"]
 
   #Make sure you don't have the same start date for the same grant (quick check; it would be better )
-  file_list[file_iteration=='approved_gm', date_dup:=sequence(.N), by=c('grant', 'sheet_financial', 'start_date_financial', 'data_source', 'pudr_semester_financial')] #EMILY NEED TO RETHINK THIS. 
+  file_list[file_iteration=='approved_gm' & data_source != 'funding_request', date_dup:=sequence(.N), by=c('grant', 'start_date_financial', 'data_source', 'pudr_semester_financial')] #EMILY NEED TO RETHINK THIS. 
   file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
 
   if ( nrow(file_list[date_dup>0])!=0){
     print(file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date_financial)][order(grant, grant_period, start_date_financial)])
     print("There are duplicates in final files - review file list.")
+  }
+  
+  #Make sure you don't have the same start date for FUNDING REQUESTS
+  file_list[file_iteration=='approved_gm' & data_source == 'funding_request', date_dup:=sequence(.N), by=c('disease', 'grant_period')] 
+  file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
+  
+  if ( nrow(file_list[date_dup>0])!=0){
+    print(file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date_financial)][order(grant, grant_period, start_date_financial)])
+    print("There are duplicates in funding request files - review file list.")
   }
   
   file_list[data_source=="pudr" & file_iteration=='approved_gm', pudr_dup:=sequence(.N), by=c('grant', 'grant_period', 'pudr_semester_financial')]
