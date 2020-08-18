@@ -46,23 +46,6 @@ primary_id <- rbind(primary_id_budgets, primary_id_fr)
 
 primary_focus_topics <- merge(all_data_subset, primary_id, by=c('loc_name', 'disease', 'gf_module', 'gf_intervention'), all.x=TRUE)
 
-# Country-specific edits to since some of the module names changed in the FR and approved budgets causing a few errors in the mapping--need to implement this as a fix throuhgout the code
-
-# primary_focus_topics <- primary_focus_topics[gf_module=="Health management information systems and monitoring and evaluation" & loc_name=="Senegal", isTopicArea:=TRUE]
-# primary_focus_topics <- primary_focus_topics[gf_module=="Health management information systems and monitoring and evaluation" & loc_name=="Senegal", topicAreaDesc:="DHIS2"]
-# 
-# primary_focus_topics <- primary_focus_topics[gf_intervention=="Analysis, evaluations, reviews and transparency" & loc_name=="DRC", isTopicArea:=TRUE]
-# primary_focus_topics <- primary_focus_topics[gf_intervention=="Analysis, evaluations, reviews and transparency" & loc_name=="DRC", topicAreaDesc:="DHIS2 and Data Quality"]
-# primary_focus_topics <- primary_focus_topics[gf_intervention=="Program and data quality" & loc_name=="DRC", isTopicArea:=TRUE]
-# primary_focus_topics <- primary_focus_topics[gf_intervention=="Program and data quality" & loc_name=="DRC", topicAreaDesc:="DHIS2 and Data Quality"]
-# primary_focus_topics <- primary_focus_topics[gf_intervention=="Routine reporting" & loc_name=="DRC", isTopicArea:=TRUE]
-# primary_focus_topics <- primary_focus_topics[gf_intervention=="Routine reporting" & loc_name=="DRC", topicAreaDesc:="DHIS2 and Data Quality"]
-# 
-# primary_focus_topics <- primary_focus_topics[gf_intervention=="Analysis, evaluations, reviews and transparency" & loc_name=="Guatemala", isTopicArea:=TRUE]
-# primary_focus_topics <- primary_focus_topics[gf_intervention=="Analysis, evaluations, reviews and transparency" & loc_name=="Guatemala", topicAreaDesc:="Health Information System"]
-# primary_focus_topics <- primary_focus_topics[gf_intervention=="Surveys" & loc_name=="Guatemala", isTopicArea:=TRUE]
-# primary_focus_topics <- primary_focus_topics[gf_intervention=="Surveys" & loc_name=="Guatemala", topicAreaDesc:="Health Information System"]
-
 #-------------------------------
 ##### SECONDARY: activity level ###############
 #-------------------------------
@@ -73,17 +56,17 @@ primary_focus_topics <- merge(all_data_subset, primary_id, by=c('loc_name', 'dis
 ###############----------------------
 
 # read in Guatemala files where focus topic activities are selected
-gtm_fr_17 <- fread(paste0(dir, "modular_framework_mapping/keyword_search/GTM/Guatemala_fr17_additional_ft_activities_073120_final.csv"))
-gtm_fr_18 <- fread(paste0(dir, "modular_framework_mapping/keyword_search/GTM/Guatemala_fr20_additional_ft_activities_prelimdecisions_final.csv"))
+gtm_fr_17 <- fread(paste0(dir, "modular_framework_mapping/keyword_search/GTM/Guatemala_fr17_additional_ft_activities_finaldecisions_081420.csv"))
+gtm_fr_20 <- fread(paste0(dir, "modular_framework_mapping/keyword_search/GTM/Guatemala_fr20_additional_ft_activities_finaldecisions_081420.csv"))
 gtm_all <- fread(paste0(dir, "modular_framework_mapping/keyword_search/GTM/gtm_focus_topic_activities_10jul2020.csv"))
 
 # subset files to only necessary columns
 gtm_fr_17 <- gtm_fr_17[,.(loc_name, gf_module, gf_intervention, activity_description, final_decision, topicAreaDesc)]
-gtm_fr_18 <- gtm_fr_18[,.(loc_name, gf_module, gf_intervention, activity_description, final_decision, topicAreaDesc)]
+gtm_fr_20 <- gtm_fr_20[,.(loc_name, gf_module, gf_intervention, activity_description, final_decision, topicAreaDesc)]
 gtm_all <- gtm_all[,.(loc_name, gf_module, gf_intervention, activity_description, final_decision, topicAreaDesc)]
 
 # bind files together
-gtm_secondary <- rbind(gtm_fr_17, gtm_fr_18, gtm_all)
+gtm_secondary <- rbind(gtm_fr_17, gtm_fr_20, gtm_all)
 
 setnames(gtm_secondary, old=c('final_decision', 'topicAreaDesc'), new=c('isTopicAreaActivity', 'topicAreaActivityDesc'))
 gtm_ft_selection <- merge(primary_focus_topics[loc_name=="Guatemala"], gtm_secondary, by=c('loc_name', 'gf_module', 'gf_intervention', 'activity_description'), all.x = TRUE)
