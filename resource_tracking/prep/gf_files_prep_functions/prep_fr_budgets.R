@@ -7,7 +7,7 @@
 # ----------------------------------------------
 # PREP FR BUDGETS code taken directly from the prep general detail budget code and modified slightly
 
-prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num, language) {
+prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num, language, file_iteration) {
   
   # # TROUBLESHOOTING HELP
   dir = file_dir
@@ -18,6 +18,7 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   disease = file_list$disease[i]
   qtr_num = file_list$qtr_number[i]
   language = file_list$language_financial[i]
+  file_iteration = file_list$file_iteration[i]
   # -------------------------------------
   #Sanity check: Is this sheet name one you've checked before? 
   verified_sheet_names <- c('Detailed Budget', 'Detailed budget')
@@ -29,7 +30,18 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   KEEP_COLS = 5 #Number of columns that are extracted before the budget columns (Module, intervention, activity, cost category, and implementer)
   
   # Load data
-  gf_data = data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name, detectDates=TRUE))
+  if (file_iteration == 'approved_gm'){
+    gf_data = data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name, detectDates=TRUE))
+  } else if (file_iteration == 'initial'){
+      if ( grepl(inFile, pattern = 'xlsx') ){
+        gf_data = data.table(read.xlsx(paste0(dir,'iterations/', inFile), sheet=sheet_name, detectDates=TRUE))
+      } else {
+        gf_data = data.table(read_excel(paste0(dir, 'iterations/', inFile), sheet=sheet_name))
+      }
+  } else {
+    stop('Not a valid file iteration value.')
+  }
+
   initial_rows = nrow(gf_data) #Save to run a check on later. 
   
   #-------------------------------------
@@ -133,7 +145,7 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   names(gf_data) = names
   #Do a sanity check here. 
   if (language == 'eng' | language == 'fr'){
-    if (inFile == "COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisé 2018.xlsx"){
+    if (inFile == "COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisÃ© 2018.xlsx"){
       stopifnot(names(gf_data[, 1]) == 'module' & names(gf_data[, 2]) == 'intervention revise')
     }else{
       stopifnot(names(gf_data[, 1]) == 'module' & names(gf_data[, 2]) == 'intervention')
@@ -159,7 +171,7 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   second_subset = c(1:KEEP_COLS, quarter_cols) #Only keep module, intervention, activity description, and the budget columns by quarter
   gf_data = gf_data[, second_subset, with = FALSE]
   
-  if (inFile=="COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisé 2018.xlsx"){ # drop extra columns at the end of this file --Francisco 02.28.2020
+  if (inFile=="COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisÃ© 2018.xlsx"){ # drop extra columns at the end of this file --Francisco 02.28.2020
     gf_data[,c("sorties de tresorerie t1  a t3 2018", "sorties de tresorerie t3 2018"):=NULL]
   }
   
@@ -188,7 +200,7 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
       new_names = c('activity_description', 'cost_category', new_qtr_names)
     }
   } else if (language == "fr") {
-    if (inFile == "COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisé 2018.xlsx"){ # added in to check specific file
+    if (inFile == "COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisÃ© 2018.xlsx"){ # added in to check specific file
       old_names = c("intervention revise", "description de l'activite", "element de cout", "entite de mise en œuvre", old_qtr_names)
       new_names = c("intervention", "activity_description", "cost_category", "implementer", new_qtr_names)
     } else if ("maitre d'œuvre"%in%names){
@@ -217,7 +229,7 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   
   #If there is any whitespace in column names, remove it. 
   names(gf_data) = trimws(names(gf_data))
-  if (inFile=="COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisé 2018.xlsx"){
+  if (inFile=="COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisÃ© 2018.xlsx"){
     names(gf_data) <- c("module", new_names) # this is because there are duplicate names in this specific file --Francisco 02.27.2020
   } else {
     setnames(gf_data, old=old_names, new=new_names)

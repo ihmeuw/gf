@@ -14,7 +14,11 @@ rm(list=ls())
 # ----------------------------------------------
 user=as.character(Sys.info()[7])
 if (Sys.info()[1]=='Windows'){
-  setwd(paste0("C:/Users/",user,"/Documents/gf/")) #Change to the root of your repository
+  if(user == 'abatzel'){ 
+    repo_root = "C:/local/gf/"
+  } else {
+    repo_root = paste0("C:/Users/", user, "/Documents/gf/")} #Change to the root of your repository
+  setwd(repo_root)
 } else {
   setwd(paste0("/ihme/homes/",user,"/gf/"))
 }
@@ -34,9 +38,10 @@ for (file in doc_prep_functions){
 verbose = FALSE 
 # load files to loop through for FR prep:
 file_list = load_master_list(purpose = "financial") #This function is sourced from the _common folder in master script. 
-file_list = file_list[data_source == 'funding_request' & file_iteration == 'approved_gm',] # note: here, 'approved_gm' is 
-# a misnomer, but we used it to fit in with the naming schema that had already been used for the file list - will want to add "initial"
-# in this subset when we compare to 
+file_list = file_list[data_source == 'funding_request' & file_iteration %in% c('approved_gm')]  #, 'initial')] 
+# note: here, 'approved_gm' and 'initial" are misnomers; we used them to fit in with the naming schema that had already been used for the file list 
+# initial = submitted to CT
+# approved_gm = submitted to TRP (will rename these later)
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -60,7 +65,8 @@ for(i in 1:nrow(file_list)){
                     folder, '/', folder_cont, '/')
   
   args = list(file_dir, file_list$file_name[i], file_list$sheet_financial[i], file_list$start_date_financial[i], 
-              file_list$period_financial[i], file_list$qtr_number_financial[i], file_list$language_financial[i])
+              file_list$period_financial[i], file_list$qtr_number_financial[i], file_list$language_financial[i], 
+              file_list$file_iteration[i])
   
   ### RUN THE PREP FUNCTION HERE ###
   tmpData = do.call(prep_fr_budgets, args)
@@ -97,6 +103,12 @@ for(i in 1:nrow(file_list)){
 write.csv(prepped_frs, paste0(box, 'tableau_data/raw_extracted_fr_budget_data.csv'), row.names = FALSE)
 # ----------------------------------------------
 
+# ----------------------------------------------
+# data table to check totals against
+# ----------------------------------------------
+check_totals = prepped_frs[, .(total_budget = sum(budget, na.rm = TRUE)), by = .(loc_name, grant_period, disease, file_iteration, file_name)]
+# ----------------------------------------------
+
 # -----------------------------------------------
 # read in raw output previously saved
 # ----------------------------------------------
@@ -105,9 +117,6 @@ write.csv(prepped_frs, paste0(box, 'tableau_data/raw_extracted_fr_budget_data.cs
 # ----------------------------------------------
 # 2. Run some checks to make sure this data was prepped correctly. 
 # ----------------------------------------------
-# check the totals
-# prepped_frs[, sum(budget, na.rm=TRUE), by = c('file_name', 'loc_name')]
-
 #Make sure all budget data pulled is actually numeric- this is an easy check to see if prep functions are working correctly. 
 verify_numeric_budget = prepped_frs[, .(budget=gsub("[[:digit:]]", "", budget))]
 verify_numeric_budget = verify_numeric_budget[, .(budget=gsub("[[:punct:]]", "", budget))]
@@ -414,6 +423,15 @@ fr_budgets[loc_name == 'cod', loc_name := 'DRC']
 fr_budgets[loc_name == 'uga', loc_name := 'Uganda']
 fr_budgets[loc_name == 'sen', loc_name := 'Senegal']
 fr_budgets[loc_name == 'gtm', loc_name := 'Guatemala']
+# ----------------------------------------------
+
+# ----------------------------------------------
+# Compare totals at the end to check_totals
+# ----------------------------------------------
+totals_end = fr_budgets[, .(total_budget_end = sum(budget, na.rm = TRUE)), by = .(file_name)]
+
+check = merge(totals_end, check_totals, all = TRUE, by = 'file_name')
+if( nrow(check[ round(total_budget_end) != round(total_budget), ]) != 0) stop( 'Totals for FR files at the end do not match totals at the beginning!' )
 # ----------------------------------------------
 
 # ----------------------------------------------
