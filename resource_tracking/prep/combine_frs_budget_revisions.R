@@ -11,7 +11,11 @@ rm(list=ls())
 # -----------------------------------------------
 user=as.character(Sys.info()[7])
 if (Sys.info()[1]=='Windows'){
-  setwd(paste0("C:/Users/",user,"/Documents/gf/")) #Change to the root of your repository
+  if(user == 'abatzel'){ 
+    repo_root = "C:/local/gf/"
+  } else {
+    repo_root = paste0("C:/Users/", user, "/Documents/gf/")} #Change to the root of your repository
+  setwd(repo_root)
 } else {
   setwd(paste0("/ihme/homes/",user,"/gf/"))
 }
