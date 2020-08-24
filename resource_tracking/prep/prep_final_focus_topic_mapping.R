@@ -31,7 +31,7 @@ if ('V1'%in%names(all_data)){
   all_data[, c('V1'):=NULL]
 }
 
-all_data_subset <- all_data[,.(loc_name, disease, gf_module, gf_intervention, activity_description)]
+all_data_subset <- all_data[,.(loc_name, disease, gf_module, gf_intervention, activity_description, budget_version, grant_period)]
 
 #-------------------------------
 ##### PRIMARY ###############

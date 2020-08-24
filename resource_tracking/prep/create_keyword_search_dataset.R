@@ -20,8 +20,8 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # -----------------------------------------------
 dt = data.table(read.csv(paste0(box, 'tableau_data/budgetRevisions_with_frBudgets_activityLevel.csv')))
 
-dt_unique = unique(dt[, .(loc_name, disease, gf_module, gf_intervention, activity_description)])
-setorderv(dt_unique, c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
+dt_unique = unique(dt[, .(loc_name, disease, gf_module, gf_intervention, activity_description, budget_version, grant_period)])
+setorderv(dt_unique, c('loc_name', 'disease', 'gf_module', 'gf_intervention', 'grant_period', 'budget_version'))
 dt_unique[, keyword_topic_area := FALSE]
 dt_unique[, isTopicArea := FALSE]
 dt_unique[, topicAreaDesc := '']

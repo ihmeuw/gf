@@ -64,10 +64,37 @@ dt2[ implementer == 'PR Societe Civile' & fr_disease == 'hiv/tb', pr := 'CORDAID
 dt2 = dt2[rssh==TRUE]
 
 # sum to activity/cost category level 
-dt2 = dt2[, .(budget = sum(budget, na.rm = TRUE)), by = c('loc_name', 'budget_version', 'implementer', 'grant_period', 'gf_module', 
-                                                          'gf_intervention','orig_module', 'orig_intervention',  'activity_description', 'cost_category')]
+dt2 = dt2[, .(budget = sum(budget, na.rm = TRUE)), by = c('loc_name', 'file_name', 'budget_version', 'implementer', 'grant_period', 'gf_module', 
+                                                          'gf_intervention','orig_module', 'orig_intervention',  'activity_description', 'cost_category', 'fr_disease')]
+
+# change fr_disease to fr_component
+setnames(dt2, "fr_disease", "fr_component")
+
+# add indicator for any rows that weren't in the previous file
+previous_file = fread(paste0(box, "tableau_data/rssh_2s_analysis_data_2020_07_23.csv"))
+previous_file = previous_file[,addition:="in previous 2s file from 07/23"]
+previous_file = previous_file[,.(loc_name, activity_description, addition)]
+unique(previous_file)
+
+# remove whitespace from merging variables
+cols_trim <- c("loc_name","activity_description")
+dt2[,(cols_trim) :=lapply(.SD,trimws),.SDcols = cols_trim]
+previous_file[,(cols_trim) :=lapply(.SD,trimws),.SDcols = cols_trim]
+
+# merge indicator column onto the new file
+dt2 = merge(dt2, previous_file, by=c("loc_name","activity_description"), all.x = TRUE)
+
+setcolorder(dt2, c("loc_name", "budget_version", "implementer", "grant_period", 
+                   "file_name", "fr_component", "gf_module", "gf_intervention", "orig_module", "orig_intervention",
+                   "activity_description", "cost_category", "budget", "addition"))
 
 # -----------------------------------------------
+# # Verify 
+# # verified manually that there are no new GTM activities
+dt2[is.na(addition) & loc_name=="Guatemala", addition:="in previous 2s file from 07/23"]
+
+# rename missing from additions column as "newly added activity"
+dt2[is.na(addition), addition:= "newly added activity"]
 
 # -----------------------------------------------
 # combine and save data - should these actually be combined? implementer could go where grant goes? 
