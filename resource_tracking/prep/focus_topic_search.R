@@ -30,8 +30,12 @@ source("./resource_tracking/prep/gf_files_prep_functions/id_focus_topics.R")
 # activity level data
 # inFile = paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas.csv')
 # activity level data including the 2017 FR budgets (eventually include the 2020 FR budgets)
-
 inFile = paste0(dir, 'modular_framework_mapping/PCE2020_FocusTopicAreas_activityLevel_wFRs.csv')
+
+# # just run the function on the budget dataset directly:
+# inFile = paste0(box, 'tableau_data/budgetRevisions_with_frBudgets_activityLevel.csv') 
+# note: this doesn't work with running the function below bc it doesn't have "cep_topic_area" column 
+# (I ran it manually to still generate the results)
 
 id_focus_topics("Senegal", include_module_intervention = TRUE, inFile)
 # for guatemala only run certain keywords on the HIV grant
