@@ -9,6 +9,7 @@
 # -----------------------------------------------
 # set up R
 # -----------------------------------------------
+rm(list=ls())
 user=as.character(Sys.info()[7])
 
 # source files with other functions and common resource tracking filepaths
