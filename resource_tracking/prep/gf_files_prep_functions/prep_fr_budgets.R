@@ -9,16 +9,16 @@
 
 prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num, language, file_iteration) {
   
-  # # TROUBLESHOOTING HELP
-  dir = file_dir
-  inFile = file_list$file_name[i]
-  sheet_name = file_list$sheet[i]
-  start_date = file_list$start_date_financial[i]
-  period = file_list$period_financial[i]
-  disease = file_list$disease[i]
-  qtr_num = file_list$qtr_number[i]
-  language = file_list$language_financial[i]
-  file_iteration = file_list$file_iteration[i]
+  # # # TROUBLESHOOTING HELP
+  # dir = file_dir
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet[i]
+  # start_date = file_list$start_date_financial[i]
+  # period = file_list$period_financial[i]
+  # disease = file_list$disease[i]
+  # qtr_num = file_list$qtr_number[i]
+  # language = file_list$language_financial[i]
+  # file_iteration = file_list$file_iteration[i]
   # -------------------------------------
   #Sanity check: Is this sheet name one you've checked before? 
   verified_sheet_names <- c('Detailed Budget', 'Detailed budget')
@@ -145,11 +145,7 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   names(gf_data) = names
   #Do a sanity check here. 
   if (language == 'eng' | language == 'fr'){
-    if (inFile == "COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisÃ© 2018.xlsx"){
-      stopifnot(names(gf_data[, 1]) == 'module' & names(gf_data[, 2]) == 'intervention revise')
-    }else{
       stopifnot(names(gf_data[, 1]) == 'module' & names(gf_data[, 2]) == 'intervention')
-    }
   } else if (language == 'esp'){
     stopifnot(names(gf_data[, 1]) == 'modulo' & names(gf_data[, 2]) == 'intervencion')
   }
