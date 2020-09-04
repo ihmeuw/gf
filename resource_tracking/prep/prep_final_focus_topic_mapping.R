@@ -76,7 +76,19 @@ gtm_ft_selection <- merge(primary_focus_topics[loc_name=="Guatemala"], gtm_secon
 ###############----------------------
 
 
+###############----------------------
+################ Uganda
+###############----------------------
 
+
+###############----------------------
+################ DRC
+###############----------------------
+
+
+#-------------------------------
+# COMBINE ALL DATA AND SAVE
+#-------------------------------
 ## bind all countries data together
 ft_selection_codebook <- rbind(gtm_ft_selection, primary_focus_topics[loc_name%in%c('Uganda', 'Senegal', 'DRC')], fill=TRUE)
 
