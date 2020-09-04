@@ -416,6 +416,7 @@ setcolorder(merge3,
             c("grant", "grant_period", "module", "intervention", 
               "absorption_rate_sem_1", "pr_comments_sem_1", "lfa_comments_sem_1",
               "absorption_rate_sem_1-2", "pr_comments_sem_1-2", "lfa_comments_sem_1-2",
+              "absorption_rate_sem_1-3", "pr_comments_sem_1-3", "lfa_comments_sem_1-3",
               "absorption_rate_sem_5", "pr_comments_sem_5", "lfa_comments_sem_5",
               "absorption_rate_sem_5-6", "pr_comments_sem_5-6", "lfa_comments_sem_5-6"))
   
@@ -423,6 +424,7 @@ setcolorder(merge3,
               c("grant", "grant_period", "cost_category", 
                 "absorption_rate_sem_1", "pr_comments_sem_1", "lfa_comments_sem_1",
                 "absorption_rate_sem_1-2", "pr_comments_sem_1-2", "lfa_comments_sem_1-2",
+                "absorption_rate_sem_1-3", "pr_comments_sem_1-3", "lfa_comments_sem_1-3",
                 "absorption_rate_sem_5", "pr_comments_sem_5", "lfa_comments_sem_5",
                 "absorption_rate_sem_5-6", "pr_comments_sem_5-6", "lfa_comments_sem_5-6"))
   
@@ -430,6 +432,7 @@ setcolorder(merge3,
               c("grant", "grant_period", "implementing_entity", 
                 "absorption_rate_sem_1", "pr_comments_sem_1", "lfa_comments_sem_1",
                 "absorption_rate_sem_1-2", "pr_comments_sem_1-2", "lfa_comments_sem_1-2",
+                "absorption_rate_sem_1-3", "pr_comments_sem_1-3", "lfa_comments_sem_1-3",
                 "absorption_rate_sem_5", "pr_comments_sem_5", "lfa_comments_sem_5",
                 "absorption_rate_sem_5-6", "pr_comments_sem_5-6", "lfa_comments_sem_5-6"))
   }  else{
