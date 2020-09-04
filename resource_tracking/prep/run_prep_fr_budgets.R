@@ -38,7 +38,7 @@ for (file in doc_prep_functions){
 verbose = FALSE 
 # load files to loop through for FR prep:
 file_list = load_master_list(purpose = "financial") #This function is sourced from the _common folder in master script. 
-file_list = file_list[data_source == 'funding_request' & file_iteration %in% c('approved_gm')]  #, 'initial')] 
+file_list = file_list[data_source == 'funding_request' & file_iteration %in% c('approved_gm', 'initial')] 
 # note: here, 'approved_gm' and 'initial" are misnomers; we used them to fit in with the naming schema that had already been used for the file list 
 # initial = submitted to CT
 # approved_gm = submitted to TRP (will rename these later)
@@ -391,6 +391,8 @@ fr_budgets[grepl(file_name, pattern = 'TB_VIH'), fr_disease := 'hiv/tb']
 fr_budgets[grepl(file_name, pattern = 'C_NSP'), fr_disease := 'hiv/tb']
 fr_budgets[grepl(file_name, pattern = 'SEN-Z'), fr_disease := 'tb']
 fr_budgets[file_name=="05.Presupuesto_detallado_final.xlsx", fr_disease := 'hiv']
+fr_budgets[file_name=="5. FR708-COD-Z_DB_25Feb20 (3) PALU  du 23 MARS 2020 BIS-1 bonne version.xls", fr_disease := 'malaria']
+fr_budgets[file_name=="Budget FR707-COD-Z_DB_VIH_23 Mars 2020_17H.xlsx", fr_disease := 'hiv/tb']
 
 # add a column for PR:
 # UGA
