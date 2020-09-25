@@ -56,6 +56,20 @@ Unless otherwise stated, all files should be run in numerical/alphabetical order
 - "8a_commitments_obligations_prep.r" Extracts raw commitments/obligations from the PUDRs. It's similar in structure to "2b_gf_files_prep_data.r".
 - "8b_commitments_obligations_clean.r" Cleans the raw extracted data from step 8a. Maps modules/interventions, converts currencies, and validates columns.
 
+### PREP NFM3 FILES
+- Keyword searches
+  - "create_keyword_search_dataset.r"
+  - "focus_topic_search.r"
+  - "prep_final_focus_topic_mapping.r"
+	- "merge_keyword_search_results_with_budget_data.r"
+- Extracting NFM3 data
+  - "run_prep_fr_budgets.r": extracts data from NFM3 and NFM2 funding request budgets; merges data together. Should be modified to also extract final approved NFM3 budgets.  
+	- "nfm3_verify_mapping.r": prepares new modular framework in order to map budgetary data. This file is soured in "run_prep_fr_budgets.r"
+	- "get_target_population_data.r": this script is not running. It was written to pull the target population tab from the NFM3 budgets.
+- Grant Cycle analyses
+  - "prep_qualitative_data.r"
+  - "get_data_for_2s_analysis.r"
+
 ### OTHER FILES
 - "match_box_to_j.r" As of January 2020, this script is not running. The vision was to have an automatic script that backs up the Box file system to the J drive to make sure they're always the same.
 - "reporting_completeness_gf.rmd" This script checks the reporting completeness for Global Fund budgets and PUDRs, and outputs an automated R-markdown report.
