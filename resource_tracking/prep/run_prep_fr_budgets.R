@@ -38,7 +38,7 @@ for (file in doc_prep_functions){
 verbose = FALSE 
 # load files to loop through for FR prep:
 file_list = load_master_list(purpose = "financial") #This function is sourced from the _common folder in master script. 
-file_list = file_list[data_source == 'funding_request' & file_iteration %in% c('approved_gm', 'initial')] 
+file_list = file_list[data_source == 'funding_request' & file_iteration %in% c('approved_gm', 'initial') | data_source== 'budget' & grant_period=='2021-2023'] 
 # note: here, 'approved_gm' and 'initial" are misnomers; we used them to fit in with the naming schema that had already been used for the file list 
 # initial = submitted to CT
 # approved_gm = submitted to TRP (will rename these later)
@@ -49,7 +49,10 @@ file_list = file_list[data_source == 'funding_request' & file_iteration %in% c('
 # ----------------------------------------------
 for(i in 1:nrow(file_list)){
   # Set up file path 
-  folder = "funding_requests"
+  if (file_list$data_source[i]=="funding_request") {
+    folder = "funding_requests"
+  } else if (file_list$data_source[i] == "budget" )
+  folder = file_list$grant[i]
   
   if (file_list[i, year(version_date) <= "2019"]){
     folder_cont = "fr_budgets_2017"
@@ -61,8 +64,13 @@ for(i in 1:nrow(file_list)){
   
   grant_period = file_list$grant_period[i]
   
+  if (file_list$data_source[i]=="funding_request") {
   file_dir = paste0(box, toupper(file_list$loc_name[i]), '/raw_data/', file_list$grant_status[i], "/", 
                     folder, '/', folder_cont, '/')
+  } else if (file_list$data_source[i]=="budget" ){
+    file_dir = paste0(box, toupper(file_list$loc_name[i]), '/raw_data/', file_list$grant_status[i], "/", 
+                      folder, '/', grant_period, '/budgets/')
+    }
   
   args = list(file_dir, file_list$file_name[i], file_list$sheet_financial[i], file_list$start_date_financial[i], 
               file_list$period_financial[i], file_list$qtr_number_financial[i], file_list$language_financial[i], 
@@ -73,7 +81,7 @@ for(i in 1:nrow(file_list)){
   ###
   
   #Add indexing data
-  append_cols = file_list[i, .(loc_name, disease, file_name, data_source, grant_period, grant_status, 
+  append_cols = file_list[i, .(loc_name, disease, file_name, data_source, grant, grant_period, grant_status, 
                                file_currency, file_iteration, budget_version, version_date, 
                                function_financial, start_date_financial, language_financial, 
                                period_financial, qtr_number_financial,

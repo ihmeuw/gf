@@ -1,7 +1,7 @@
 # RT PREP CODE  
 ## *USER GUIDE*
 
-Last updated by Francisco Rios Casas (elineb@uw.edu)
+Last updated by Francisco Rios Casas (frc2@uw.edu)
 September 2020
 
 Unless otherwise stated, all files should be run in numerical/alphabetical order. Files are called in order in the master file list (step 1).
