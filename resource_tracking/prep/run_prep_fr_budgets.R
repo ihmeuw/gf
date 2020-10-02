@@ -401,6 +401,7 @@ fr_budgets[grepl(file_name, pattern = 'SEN-Z'), fr_disease := 'tb']
 fr_budgets[file_name=="05.Presupuesto_detallado_final.xlsx", fr_disease := 'hiv']
 fr_budgets[file_name=="5. FR708-COD-Z_DB_25Feb20 (3) PALU  du 23 MARS 2020 BIS-1 bonne version.xls", fr_disease := 'malaria']
 fr_budgets[file_name=="Budget FR707-COD-Z_DB_VIH_23 Mars 2020_17H.xlsx", fr_disease := 'hiv/tb']
+fr_budgets[grepl(file_name, pattern = '-M-'), fr_disease := 'malaria']
 
 # add a column for PR:
 # UGA

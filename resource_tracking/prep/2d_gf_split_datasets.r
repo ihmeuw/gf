@@ -1,4 +1,13 @@
 # ----------------------------------------------------------------------------
+# Create covid datasets to save as a backup
+# ---------------------------------------------------------------------------
+if ("COVID-19" %in% mapped_data$gf_module){
+  covid_absorption <- mapped_data[gf_module=="COVID-19"]
+  mapped_data <- mapped_data[gf_module != "COVID-19"]
+}
+# add more lines here to subset and reformat data columns if necessary in future
+
+# ----------------------------------------------------------------------------
 # Create datasets to release to partners
 # ---------------------------------------------------------------------------
 

@@ -170,4 +170,14 @@ all_absorption = merge(all_absorption, topic_areas_intervention, all.x = TRUE, b
 
 write.csv(all_absorption, paste0(final_write, "all_absorption.csv"), row.names=F)
 
+#------------------------------------------------
+# 7. covid absorption
+# add in other countries in case there is also covid data from other countries
+sen7 = fread(paste0(sen_prepped, list.files(sen_prepped, pattern = "covid_absorption")))
+sen7[, loc_name:="Senegal"]
+
+covid_absorption = rbindlist(list(sen7))
+
+write.csv(covid_absorption, paste0(final_write, "covid_absorption"), row.names = F)
+
 print("Step E: Aggregate GF files completed. Files saved in combined_prepped folder.")

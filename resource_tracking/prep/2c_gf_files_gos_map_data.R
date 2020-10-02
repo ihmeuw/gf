@@ -306,7 +306,13 @@ if (prep_files){
   
   # # First, delete the currently saved files (these are all archived so we don't need these copies)
   saved_files = list.files(export_dir, full.names=TRUE, pattern=".csv") # Only find the .csv files - these are the prepped data files. As of 3/18/20, there is one RDS 'raw bound files' from step 2B. EL
-  stopifnot(length(saved_files)==7) # There should be exactly 6 files you're going to delete. FRC 5/20/2020 added one in
+  
+  if (country=="sen"){
+    stopifnot(length(saved_files)==8) # Senegal should have 8 files for now (since it has an extra covid absorption file. FRC 10/1/2020)
+  } else {
+    stopifnot(length(saved_files)==7)  # There should be exactly 7 files you're going to delete. FRC 5/20/2020 added one in.
+  } 
+  
   sapply(saved_files, unlink) # Delete the five files in this folder.
   
   # (GEP and CEP files are exactly the same, except GEP files have additional variables saved in the data for more advanced visualization)
@@ -318,7 +324,6 @@ if (prep_files){
   
   write.csv(absorption_cep, paste0(export_dir, "most_recent_absorption_", country, "_", Sys.Date(), ".csv"), row.names=F)
   write.csv(cumulative_absorption_cep, paste0(export_dir, "cumulative_absorption_", country, "_", Sys.Date(), ".csv"), row.names=F)
-  write.csv(all_absorption, paste0(export_dir, "all_absorption_", country, "_", Sys.Date(), ".csv"), row.names=F)
   write.csv(all_absorption, paste0(export_dir, "all_absorption_", country, "_", Sys.Date(), ".csv"), row.names=F)
   
   # Save admin-level files on J. 
@@ -342,7 +347,14 @@ if (prep_files){
   saveRDS(cumulative_absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/cumulative_absorption_", country, "_", Sys.Date(), ".rds"))
   saveRDS(all_absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/all_absorption_", country, "_", Sys.Date(), ".rds"))
   
+  # the eighth file type only applies to Senegal
+  if (country=="sen"){
+    write.csv(covid_absorption, paste0(export_dir, "covid_absorption_", country, "_", Sys.Date(), ".csv"), row.names=F)
+    saveRDS(covid_absorption, paste0(dir, "_gf_files_gos/tableau_data/", country, "/covid_absorption_", country, "_", Sys.Date(), ".rds"))
+    saveRDS(covid_absorption, paste0(dir, "_gf_files_gos/tableau_data/archive/covid_absorption_", country, "_", Sys.Date(), ".rds"))
+  }
 }
+  
 
 if (prep_gos == TRUE){
   saveRDS(mapped_data, paste0(gos_prepped, "prepped_gos_data.rds"))
