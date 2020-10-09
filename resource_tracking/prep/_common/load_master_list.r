@@ -17,7 +17,7 @@ load_master_list = function(purpose=NULL) {
   
   if (Sys.info()[1]=='Windows'){
     dir = paste0(box) #Change to the root of your repository
-    j_dir = "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/" #On windows, you'll want to pull the file list off of Box. 
+    j_dir = "\\\\ihme.washington.edu/ihme/snfs/Project/Evaluation/GF/resource_tracking/_gf_files_gos/" #On windows, you'll want to pull the file list off of Box. 
   } else {
     dir = "/home/j/Project/Evaluation/GF/resource_tracking/_gf_files_gos/"
     j_dir = copy(dir) #On the cluster, these will be the same 

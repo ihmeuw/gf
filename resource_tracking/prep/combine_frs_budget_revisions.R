@@ -52,13 +52,17 @@ if(nrow(topic_areas[isTopicArea == TRUE & is.na(topicAreaDesc) ])!=0) stop('You 
 if(nrow(topic_areas[isTopicArea == FALSE & !is.na(topicAreaDesc) ])!=0) stop('You should not have value for topicAreaDesc where isTopicArea = FALSE.')
 
 # topic_areas = topic_areas[isTopicArea == TRUE,]
-topic_areas = topic_areas[, -c('disease', 'X')]
+topic_areas = topic_areas[, -c('disease', 'X', 'grant_period', 'budget_version')]
 
 fr_budgets = merge(fr_budgets, topic_areas, all.x = TRUE, by = c('loc_name', 'gf_module', 'gf_intervention', 'activity_description'))
 # check = merge(fr_budgets[, -c('isTopicArea', 'topicAreaDesc')], topic_areas, all = TRUE, by = c('loc_name', 'gf_module', 'gf_intervention'))
 # some of the interventions identified in the spreadsheet are not in the fr_budgets - did a visual check of this and it makes sense.
 fr_budgets[is.na(isTopicArea), isTopicArea := FALSE]
 # -----------------------------------------------
+
+#----------------------------------------------
+# add ad check to make sure that the merging doesn't lead to duplicate rows
+fr_budgets <- unique(fr_budgets)
 
 # -----------------------------------------------
 # add a PR column to the budget rev
@@ -92,3 +96,5 @@ dt = rbindlist(list(fr_budgets, budget_rev), use.names = TRUE, fill = TRUE)
 
 write.csv(dt,paste0(box, 'tableau_data/budgetRevisions_with_frBudgets_activityLevel.csv'), row.names = FALSE)
 # -----------------------------------------------
+
+print("Combine FRs and Budget Revisions: Done")

@@ -41,7 +41,7 @@ if(nrow(topic_areas[isTopicArea == FALSE & !is.na(topicAreaDesc) ])!=0) stop('Yo
 if(nrow(topic_areas[isTopicArea == FALSE & (!is.na(topicAreaDesc) | topicAreaDesc != '')])!=0) stop('You should not have value for topicAreaDesc where isTopicArea = FALSE.')
 
 # subset
-topic_areas_activity = topic_areas[,.(loc_name, gf_module, gf_intervention, activity_description, disease, isTopicArea, topicAreaDesc, isTopicAreaActivity, topicAreaActivityDesc)]
+topic_areas_activity = unique(topic_areas[,.(loc_name, gf_module, gf_intervention, activity_description, disease, isTopicArea, topicAreaDesc, isTopicAreaActivity, topicAreaActivityDesc)])
 topic_areas_intervention = unique(topic_areas[,.(loc_name, gf_module, gf_intervention, disease, isTopicArea, topicAreaDesc)])
 
 #---------------------------------------------
@@ -178,6 +178,6 @@ sen7[, loc_name:="Senegal"]
 
 covid_absorption = rbindlist(list(sen7))
 
-write.csv(covid_absorption, paste0(final_write, "covid_absorption"), row.names = F)
+write.csv(covid_absorption, paste0(final_write, "covid_absorption.csv"), row.names = F)
 
 print("Step E: Aggregate GF files completed. Files saved in combined_prepped folder.")

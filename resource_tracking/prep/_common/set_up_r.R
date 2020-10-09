@@ -34,8 +34,10 @@ options(digits=6)
 # ---------------------------------------
 
 #J:drive filepaths
-j = ifelse(Sys.info()[1]=='Windows','J:','/home/j/')
+#j = ifelse(Sys.info()[1]=='Windows','J:','/home/j/')
+j = "\\\\ihme.washington.edu/ihme/snfs"
 dir = paste0(j, '/Project/Evaluation/GF/resource_tracking/')
+
 combined_output_dir = paste0(dir, "_gf_files_gos/combined_prepped_data/")
 mapping_dir = paste0(dir, "modular_framework_mapping/")
 

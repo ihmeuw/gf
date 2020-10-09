@@ -311,8 +311,8 @@ if (prep_files){
     stopifnot(length(saved_files)==8) # Senegal should have 8 files for now (since it has an extra covid absorption file. FRC 10/1/2020)
   } else {
     stopifnot(length(saved_files)==7)  # There should be exactly 7 files you're going to delete. FRC 5/20/2020 added one in.
-  } 
-  
+  }
+
   sapply(saved_files, unlink) # Delete the five files in this folder.
   
   # (GEP and CEP files are exactly the same, except GEP files have additional variables saved in the data for more advanced visualization)
@@ -327,7 +327,7 @@ if (prep_files){
   write.csv(all_absorption, paste0(export_dir, "all_absorption_", country, "_", Sys.Date(), ".csv"), row.names=F)
   
   # Save admin-level files on J. 
-  dir = 'J:/Project/Evaluation/GF/resource_tracking/'
+  dir = '\\\\ihme.washington.edu/ihme/snfs/Project/Evaluation/GF/resource_tracking/'
   saveRDS(approved_budgets_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/approved_budgets_", country, "_", Sys.Date(), ".rds"))
   saveRDS(most_recent_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/most_recent_budgets_", country, "_", Sys.Date(), ".rds"))
   saveRDS(revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/all_budget_revisions_", country, "_", Sys.Date(), ".rds"))

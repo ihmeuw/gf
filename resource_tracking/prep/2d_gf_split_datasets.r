@@ -2,8 +2,7 @@
 # Create covid datasets to save as a backup
 # ---------------------------------------------------------------------------
 if ("COVID-19" %in% mapped_data$gf_module){
-  covid_absorption <- mapped_data[gf_module=="COVID-19"]
-  mapped_data <- mapped_data[gf_module != "COVID-19"]
+  covid_absorption <- mapped_data[gf_module=="COVID-19" & data_source=="pudr"]
 }
 # add more lines here to subset and reformat data columns if necessary in future
 
@@ -66,7 +65,7 @@ most_recent_revisions_cep = revisions[, .(budget=sum(budget, na.rm=T)), by=cep_c
 #------------------------------------------------------
 
 #------------------------------------------------------
-# 3a. ALl budgets for current grants
+# 3a. ALL budgets for current grants
 #------------------------------------------------------
 gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date',
              'current_grant', 'data_source', 'file_iteration', 'budget_version', 'revision_type', 'gf_revision_type', 'version_date',
@@ -215,6 +214,10 @@ stopifnot(unique(absorption$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', '
 absorption[is.nan(absorption), absorption:=NA]
 absorption[!is.finite(absorption), absorption:=NA]
 
+# remove COVID data from absorption
+absorption[gf_module!="COVID-19"]
+
+
 # Subset columns to GEP and CEP variables. 
 absorption_gep = copy(absorption) # Leaving this in this format for now EL 3/9/20 
 absorption_cep = absorption[, .(grant, grant_period, gf_module, gf_intervention, disease, start_date, end_date, 
@@ -301,6 +304,9 @@ cumulative_absorption = cumulative_absorption[, .(cumulative_budget = sum(cumula
                                                   cumulative_expenditure=sum(cumulative_expenditure, na.rm=T)), by=c(byVars)]
 cumulative_absorption[, cumulative_absorption:=round((cumulative_expenditure/cumulative_budget)*100, 1)]
 
+# remove COVID data from absorption
+cumulative_absorption[gf_module!="COVID-19"]
+
 # Subset columns to GEP and CEP variables. 
 cumulative_absorption_gep = cumulative_absorption[, gep_cols, with=FALSE]
 cumulative_absorption_cep = cumulative_absorption[, cep_cols, with=FALSE]
@@ -383,6 +389,9 @@ stopifnot(unique(all_absorption$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh
 #Make Nan, Infinity all NA 
 all_absorption[is.nan(absorption), absorption:=NA] 
 all_absorption[!is.finite(absorption), absorption:=NA]
+
+# remove COVID data from absorption
+all_absorption[gf_module!="COVID-19"]
 
 # Subset columns to GEP and CEP variables. 
 all_absorption_gep = copy(all_absorption) # Leaving this in this format for now EL 3/9/20 

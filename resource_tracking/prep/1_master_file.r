@@ -48,7 +48,7 @@ limit_filelist = TRUE #Set to TRUE if you want to only run files that will be sa
 only_new_files = FALSE # Set to TRUE if, when you re-run file list, you only want to process files that are additional. TRUE is the default. 
 include_zero_pudrs = FALSE # Set to TRUE if when you re-run file list, the final data set will include PUDRs with zero expenditure, if FALSE the PUDRs will not be included. FALSE is default
 
-country = "sen" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga". 
+country = "cod" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga". 
 
 # ----------------------------------------------
 # STEP 2: PREP GF FILES AND GOS DATA 

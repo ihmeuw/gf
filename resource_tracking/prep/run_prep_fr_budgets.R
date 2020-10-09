@@ -114,7 +114,7 @@ write.csv(prepped_frs, paste0(box, 'tableau_data/raw_extracted_fr_budget_data.cs
 # ----------------------------------------------
 # data table to check totals against
 # ----------------------------------------------
-check_totals = prepped_frs[, .(total_budget = sum(budget, na.rm = TRUE)), by = .(loc_name, grant_period, disease, file_iteration, file_name)]
+check_totals = prepped_frs[, .(total_budget = sum(budget, na.rm = TRUE)), by = .(loc_name, grant_period, data_source, disease, file_iteration, file_name)]
 # ----------------------------------------------
 
 # -----------------------------------------------
@@ -376,7 +376,7 @@ mapped_data$orig_intervention <- str_replace_all(mapped_data$orig_intervention, 
 fr_budgets= copy(mapped_data)
 
 # specify the columns to keep in the output:
-keep_cols = c('file_name', 'loc_name', 'gf_module', 'gf_intervention', 
+keep_cols = c('file_name', 'loc_name', 'grant', 'gf_module', 'gf_intervention', 
               'orig_module', 'orig_intervention', 'activity_description', 'cost_category', 
               'disease', 'implementer',
               'data_source', 'grant_period', 'grant_status', 
@@ -393,8 +393,8 @@ fr_budgets[grepl(file_name, pattern = 'C_DB'), fr_disease := 'hiv/tb']
 fr_budgets[grepl(file_name, pattern = 'M_DB'), fr_disease := 'malaria']
 fr_budgets[grepl(file_name, pattern = 'H_DB'), fr_disease := 'hiv']
 fr_budgets[grepl(file_name, pattern = 'T_Full'), fr_disease := 'tb']
-fr_budgets[grepl(file_name, pattern = 'TB-SSRP'), fr_disease := 'tb']
-fr_budgets[grepl(file_name, pattern = 'TB SSRP'), fr_disease := 'tb']
+fr_budgets[grepl(file_name, pattern = 'TB-SSRP'), fr_disease := 'tb/rssh']
+fr_budgets[grepl(file_name, pattern = 'TB SSRP'), fr_disease := 'tb/rssh']
 fr_budgets[grepl(file_name, pattern = 'TB_VIH'), fr_disease := 'hiv/tb']
 fr_budgets[grepl(file_name, pattern = 'C_NSP'), fr_disease := 'hiv/tb']
 fr_budgets[grepl(file_name, pattern = 'SEN-Z'), fr_disease := 'tb']
@@ -402,17 +402,28 @@ fr_budgets[file_name=="05.Presupuesto_detallado_final.xlsx", fr_disease := 'hiv'
 fr_budgets[file_name=="5. FR708-COD-Z_DB_25Feb20 (3) PALU  du 23 MARS 2020 BIS-1 bonne version.xls", fr_disease := 'malaria']
 fr_budgets[file_name=="Budget FR707-COD-Z_DB_VIH_23 Mars 2020_17H.xlsx", fr_disease := 'hiv/tb']
 fr_budgets[grepl(file_name, pattern = '-M-'), fr_disease := 'malaria']
+fr_budgets[grepl(file_name, pattern = '_M_'), fr_disease := 'malaria']
+fr_budgets[grepl(file_name, pattern = 'COD_S'), fr_disease := 'rssh']
+fr_budgets[grepl(file_name, pattern = 'COD_Z'), fr_disease := 'malaria/rssh']
+fr_budgets[grepl(file_name, pattern = '-H-'), fr_disease := 'hiv']
+fr_budgets[grepl(file_name, pattern = '_C_'), fr_disease := 'hiv/tb']
+fr_budgets[grepl(file_name, pattern = '_T_'), fr_disease := 'tb']
+
+# print the major data sources
+#unique(fr_budgets[,.(loc_name, data_source, fr_disease, grant)])
 
 # add a column for PR:
 # UGA
 fr_budgets[ implementer == 'Ministry of Finance, Planning and Economic Development of the Government of the Republic of Uganda', pr := 'MoFPED']
 fr_budgets[ implementer == 'The AIDS Support Organisation (Uganda) Limited', pr := 'TASO']
 fr_budgets[ implementer == 'Ministry of Finance, Planning and Economic Development of the Republic of Uganda', pr := 'MoFPED']
+fr_budgets[ file_name == 'UGA-H-MoFPED-Detailed Budget-14-Aug-2020 Final.xlsx', pr := 'MoFPED']
 
 # DRC
 fr_budgets[ implementer == 'Ministry of Health and Population of the Government of the Democratic Republic of Congo', pr := 'MOH']
 fr_budgets[ implementer == 'Ministry of Health and Population of the Democratic Republic of Congo', pr := 'MOH']
 fr_budgets[ implementer == 'PR Societe Civile' & fr_disease == 'hiv/tb', pr := 'CORDAID']
+
 # GTM
 fr_budgets[ loc_name == 'gtm' & fr_disease == 'tb', pr := 'MSPAS']
 fr_budgets[ loc_name == 'gtm' & fr_disease == 'hiv', pr := 'INCAP']
@@ -434,6 +445,9 @@ fr_budgets[loc_name == 'cod', loc_name := 'DRC']
 fr_budgets[loc_name == 'uga', loc_name := 'Uganda']
 fr_budgets[loc_name == 'sen', loc_name := 'Senegal']
 fr_budgets[loc_name == 'gtm', loc_name := 'Guatemala']
+
+# print the major data sources
+unique(fr_budgets[data_source=="budget",.(loc_name, data_source, fr_disease, grant, pr)])
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -451,4 +465,9 @@ if( nrow(check[ round(total_budget_end) != round(total_budget), ]) != 0) stop( '
 # Do we want to split the dataset into different components? maybe 2017 or 2020 files? or maybe not necessary? 
 # save data
 write.csv(fr_budgets, paste0(box, "tableau_data/fr_budgets_all.csv"), row.names=FALSE)
+
+# -----------------------------------------------
+# Update Focus Topic Mapping
+# -----------------------------------------------
+source("./resource_tracking/prep/update_focus_topics.r")
 # ----------------------------------------------

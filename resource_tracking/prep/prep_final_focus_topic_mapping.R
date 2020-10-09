@@ -109,3 +109,6 @@ codebook_final <- unique(ft_selection_codebook)
 
 ## save the final file that will be read in to select focus topics in all of Tableau data
 write.csv(codebook_final, paste0(dir, "modular_framework_mapping/PCE2020_FocusTopicAreas_activityLevel_wFRs_FINAL.csv"))
+
+#
+print("Focus Topic Mapping Done")
