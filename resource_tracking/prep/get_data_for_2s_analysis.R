@@ -45,7 +45,7 @@ setorderv(dt, cols = c('loc_name'))
 # -----------------------------------------------
 dt2 = as.data.table(read.csv(inFile_frs))
 # keep only 2020 FRs
-dt2 = dt2[grant_period == '2021-2023']
+dt2 = dt2[grant_period == '2021-2023' & data_source=='funding_request']
 
 # clean implementer
 dt2[ implementer == 'Ministry of Finance, Planning and Economic Development of the Government of the Republic of Uganda', pr := 'MoFPED']
@@ -71,10 +71,10 @@ dt2 = dt2[, .(budget = sum(budget, na.rm = TRUE)), by = c('loc_name', 'file_name
 setnames(dt2, "fr_disease", "fr_component")
 
 # add indicator for any rows that weren't in the previous file
-previous_file = fread(paste0(box, "tableau_data/rssh_2s_analysis_data_2020_07_23.csv"))
-previous_file = previous_file[,addition:="in previous 2s file from 07/23"]
+previous_file = fread(paste0(box, "tableau_data/rssh_2s_analysis_data_2020_08_19.csv"))
+previous_file = previous_file[,addition:="in previous 2s file from 08/19"]
 previous_file = previous_file[,.(loc_name, activity_description, addition)]
-unique(previous_file)
+previous_file = unique(previous_file)
 
 # remove whitespace from merging variables
 cols_trim <- c("loc_name","activity_description")
@@ -91,7 +91,7 @@ setcolorder(dt2, c("loc_name", "budget_version", "implementer", "grant_period",
 # -----------------------------------------------
 # # Verify 
 # # verified manually that there are no new GTM activities
-dt2[is.na(addition) & loc_name=="Guatemala", addition:="in previous 2s file from 07/23"]
+#dt2[is.na(addition) & loc_name=="Guatemala", addition:="in previous 2s file from 08/19"]
 
 # rename missing from additions column as "newly added activity"
 dt2[is.na(addition), addition:= "newly added activity"]
