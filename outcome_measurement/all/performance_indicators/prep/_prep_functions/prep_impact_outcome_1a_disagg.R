@@ -7,8 +7,8 @@
 
 prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   
-  #TROUBLESHOOTING HELP
-  # #Uncomment variables below and run line-by-line.
+  # #TROUBLESHOOTING HELP
+  # # #Uncomment variables below and run line-by-line.
   # folder = "budgets"
   # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
   # if (file_list$file_iteration[i]=="initial"){
@@ -46,7 +46,8 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
                       "LFA_COD-C-CORDAID_Progress Report Disbursement_31Dec2019_26032020.xlsx", "LFA_COD-H-MOH_Progress Report Disbursement_31Dec2019_v2_23042020.xlsx",
                       "LFA_COD-T-MOH_Progress Report Disbursement_31Dec2019_CANEVAS_12042020.xlsx", "Copy of SEN-Z-MOH PU (Jan-Juin19) LFA, 25Sept19.xlsx",
                       "SEN-H-ANCS PUDR (Juil-Dec19) LFA 5Mar20.xlsm", "SEN-H-CNLS PUDR (Juil-Dec19) LFA, 7Avr20.xlsx", "SEN-M-PNLP PUDR (Juil-Dec19), LFA 10Avr20.xlsx",
-                      "SEN-Z-MOH PUDR (Juil-Dec19), LFA 7Avr20.xlsx")
+                      "SEN-Z-MOH PUDR (Juil-Dec19), LFA 7Avr20.xlsx", "Copy of CTvf__COD-H-MOH_Progress Report Disbursement_31Dec2019_v3_LFA23042020_BrK_Validated.xlsx",
+                      "SEN M PNLP PU (Jan-Juin20), LFA, 21Sep20.xlsx", "SEN-H-CNLS PU (Jan-Juin20) LFA,16Sept20.xlsx", "SEN-Z-MOH_PU (Jan-Juin20), LFA 25Sept20 (1).xlsx")
   
   # Load/prep data
   gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name, detectDates=TRUE))

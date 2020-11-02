@@ -38,7 +38,7 @@ limit_filelist = TRUE #Set to TRUE if you want to only run files that will be sa
 only_new_files = FALSE # Set to TRUE if, when you re-run file list, you only want to process files that are additional. TRUE is the default. 
 include_zero_pudrs = FALSE # Set to TRUE if when you re-run file list, the final data set will include PUDRs with zero expenditure, if FALSE the PUDRs will not be included. FALSE is default
 
-country = "gtm" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga". 
+country = "sen" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga". 
 
 
 master_file_dir = ifelse(Sys.info()[1]=='Windows', paste0(box, toupper(country), "/raw_data/"), 
@@ -441,21 +441,24 @@ setcolorder(merge3,
                 "absorption_rate_sem_1", "pr_comments_sem_1", "lfa_comments_sem_1",
                 "absorption_rate_sem_1-2", "pr_comments_sem_1-2", "lfa_comments_sem_1-2",
                 "absorption_rate_sem_3", "pr_comments_sem_3", "lfa_comments_sem_3",
-                "absorption_rate_sem_3-4", "pr_comments_sem_3-4", "lfa_comments_sem_3-4"))
+                "absorption_rate_sem_3-4", "pr_comments_sem_3-4", "lfa_comments_sem_3-4",
+                "absorption_rate_sem_5", "pr_comments_sem_5", "lfa_comments_sem_5"))
   
   setcolorder(merge2,
               c("grant", "cost_category", 
                 "absorption_rate_sem_1", "pr_comments_sem_1", "lfa_comments_sem_1",
                 "absorption_rate_sem_1-2", "pr_comments_sem_1-2", "lfa_comments_sem_1-2",
                 "absorption_rate_sem_3", "pr_comments_sem_3", "lfa_comments_sem_3",
-                "absorption_rate_sem_3-4", "pr_comments_sem_3-4", "lfa_comments_sem_3-4"))
+                "absorption_rate_sem_3-4", "pr_comments_sem_3-4", "lfa_comments_sem_3-4",
+                "absorption_rate_sem_5", "pr_comments_sem_5", "lfa_comments_sem_5"))
   
   setcolorder(merge3,
               c("grant", "implementing_entity", 
                 "absorption_rate_sem_1", "pr_comments_sem_1", "lfa_comments_sem_1",
                 "absorption_rate_sem_1-2", "pr_comments_sem_1-2", "lfa_comments_sem_1-2",
                 "absorption_rate_sem_3", "pr_comments_sem_3", "lfa_comments_sem_3",
-                "absorption_rate_sem_3-4", "pr_comments_sem_3-4", "lfa_comments_sem_3-4"))
+                "absorption_rate_sem_3-4", "pr_comments_sem_3-4", "lfa_comments_sem_3-4",
+                "absorption_rate_sem_5", "pr_comments_sem_5", "lfa_comments_sem_5"))
 }
 
 # aggregate files into one per grant and save on shared drive

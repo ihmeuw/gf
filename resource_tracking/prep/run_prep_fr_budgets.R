@@ -389,25 +389,31 @@ fr_budgets = fr_budgets[, .(budget=sum(budget)), by=keep_cols]
 # fr_budgets[loc_name == 'cod', sum(budget), by = .(file_name, implementer)]
 
 # add a disease column for the file as a whole
+# drc
 fr_budgets[grepl(file_name, pattern = 'C_DB'), fr_disease := 'hiv/tb']
-fr_budgets[grepl(file_name, pattern = 'M_DB'), fr_disease := 'malaria']
-fr_budgets[grepl(file_name, pattern = 'H_DB'), fr_disease := 'hiv']
-fr_budgets[grepl(file_name, pattern = 'T_Full'), fr_disease := 'tb']
-fr_budgets[grepl(file_name, pattern = 'TB-SSRP'), fr_disease := 'tb/rssh']
-fr_budgets[grepl(file_name, pattern = 'TB SSRP'), fr_disease := 'tb/rssh']
-fr_budgets[grepl(file_name, pattern = 'TB_VIH'), fr_disease := 'hiv/tb']
-fr_budgets[grepl(file_name, pattern = 'C_NSP'), fr_disease := 'hiv/tb']
-fr_budgets[grepl(file_name, pattern = 'SEN-Z'), fr_disease := 'tb']
-fr_budgets[file_name=="05.Presupuesto_detallado_final.xlsx", fr_disease := 'hiv']
-fr_budgets[file_name=="5. FR708-COD-Z_DB_25Feb20 (3) PALU  du 23 MARS 2020 BIS-1 bonne version.xls", fr_disease := 'malaria']
-fr_budgets[file_name=="Budget FR707-COD-Z_DB_VIH_23 Mars 2020_17H.xlsx", fr_disease := 'hiv/tb']
-fr_budgets[grepl(file_name, pattern = '-M-'), fr_disease := 'malaria']
-fr_budgets[grepl(file_name, pattern = '_M_'), fr_disease := 'malaria']
-fr_budgets[grepl(file_name, pattern = 'COD_S'), fr_disease := 'rssh']
 fr_budgets[grepl(file_name, pattern = 'COD_Z'), fr_disease := 'malaria/rssh']
-fr_budgets[grepl(file_name, pattern = '-H-'), fr_disease := 'hiv']
-fr_budgets[grepl(file_name, pattern = '_C_'), fr_disease := 'hiv/tb']
-fr_budgets[grepl(file_name, pattern = '_T_'), fr_disease := 'tb']
+fr_budgets[grepl(file_name, pattern = 'COD-Z'), fr_disease := 'malaria/rssh']
+fr_budgets[grepl(file_name, pattern = 'COD_S'), fr_disease := 'malaria/rssh']
+fr_budgets[grepl(file_name, pattern = 'COD_M_FULL'), fr_disease := 'malaria/rssh']
+
+#uga
+fr_budgets[grepl(file_name, pattern = 'M_DB'), fr_disease := 'malaria']
+fr_budgets[grepl(file_name, pattern = 'C_NSP'), fr_disease := 'hiv/tb']
+fr_budgets[grepl(file_name, pattern = 'UGA-M-MoFPED'), fr_disease := 'malaria']
+fr_budgets[grepl(file_name, pattern = 'UGA_C_TASO'), fr_disease := 'hiv/tb']
+fr_budgets[grepl(file_name, pattern = 'UGA-H-MoFPED'), fr_disease := 'hiv/tb']
+fr_budgets[grepl(file_name, pattern = 'UGA_T_MoFPED'), fr_disease := 'hiv/tb']
+
+#gtm
+fr_budgets[grepl(file_name, pattern = 'T_Full'), fr_disease := 'tb']
+fr_budgets[grepl(file_name, pattern = 'GTM-H_DB'), fr_disease := 'hiv']
+fr_budgets[file_name=="05.Presupuesto_detallado_final.xlsx", fr_disease := 'hiv']
+
+# senegal
+fr_budgets[grepl(file_name, pattern = 'TB-SSRP'), fr_disease := 'tb']
+fr_budgets[grepl(file_name, pattern = 'TB SSRP'), fr_disease := 'tb']
+fr_budgets[grepl(file_name, pattern = 'SEN-Z'), fr_disease := 'tb']
+fr_budgets[grepl(file_name, pattern = 'SEN-H_DB'), fr_disease := 'hiv']
 
 # print the major data sources
 #unique(fr_budgets[,.(loc_name, data_source, fr_disease, grant)])

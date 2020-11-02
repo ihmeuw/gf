@@ -108,7 +108,7 @@ for (var in numVars) {
   dt[str_count(get(var), "\\.")>1, (var):=gsub("\\.", "", get(var))] 
   
   #REMOVE PUNCTUATION # line 93 changes depending on the encoding of this file and results in not all of the punctuation getting properly cleaned.
-  dt[, (var):=gsub("?|%|‰|Ã¢|Â°|â°", "", get(var))]
+  dt[, (var):=gsub("?|%|'|‰|Ã¢|Â°|â°", "", get(var))]
   
   # REMOVE SPACE BETWEEN NUMBERS
   dt[, (var):=gsub("[[:space:]]", "", get(var))] 
@@ -160,6 +160,19 @@ dt[loc_name=="cod" & indicator=="Nombre et pourcentage de structures de santÃ©
 
 dt[loc_name=="cod" & indicator=="Parmi l'ensemble des nouveaux cas de tuberculose (toutes formes confondues) ayant recu un soutien Ã  l'observance de la part des agents de santÃ© ou des bÃ©nÃ©voles, nombre et pourcentage de ceux traitÃ©s avec succÃ¨s (traitement achevÃ© et guÃ©rison)",
    indicator_code:="TCP-Other"]
+
+dt[loc_name=="cod" & indicator=="Nombre et pourcentage de structures de santé (CDT) qui ont connu une rupture de stock des tests de VIH",
+   indicator_code:="TCS-other 1"]
+
+dt[loc_name=="cod" & indicator=="Nombre et pourcentage de structures de santé (Centres de Santé intégrés) qui rapporte une rupture de stock des tests de diagnostic rapide (TDR) malaria",
+   indicator_code:="TCS-other 1"]
+
+dt[loc_name=="cod" & indicator=="Parmi l'ensemble des nouveaux cas de tuberculose (toutes formes confondues) ayant recu un soutien à l'observance de la part des agents de santé ou des bénévoles, nombre et pourcentage de ceux traités avec succès (traitement achevé et guérison)",
+   indicator_code:="TCP other-1"]
+
+# remove white spaces from indicator columns to faciliate merge
+cols_trim <- c("indicator_code")
+dt[,(cols_trim) :=lapply(.SD,trimws),.SDcols = cols_trim]
 
 #-------------------------------------
 # add standardized name variables
