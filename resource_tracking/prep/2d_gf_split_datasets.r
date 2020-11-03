@@ -308,7 +308,7 @@ cumulative_absorption[, cumulative_absorption:=round((cumulative_expenditure/cum
 cumulative_absorption <- cumulative_absorption[gf_module!="COVID-19"]
 
 # remove calculated columns since they are not correct
-cumulative_absorption <- cumulative_absorption[cumul_abs_method!="calculated"]
+# cumulative_absorption <- cumulative_absorption[cumul_abs_method!="calculated"]
 
 # Subset columns to GEP and CEP variables. 
 cumulative_absorption_gep = cumulative_absorption[, gep_cols, with=FALSE]
@@ -394,7 +394,7 @@ all_absorption[is.nan(absorption), absorption:=NA]
 all_absorption[!is.finite(absorption), absorption:=NA]
 
 # remove COVID data from absorption
-all_absorption[gf_module!="COVID-19"]
+all_absorption <- all_absorption[gf_module!="COVID-19"]
 
 # Subset columns to GEP and CEP variables. 
 all_absorption_gep = copy(all_absorption) # Leaving this in this format for now EL 3/9/20 
