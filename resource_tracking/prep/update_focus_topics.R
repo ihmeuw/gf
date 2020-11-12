@@ -19,7 +19,6 @@ source("./resource_tracking/prep/create_keyword_search_dataset.R")
 source("./resource_tracking/prep/prep_final_focus_topic_mapping.R")
 
 # 5. Run the file: "2e_aggregate_files.R" which will remap data to the focus topics
-
 source("./resource_tracking/prep/2e_gf_aggregate_files.R")
 
 # 6. Run: "combine_frs_budget_revisions.R" to map focus topics onto the activity level file called: budgetRevisions_with_frBudgets_activityLevel.csv"

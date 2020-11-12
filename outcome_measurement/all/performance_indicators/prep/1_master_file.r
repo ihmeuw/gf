@@ -38,14 +38,14 @@ source('./resource_tracking/prep/_common/load_master_list.r', encoding="UTF-8")
 # Set boolean switches
 # ---------------------------------------
 # What countries do you want to run? 
-countries = c('gtm', 'cod', 'uga', 'sen') #Add country codes to this list to prep them. Possible choices are 'cod', 'gtm', 'sen', and 'uga'. 
+countries = c('uga') #Add country codes to this list to prep them. Possible choices are 'cod', 'gtm', 'sen', and 'uga'. 
 
 prep_1a = TRUE #Set to true if you want to extract impact outcome indicators 1A. 
 prep_1a_disagg = TRUE #Set to true if you want to extract disaggregated impact outcome indicators 1A.
 prep_1b = TRUE #Set to true if you want to extract coverage indicators 1B. 
 prep_1b_disagg = TRUE #Set to true if you want to extract disaggregated coverage indicators 1B. 
 
-verbose = FALSE #Set to true if you want to print more detailed error messages. 
+verbose = TRUE #Set to true if you want to print more detailed error messages. 
 
 #-----------------------------------------------
 # 1. Prep individual countries 
