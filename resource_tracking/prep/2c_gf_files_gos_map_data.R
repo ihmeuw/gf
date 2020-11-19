@@ -101,6 +101,7 @@ mapped_data[disease == 'hss', disease:='rssh']
 mapped_data[substring(code, 1, 1)=='H', disease:='hiv']
 mapped_data[substring(code, 1, 1)=='T', disease:='tb']
 mapped_data[substring(code, 1, 1)=='M', disease:='malaria']
+mapped_data[substring(code, 1, 1)=='C', disease:='covid-19']
 
 #-------------------------------------------------------
 # Split HIV/TB combined grants  
