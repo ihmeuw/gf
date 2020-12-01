@@ -20,7 +20,7 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # -----------------------------------------------
 # update these files with the keyword search runs to use:
 drc = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_23_2020.csv')))
-uga = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/UGA/test_uganda_focus_topic_search_11_18_2020.csv')))
+uga = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/UGA/test_uganda_focus_topic_search_11_23_2020.csv')))
 gtm = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/GTM/test_guatemala_focus_topic_search_7_23_2020.csv')))
 sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/SEN/test_senegal_focus_topic_search_7_31_2020.csv')))
 # combine keyword search results
@@ -80,7 +80,7 @@ write.csv(dt_wide_percent, paste0(dir, 'modular_framework_mapping/keyword_search
 # -----------------------------------------------
 # update these files with the keyword serach runs to use:
 drc = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_23_2020.csv')))
-uga = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/UGA/test_uganda_focus_topic_search_11_18_2020.csv')))
+uga = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/UGA/test_uganda_focus_topic_search_11_23_2020.csv')))
 gtm = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/GTM/test_guatemala_focus_topic_search_7_23_2020.csv')))
 sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/SEN/test_senegal_focus_topic_search_7_31_2020.csv')))
 # combine keyword search results

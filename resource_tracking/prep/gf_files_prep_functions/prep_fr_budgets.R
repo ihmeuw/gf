@@ -10,15 +10,16 @@
 prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num, language, file_iteration) {
   
   # # # TROUBLESHOOTING HELP
-  # dir = file_dir
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet[i]
-  # start_date = file_list$start_date_financial[i]
-  # period = file_list$period_financial[i]
-  # disease = file_list$disease[i]
-  # qtr_num = file_list$qtr_number[i]
-  # language = file_list$language_financial[i]
-  # file_iteration = file_list$file_iteration[i]
+  
+  dir = file_dir
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet[i]
+  start_date = file_list$start_date_financial[i]
+  period = file_list$period_financial[i]
+  disease = file_list$disease[i]
+  qtr_num = file_list$qtr_number[i]
+  language = file_list$language_financial[i]
+  file_iteration = file_list$file_iteration[i]
   # -------------------------------------
   #Sanity check: Is this sheet name one you've checked before? 
   verified_sheet_names <- c('Detailed Budget', 'Detailed budget')
@@ -250,6 +251,16 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   }
   gf_data = gf_data[!(is.na(module) & is.na(intervention) & is.na(activity_description) & is.na(cost_category))]
   
+  # Remove rows with NA for activity descriptions but make sure that their sum is 0 for budgetary information
+  check_na_activities_sum <- gf_data[is.na(activity_description)]
+  check_na_activities_sum <- melt(check_na_activities_sum, id.vars = c('module', 'intervention', 'implementer', 'cost_category'), value.name = "budget")
+  check_na_activities_sum[, budget:=as.numeric(budget)]
+  na_activities_budget = check_na_activities_sum[, sum(budget, na.rm = TRUE)]
+  if (na_budget!=0){
+    stop("Budgeted line items have NA for activity description - review drop conditions before dropping NAs in module and intervention")
+  }
+  gf_data = gf_data[!(is.na(activity_description))]
+  
   # this Guatemala and Senegal file have extra blank row with only an activity description but that activity description already has a budget item (with mod and interv elsewhere)
   if (inFile%in%c("05.Presupuesto_detallado_final.xlsx", "FR909-SEN-H_DB_template_Master_conso   Version finale du  29062020.xlsx",
                   "FR909-SEN-H_DB_template_Master_conso   Version finale du   07072020   - VF090720_19H30.xlsx",
@@ -283,7 +294,7 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
     gf_data <- gf_data[-extra_module_row, ,drop = FALSE]
   }
 
-  
+
   #-------------------------------------
   # 3. Reshape data long
   #-------------------------------------

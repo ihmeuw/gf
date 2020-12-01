@@ -38,7 +38,7 @@ for (file in doc_prep_functions){
 verbose = FALSE 
 # load files to loop through for FR prep:
 file_list = load_master_list(purpose = "financial") #This function is sourced from the _common folder in master script. 
-file_list = file_list[data_source == 'funding_request' & file_iteration %in% c('approved_gm', 'initial') | data_source== 'budget' & grant_period=='2021-2023'] 
+file_list = file_list[data_source == 'funding_request' & file_iteration %in% c('approved_gm', 'initial') | data_source== 'budget' & grant_period=='2021-2023' & file_iteration=='approved_gm'] 
 # note: here, 'approved_gm' and 'initial" are misnomers; we used them to fit in with the naming schema that had already been used for the file list 
 # initial = submitted to CT
 # approved_gm = submitted to TRP (will rename these later)
@@ -296,6 +296,7 @@ mapped_data[disease == 'hss', disease:='rssh']
 mapped_data[substring(code, 1, 1)=='H', disease:='hiv']
 mapped_data[substring(code, 1, 1)=='T', disease:='tb']
 mapped_data[substring(code, 1, 1)=='M', disease:='malaria']
+mapped_data[substring(code, 1, 1)=='C', disease:='covid-19']
 
 # ----------------------------------------------
 # Split HIV/TB combined grants  

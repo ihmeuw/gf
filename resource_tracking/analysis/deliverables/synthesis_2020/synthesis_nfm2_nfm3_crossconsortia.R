@@ -38,6 +38,9 @@ outFilee3 = paste0(outDir, 'cc_fr17_comparisons_equity.png')
 
 outFiler = paste0(outDir, 'cc_fr_comparisons_rssh_grid.png')
 outFiler2 = paste0(outDir, 'cc_fr_comparions_rssh_grip.png')
+
+# the tables to be saved
+outTable1 = paste0(outDir, "tables/hiv_data_table.csv")
 # -------------------------------------------------------------------
 
 # -------------------------------------------------------------------
@@ -126,6 +129,22 @@ g <- ggplot(plot_data, aes(y=budget, x=version_short, fill=disease)) +
 png(outFileg, height = 8, width = 10, units = "in", res = 300)
 g
 dev.off()
+
+######################### table 1 ######################################
+#
+# Create a table of the underlying data for synthesis report
+#######################################################################
+# sum budget across many variables
+g_table <- plot_data[,.(budget=sum(budget, na.rm=TRUE)), by=c('loc_name', 'disease', 'version_short', 'simplified_mod')]
+
+# reshape data back to wide to match figures in table
+g_table <- dcast(g_table, loc_name + disease + simplified_mod ~version_short, value.var = "budget" )
+
+# reorder columns
+setcolorder(g_table, neworder = c("loc_name", "disease", "simplified_mod", "NFM2 FR", "NFM2 Approved", "NFM2 Revision*", "NFM3 FR"))
+
+# save datatables
+write.csv(g_table[disease=="hiv"], outTable1)
 
 ######################## Second OutFiles #################################
 #

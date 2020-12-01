@@ -71,9 +71,9 @@ idat2.first <- idat2.first[loc_name=="Guatemala", year:=2019]
 # sum first year of data
 idat2.first <- idat2.first[,.(cum_budget=sum(budget, na.rm=TRUE), cum_expend=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'disease', 'year', 'gf_module', 'rssh')]
 
-###########################
-# Prep missing cumulative data
-##########################
+#####################################################s
+# Prep missing cumulative data for 2020 and 2019
+####################################################
 
 # certain grants are missing cumulative data in IHME PUDRs for 2020, this includes the following grants
 # - COD-C-CORDAID
@@ -81,6 +81,8 @@ idat2.first <- idat2.first[,.(cum_budget=sum(budget, na.rm=TRUE), cum_expend=sum
 # - COD-M-SANRU
 # - COD-T-MOH
 # - GTM-H-INCAP
+
+# Senegal grants do have the data reported for 2020, but I also will calculate cumulative absorption for 2019 in case we need that data point
 
 # subset to grants that are missing cumulative data for 2020 and those that can be summed for 2019 and 2020
 idat2.second <- idat2[grant %in% c('COD-C-CORDAID', 'COD-H-MOH', 'COD-M-SANRU', 'COD-T-MOH', 'SEN-Z-MOH', 'SEN-M-PNLP', 'SEN-H-ANCS', 'SEN-H-CNLS')]
