@@ -36,9 +36,9 @@ for (var in numVars) {
   #Do an overall check - how many rows have at least one digit for this value (numeric information?) Is it the same at the end? 
   start_numeric = nrow(dt[grepl("[[:digit:]]", get(var))])
   # REMOVE NAs
-  dt[get(var)=="N/A" | get(var)=="ND" | get(var)==" " | get(var)=="No disaggregation" | get(var)=="No disagregation" | get(var)=="qu " | get(var)=="i" | 
-       get(var)=="The PR did not report any result" | get(var)=="Sin dato" | get(var)=="sin dato" | get(var)=="Not reported" | 
-       get(var)=="Pendiente de recibir la info del PNS" | get(var)=="." | get(var)=='[Baseline Value]', (var):=NA]
+  dt[get(var)=="N/A" | get(var)=="ND" | get(var)==" " | get(var)=="No disaggregation" | get(var)=="No disagregation" | get(var)=="qu " | get(var)=="i" | get(var)=="na" | 
+       get(var)=="The PR did not report any result" | get(var)=="Sin dato" | get(var)=="sin dato" | get(var)=="Not reported" | get(var)=="Pendiente de recibir la info del PNS" |
+       get(var)=="SIN DATO" | get(var)=="Pendiente de recibir la info del PNS" | get(var)=="." | get(var)=='[Baseline Value]', (var):=NA]
   start_nas = nrow(dt[is.na(get(var))]) #Make sure that this numeric conversion doesn't accidentally introduce any NAs after this point.
   
   # LOOK FOR "E-" AND CONVERT SCIENTIFIC NOTATION
@@ -169,6 +169,9 @@ dt[loc_name=="cod" & indicator=="Nombre et pourcentage de structures de santé (
 
 dt[loc_name=="cod" & indicator=="Parmi l'ensemble des nouveaux cas de tuberculose (toutes formes confondues) ayant recu un soutien à l'observance de la part des agents de santé ou des bénévoles, nombre et pourcentage de ceux traités avec succès (traitement achevé et guérison)",
    indicator_code:="TCP other-1"]
+
+dt[loc_name=="cod" & indicator=="Number and percentage of new TB cases (all forms) successfully treated (cured plus completed treatment) who received support for treatment adherence from community health workers or community volunteers among all new TB cases (all forms) provided with treatment adherence support by community health workers or community volunteers",
+   indicator_code:="TCP-Other"]
 
 # remove white spaces from indicator columns to faciliate merge
 cols_trim <- c("indicator_code")

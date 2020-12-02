@@ -47,7 +47,10 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
                       "LFA_COD-T-MOH_Progress Report Disbursement_31Dec2019_CANEVAS_12042020.xlsx", "Copy of SEN-Z-MOH PU (Jan-Juin19) LFA, 25Sept19.xlsx",
                       "SEN-H-ANCS PUDR (Juil-Dec19) LFA 5Mar20.xlsm", "SEN-H-CNLS PUDR (Juil-Dec19) LFA, 7Avr20.xlsx", "SEN-M-PNLP PUDR (Juil-Dec19), LFA 10Avr20.xlsx",
                       "SEN-Z-MOH PUDR (Juil-Dec19), LFA 7Avr20.xlsx", "Copy of CTvf__COD-H-MOH_Progress Report Disbursement_31Dec2019_v3_LFA23042020_BrK_Validated.xlsx",
-                      "SEN M PNLP PU (Jan-Juin20), LFA, 21Sep20.xlsx", "SEN-H-CNLS PU (Jan-Juin20) LFA,16Sept20.xlsx", "SEN-Z-MOH_PU (Jan-Juin20), LFA 25Sept20 (1).xlsx")
+                      "SEN M PNLP PU (Jan-Juin20), LFA, 21Sep20.xlsx", "SEN-H-CNLS PU (Jan-Juin20) LFA,16Sept20.xlsx", "SEN-Z-MOH_PU (Jan-Juin20), LFA 25Sept20 (1).xlsx",
+                      "COD-M-MOH_Progress Report_30Jun2020_Revue LFA_271020.xlsx",
+                      "COD-M-SANRU_PU S1 2020_REVUE LFA_21Sep20.xlsx",
+                      "LFA_COD-H-MOH_Progress Report_30Jun2020_v9 Bonne Version Paul_vf-ok_15102020.xlsx")
   
   # Load/prep data
   gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name, detectDates=TRUE))

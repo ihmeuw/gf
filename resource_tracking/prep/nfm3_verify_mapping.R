@@ -34,8 +34,10 @@ map_20_22_malaria = data.table(read_xlsx(paste0(mapping_dir, "2020-2022 Modular 
 map_20_22_malaria[, disease:="malaria"]
 map_20_22_rssh = data.table(read_xlsx(paste0(mapping_dir, "2020-2022 Modular Framework.xlsx"), sheet="RSSH Interventions"))
 map_20_22_rssh[, disease:="rssh"]
+map_20_22_covid = data.table(read_xlsx(paste0(mapping_dir, "2020-2022 Modular Framework.xlsx"), sheet="COVID Interventions"))
+map_20_22_covid[, disease:= "covid-19"]
 
-map_20_22 = rbindlist(list(map_20_22_hiv, map_20_22_tb, map_20_22_malaria, map_20_22_rssh), fill = TRUE)
+map_20_22 = rbindlist(list(map_20_22_hiv, map_20_22_tb, map_20_22_malaria, map_20_22_rssh, map_20_22_covid), fill = TRUE)
 saveRDS(map_20_22, paste0(mapping_dir, "2020_2022_MF.rds"))
  
 map_20_22 = readRDS(paste0(mapping_dir, "2020_2022_MF.rds"))

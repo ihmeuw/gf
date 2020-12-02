@@ -58,10 +58,11 @@ Unless otherwise stated, all files should be run in numerical/alphabetical order
 
 ### PREP NFM3 FILES
 - Keyword searches
+	- "combine_frs_budget_revisions.r"
   - "create_keyword_search_dataset.r"
   - "focus_topic_search.r"
-  - "prep_final_focus_topic_mapping.r"
-	- "merge_keyword_search_results_with_budget_data.r"
+  - "merge_keyword_search_results_with_budget_data.r"
+	- "prep_final_focus_topic_mapping.r" *I think this file doesn't fit in this sequence*
 - Extracting NFM3 data
   - "run_prep_fr_budgets.r": extracts data from NFM3 and NFM2 funding request budgets; merges data together. Should be modified to also extract final approved NFM3 budgets.  
 	- "nfm3_verify_mapping.r": prepares new modular framework in order to map budgetary data. This file is soured in "run_prep_fr_budgets.r"
