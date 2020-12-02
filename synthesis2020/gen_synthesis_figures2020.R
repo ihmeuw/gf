@@ -160,7 +160,7 @@ p3 <- ggplot(df3, aes(x = variable, y = value, fill = label)) +
         panel.grid.major.y = element_blank()) +
   scale_fill_brewer(guide = guide_legend(reverse=TRUE), palette = "Set2") +
   scale_x_discrete(limits = rev(levels(df1$variable))) +
-  scale_y_continuous(breaks = seq(0,30,5),expand = expansion(add = 0.1)) +
+  scale_y_continuous(breaks = seq(0,30,5),expand = expansion(add = 0.1))
 p3
 
 # facet fr_disease
