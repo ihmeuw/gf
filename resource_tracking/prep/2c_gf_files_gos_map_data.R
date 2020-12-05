@@ -307,12 +307,12 @@ if (prep_files){
   
   # # First, delete the currently saved files (these are all archived so we don't need these copies)
   saved_files = list.files(export_dir, full.names=TRUE, pattern=".csv") # Only find the .csv files - these are the prepped data files. As of 3/18/20, there is one RDS 'raw bound files' from step 2B. EL
-  
-  if (country=="sen"){
-    stopifnot(length(saved_files)==8) # Senegal should have 8 files for now (since it has an extra covid absorption file. FRC 10/1/2020)
-  } else {
-    stopifnot(length(saved_files)==7)  # There should be exactly 7 files you're going to delete. FRC 5/20/2020 added one in.
-  }
+  # 
+  # if (country=="sen"){
+  #   stopifnot(length(saved_files)==8) # Senegal should have 8 files for now (since it has an extra covid absorption file. FRC 10/1/2020)
+  # } else {
+  #   stopifnot(length(saved_files)==7)  # There should be exactly 7 files you're going to delete. FRC 5/20/2020 added one in.
+  # }
 
   sapply(saved_files, unlink) # Delete the five files in this folder.
   

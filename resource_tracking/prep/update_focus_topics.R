@@ -2,7 +2,7 @@
 # Run this script to source all of the steps that are necessary
 
 # set repo directory as teh root of this file
-setwd("~/gf")
+# setwd("~/gf")
 rm(list=ls())
 
 # 

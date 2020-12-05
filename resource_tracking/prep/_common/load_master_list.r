@@ -23,7 +23,7 @@ load_master_list = function(purpose=NULL) {
     j_dir = copy(dir) #On the cluster, these will be the same 
   }
   
-  #Read in data. 
+  #Read in data.
   dt = data.table(read_excel(paste0(dir, "master_file_list.xlsx")))
   #*** Note that NA's entered by hand in the excel will be imported as strings! ("NA")
   
