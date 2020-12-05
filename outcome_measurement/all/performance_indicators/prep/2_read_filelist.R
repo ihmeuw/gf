@@ -32,7 +32,7 @@ master_file_list[, date_dup:=sequence(.N), by=c('grant', 'grant_period', 'start_
 master_file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
 
 if ( nrow(master_file_list[date_dup>0])!=0){
-  print(master_file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date_financial)][order(grant, grant_period, start_date_financial)])
+  print(master_file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period)][order(grant, grant_period)])
   print("There are duplicates in approved_gm files - review file list.")
 }
 

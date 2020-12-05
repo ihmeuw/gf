@@ -230,7 +230,7 @@ absorption_cep = absorption[, .(grant, grant_period, gf_module, gf_intervention,
 # and this has to be summed across files. 
 gep_cols = c('grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'cumulative_budget', 'cumulative_expenditure', 'cumulative_absorption',
              'start_date', 'end_date', 'cumul_abs_method')
-cep_cols = c('grant', 'grant_period', 'gf_module', 'gf_intervention', 
+cep_cols = c('grant', 'grant_period', 'gf_module', 'gf_intervention',
              'disease', 'cumulative_budget', 'cumulative_expenditure', 'cumulative_absorption',
              'start_date', 'end_date', 'cumul_abs_method')
 

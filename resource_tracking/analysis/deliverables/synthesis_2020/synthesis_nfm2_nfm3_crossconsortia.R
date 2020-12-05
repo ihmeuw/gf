@@ -321,7 +321,6 @@ png(outFilee3, height = 8, width = 10, units = "in", res = 300)
 e3
 dev.off()
 
-
 ######################## Fourth OutFiles #################################
 #
 # show how RSSH modules have changed over time during grant revisions
@@ -439,4 +438,6 @@ dev.off()
 png(outFiler2, height = 8, width = 12, units = "in", res = 300)
 r2
 dev.off()
+
+# reshape rssh data to plot percent change
 
