@@ -98,6 +98,8 @@ data2$loc_name <- factor(data2$loc_name,
                                     'DRC',
                                     'Cambodia'))
 
+data2 <- data2[loc_name!="Sudan"]
+
 # special synthesis figure for chapter 2.1  FR to GM shifts in RSSH module categories
 p1 <- ggplot(data2, aes(y=percent_change, x=loc_name)) +
   geom_bar(stat = 'identity', color="#FC8D62", fill="#FC8D62") +
