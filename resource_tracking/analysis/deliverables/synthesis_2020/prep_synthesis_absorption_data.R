@@ -14,7 +14,8 @@ library(readxl)
 box = paste0("C:/Users/frc2/Box Sync/Global Fund Files/")
 inFile = paste0(box, 'tableau_data/cumulative_absorption.csv')
 inFile2 = paste0(box, 'tableau_data/all_absorption.csv')
-ehgFile = paste0(box, 'synthesis/data/EHG Absorption synthesis19Nov20.xlsx')
+ehgFile = paste0(box, 'synthesis/data/EHG Absorption synthesis19Nov20.xlsx') # with all absorption
+ehgEquityFile = paste0(box, 'synthesis/data/EHG Equity Absorption Synthesis 22Nov20.xlsx') # with data on Equity
 
 # output files
 outDir = paste0(box, '/synthesis/data/')
@@ -28,8 +29,9 @@ outFile = paste0(outDir, 'merged_consortia_absorption_data.csv')
 #######################################################
 idat1 <- as.data.table(read.csv(inFile)) # cumulative IHME absorption data
 idat2 <- as.data.table(read.csv(inFile2)) # all IHME absorption data
-edat1 <- as.data.table(read_xlsx(ehgFile, sheet = "National Program")) # EHG data
+edat1 <- as.data.table(read_xlsx(ehgFile, sheet = "National Program")) # EHG data with Equity and non-SO data
 edat2 <- as.data.table(read_xlsx(ehgFile, sheet = "RSSH")) # EGH RSSH Data in a separate tab
+edat3 <- as.data.table(read_xlsx(ehgEquityFile, sheet="National Program")) # this is the cumulative Equity data
 
 ####################################
 # prep IHME data
@@ -38,17 +40,23 @@ edat2 <- as.data.table(read_xlsx(ehgFile, sheet = "RSSH")) # EGH RSSH Data in a 
 idat1 <- idat1[disease=='rssh', rssh:='TRUE']
 idat1 <- idat1[disease!='rssh', rssh:='FALSE']
 
+# add equity indicator to cumulative data
+mf_map <- readRDS("J:\\Project\\Evaluation\\GF\\resource_tracking\\modular_framework_mapping\\2018_2020_MF.rds")
+equity_map <- mf_map[,.(gf_module, gf_intervention, equity)]
+idat1 <- merge(idat1, equity_map, by=c('gf_module', 'gf_intervention'), all.x = TRUE)
+idat1 <- idat1[gf_module=="Vector control", equity:=FALSE]
+
 # subset rows in IHME cumulative data to remove those 'calculated' incorrectly
 idat1 <- idat1[cumul_abs_method=="reported_in_pudr"]
 
-# subset columns
-idat1 <- idat1[,.(loc_name, grant, grant_period, disease, start_date, end_date, gf_module, cumulative_budget, cumulative_expenditure, rssh)]
+# subset columns 
+idat1 <- idat1[,.(loc_name, grant, grant_period, disease, start_date, end_date, gf_module, cumulative_budget, cumulative_expenditure, rssh, equity)]
 
 # add year variable
 idat1[,year:=year(end_date)]
 
 # sum to country disease and year--cumulative data contains 2019 and 2020 data for some grants
-idat1 <- idat1[,.(cum_budget=sum(cumulative_budget, na.rm=TRUE), cum_expend=sum(cumulative_expenditure, na.rm=TRUE)), by=c('loc_name', 'disease', 'year', 'gf_module', 'rssh')] 
+idat1 <- idat1[,.(cum_budget=sum(cumulative_budget, na.rm=TRUE), cum_expend=sum(cumulative_expenditure, na.rm=TRUE)), by=c('loc_name', 'disease', 'year', 'gf_module', 'rssh', 'equity')] 
 
 ##############################
 # Prep first year ihme data
@@ -69,7 +77,7 @@ idat2.first <- idat2.first[,year:=2018]
 idat2.first <- idat2.first[loc_name=="Guatemala", year:=2019]
 
 # sum first year of data
-idat2.first <- idat2.first[,.(cum_budget=sum(budget, na.rm=TRUE), cum_expend=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'disease', 'year', 'gf_module', 'rssh')]
+idat2.first <- idat2.first[,.(cum_budget=sum(budget, na.rm=TRUE), cum_expend=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'disease', 'year', 'gf_module', 'rssh', 'equity')]
 
 #####################################################s
 # Prep missing cumulative data for 2020 and 2019
@@ -96,26 +104,26 @@ idat2.second <- idat2.second[semester=="Semester 3-4", year:=2019]
 idat2.second <- idat2.second[semester=="Semester 5", year:=2020]
 
 # calculate cumulative absorption for 2019
-idata19 <- idat2.second[semester%in%c("Semester 1-2", "Semester 3-4"), .(cum_budget=sum(budget, na.rm=TRUE), cum_expend=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'disease', 'gf_module', 'rssh')]
+idata19 <- idat2.second[semester%in%c("Semester 1-2", "Semester 3-4"), .(cum_budget=sum(budget, na.rm=TRUE), cum_expend=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'disease', 'gf_module', 'rssh', 'equity')]
 
 # add corresponding year
 idata19 <- idata19[,year:=2019] 
 
 # calculate cumulative absorption for 2020 (and exclude grants that already have it reported in pudrs (i.e. Senegal grants))
-idata20 <- idat2.second[grant%in%c('COD-C-CORDAID', 'COD-H-MOH', 'COD-M-SANRU', 'COD-T-MOH') & semester%in%c("Semester 1-2", "Semester 3-4", "Semester 5"), .(cum_budget=sum(budget, na.rm=TRUE), cum_expend=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'disease','gf_module', 'rssh')]
+idata20 <- idat2.second[grant%in%c('COD-C-CORDAID', 'COD-H-MOH', 'COD-M-SANRU', 'COD-T-MOH') & semester%in%c("Semester 1-2", "Semester 3-4", "Semester 5"), .(cum_budget=sum(budget, na.rm=TRUE), cum_expend=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'disease','gf_module', 'rssh', 'equity')]
 
 # add corresponding year
 idata20 <- idata20[,year:=2020]
 
 # calculate cumulative absorption for INCAP grant 
-idata20.incap <- idat2[grant=='GTM-H-INCAP' & semester%in%c('Semester 1-3', 'Semester 4'), .(cum_budget=sum(budget, na.rm=TRUE), cum_expend=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'disease','gf_module', 'rssh')]
+idata20.incap <- idat2[grant=='GTM-H-INCAP' & semester%in%c('Semester 1-3', 'Semester 4'), .(cum_budget=sum(budget, na.rm=TRUE), cum_expend=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'disease','gf_module', 'rssh', 'equity')]
 idata20.incap <- idata20.incap[,year:=2020]
 
 # bind together four files: (1) IHME cumulative data reported in pudrs, (2) first year data from PUDRs, and (3) calculated 2019 and 2020 data, and (4) second year GTM-H-INCAP grant
 idata <- rbind(idat1, idat2.first, idata19, idata20, idata20.incap, fill=TRUE)
 
 # sum up together one more time
-idata <- idata[,.(cum_budget=sum(cum_budget, na.rm=TRUE), cum_expend=sum(cum_expend, na.rm=TRUE)), by=c('loc_name', 'disease','year', 'gf_module', 'rssh')]
+idata <- idata[,.(cum_budget=sum(cum_budget, na.rm=TRUE), cum_expend=sum(cum_expend, na.rm=TRUE)), by=c('loc_name', 'disease','year', 'gf_module', 'rssh', 'equity')]
 
 # reorder columns
 # idata <- idata[,.(loc_name, year, gf_module, cum_budget, cum_expend)]
@@ -126,19 +134,27 @@ idata <- idata[,.(cum_budget=sum(cum_budget, na.rm=TRUE), cum_expend=sum(cum_exp
 # subset columns
 edat1 <- edat1[,.(Country, component, year, gf_module, cum_budget, cum_expend)] 
 edat2 <- edat2[,.(loc_name, component, year, gf_module, cum_budget, cum_expend)]
+edat3 <- edat3[,.(loc_name, component, year, Module, cum_budget, cum_expend)]
 
 # add indicator for RSSH variables
 edat2$rssh <- TRUE 
 edat1$rssh <- FALSE
+edat3$rssh <- FALSE
+
+# add indicator for Equity variables
+edat1$equity <- FALSE
+edat2$equity <- FALSE
+edat3$equity <- TRUE
 
 # rename variables
 setnames(edat1, old=c('Country', 'component'), new=c('loc_name', 'disease')) 
+setnames(edat3, old=c('Module'), new=c('gf_module'))
 
 # bind two EHG data files together
-edata <- rbind(edat1, edat2, fill=TRUE)
+edata <- rbind(edat1, edat2, edat3, fill=TRUE)
 
-# sum to country, disease, year, module, and rssh
-edata <- edata[, lapply(.SD, sum, na.rm = TRUE), .SDcols = c('cum_budget', 'cum_expend'), by =c('loc_name', 'disease', 'year', 'gf_module', 'rssh')] 
+# sum to country, disease, year, module, and rssh, equity
+edata <- edata[, lapply(.SD, sum, na.rm = TRUE), .SDcols = c('cum_budget', 'cum_expend'), by =c('loc_name', 'disease', 'year', 'gf_module', 'rssh', 'equity')] 
 
 # corrections
 edata[gf_module=="Treatment", gf_module:="Treatment, care and support"]
@@ -170,12 +186,12 @@ edata[gf_module=="RSSH: National health strategies", gf_module:="National health
 # DISEASE CORRECTIONS
 edata[is.na(disease) & rssh=="TRUE", disease:='rssh']
 
-unmatched_mods <- edata[!gf_module %in% idata$gf_module] # modules in the EHG data that don't match those in IHME data
-if(nrow(unmatched_mods)>0){
-  print(unique(unmatched_mods[, c("gf_module"), with= FALSE]))
-  # print(unique(unmatched_mods$file_name)) #For documentation in the comments above.
-  stop("You have unmapped original modules/interventions!")
-}
+# unmatched_mods <- edata[!gf_module %in% idata$gf_module] # modules in the EHG data that don't match those in IHME data
+# if(nrow(unmatched_mods)>0){
+#   print(unique(unmatched_mods[, c("gf_module"), with= FALSE]))
+#   # print(unique(unmatched_mods$file_name)) #For documentation in the comments above.
+#   stop("You have unmapped original modules/interventions!")
+# }
 
 # # make sure column names align
 # non_similar_columns <- !names(idata)%in%names(edata)

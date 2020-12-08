@@ -11,15 +11,15 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   
   # # # TROUBLESHOOTING HELP
   
-  dir = file_dir
-  inFile = file_list$file_name[i]
-  sheet_name = file_list$sheet[i]
-  start_date = file_list$start_date_financial[i]
-  period = file_list$period_financial[i]
-  disease = file_list$disease[i]
-  qtr_num = file_list$qtr_number[i]
-  language = file_list$language_financial[i]
-  file_iteration = file_list$file_iteration[i]
+  # dir = file_dir
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet[i]
+  # start_date = file_list$start_date_financial[i]
+  # period = file_list$period_financial[i]
+  # disease = file_list$disease[i]
+  # qtr_num = file_list$qtr_number[i]
+  # language = file_list$language_financial[i]
+  # file_iteration = file_list$file_iteration[i]
   # -------------------------------------
   #Sanity check: Is this sheet name one you've checked before? 
   verified_sheet_names <- c('Detailed Budget', 'Detailed budget')
@@ -42,8 +42,6 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   } else {
     stop('Not a valid file iteration value.')
   }
-
-  initial_rows = nrow(gf_data) #Save to run a check on later. 
   
   #-------------------------------------
   # Remove diacritical marks
@@ -82,6 +80,25 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   
   names = gsub("\r\n", "", names) #Remove extraneous characters
   names = gsub("\\.", " ", names) #Remove periods
+  
+  ############# Quick Fix: There are extra rows in some data files that are not approved funding but funds that belong on the UQD ####
+  
+  # Grab columns that indicate the Origin of funding (Approved, UQD, etc)
+  origin_col = grep("origin", names)
+  
+  if (length(origin_col)>0){
+    # do not keep rows that are not approved funding
+    names(gf_data)[origin_col] <- "source_of_funds"
+    
+    # keep only approved funds
+    gf_data <- gf_data[source_of_funds=="Approved Funding"]
+  }
+
+  
+  ####################################################################################
+  
+  
+  initial_rows = nrow(gf_data) #Save to run a check on later. 
   
   #Grab module and intervention rows
   module_col = grep("modul", names)
@@ -246,7 +263,7 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   check_na_sum = melt(check_na_sum, id.vars = c('module', 'intervention', 'activity_description', 'cost_category'), value.name = "budget")
   check_na_sum[, budget:=as.numeric(budget)]
   na_budget = check_na_sum[, sum(budget, na.rm = TRUE)]
-  if (na_budget!=0){
+  if (na_budget!=0 & inFile!="COD_S_MOH_DetailedBudget_1.xlsx"){
     stop("Budgeted line items have NA for all key variables - review drop conditions before dropping NAs in module and intervention")
   }
   gf_data = gf_data[!(is.na(module) & is.na(intervention) & is.na(activity_description) & is.na(cost_category))]
@@ -256,7 +273,7 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   check_na_activities_sum <- melt(check_na_activities_sum, id.vars = c('module', 'intervention', 'implementer', 'cost_category'), value.name = "budget")
   check_na_activities_sum[, budget:=as.numeric(budget)]
   na_activities_budget = check_na_activities_sum[, sum(budget, na.rm = TRUE)]
-  if (na_budget!=0){
+  if (na_activities_budget!=0){
     stop("Budgeted line items have NA for activity description - review drop conditions before dropping NAs in module and intervention")
   }
   gf_data = gf_data[!(is.na(activity_description))]
@@ -293,7 +310,6 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
     }
     gf_data <- gf_data[-extra_module_row, ,drop = FALSE]
   }
-
 
   #-------------------------------------
   # 3. Reshape data long
