@@ -58,16 +58,33 @@ dt = plot_rssh[ version == 'nfm3_funding_request20', ]
 
 # rename duplicate modules
 dt[gf_module == 'Health management information system and monitoring and evaluation', gf_module := 'Health management information systems and M&E']
+dt[gf_module == 'Community responses and systems', gf_module := 'Community systems strengthening']
+dt[gf_module == 'Procurement and supply chain management systems', gf_module := 'Health products management systems']
 
 # calculate each module % of total
 dt[, rssh_total_by_country := sum(budget), by = c('loc_name')]
-dt[, module_percent_of_total_rssh := (budget/rssh_total_by_country)*100]
+dt[, module_percent_of_total_rssh := round((budget/rssh_total_by_country)*100, 2)]
+dt = dt[module_percent_of_total_rssh > 0, ]
 
 # order and limit to match what is in the synthesis report
+dt[, gf_module := factor(gf_module, levels = c('Health management information systems and M&E', 
+                                 'Health products management systems',
+                                 'Integrated service delivery and quality improvement',
+                                 'Community systems strengthening',
+                                 'Health sector governance and planning',
+                                 'Human resources for health, including community health workers',
+                                 'Laboratory systems',
+                                 'Financial management systems'))]
 
 # plot into a heatmap
-g = ggplot(dt, aes(loc_name, gf_module, fill= module_percent_of_total_rssh)) + geom_tile() + theme_bw()
-
+g = ggplot(dt, aes(loc_name, gf_module, fill= module_percent_of_total_rssh)) + geom_tile() + theme_bw() + 
+  scale_x_discrete(position = 'top') + labs( x = 'Country', y = "RSSH-related Module", fill = "% of Country's Total \nRSSH Spending") + 
+  scale_fill_continuous(high = "#132B43", low = "#9fd4fc") +
+  scale_y_discrete(limits = rev(levels(dt$gf_module))) +
+  geom_text(aes(label= paste0(dt$module_percent_of_total_rssh, '%')), color = '#FFFFFF')
+  # scale_fill_continuous(type = 'viridis') 
+  # 56B1F7 - alternate/close to default color 
+  
 pdf(outFile, height = 9, width = 14)
 print(g)
 dev.off()
