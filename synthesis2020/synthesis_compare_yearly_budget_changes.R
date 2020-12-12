@@ -6,7 +6,8 @@
 # To do - Matt said something about including/visualizing the relative changes 
 #       - summarize across grants/countries? how? 
 #       - figure out what to do with GTM years? 
-#       - fix COD data - why are there years 2028-2031 for H-MOH? 
+#       - fix COD data - why are there years 2028-2031 for COD-H-MOH? 
+#       - NAs in budget_version for COD-M-MOH and COD-M-SANRU
 
 rm(list=ls())
 
