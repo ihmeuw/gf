@@ -91,15 +91,19 @@ data1$loc_name <- factor(data1$loc_name,
                                     'DRC',
                                     'Cambodia'))
 
+# add label that will be added to the figures
+data1$label <- format(round(data1$difference, digits = -3), nsmall = 0, big.mark=",")
+
 # special synthesis figure for chapter 2.1  FR to GM shifts in equity
 p0 <- ggplot(data1, aes(y=percent_change, x=loc_name)) +
   geom_bar(stat = 'identity', color="#66C2A5", fill="#66C2A5") +
   coord_flip()+
-  labs(title=paste0("HRG-Equity Percent Change NFM2 FR-GM"),
+  labs(title=paste0("HRG-Equity Change NFM2 FR-GM"),
        y='Percent change',
        x='',
        fill = '')+
-  theme_minimal(base_size=14)
+  theme_minimal(base_size=20)+
+  geom_text(aes(label = label), position = position_stack(vjust = 0.5))
 
 p0
 ggsave("HRG-Equity_summary_figure.png", plot = p0, path = out.path, width = 7.5, height = 5, units = "in")
@@ -122,6 +126,16 @@ data2$loc_name <- factor(data2$loc_name,
                                     'DRC',
                                     'Cambodia'))
 
+# add label that will be added to the figures
+data2$diff_label <- format(round(data2$difference, digits = -3), nsmall = 0, big.mark=",")
+
+# change the labels that will plot since they are too long
+data2[label=="Human rights related investments", label:="Human rights"]
+data2[label=="KVP related investments", label:="KVP"]
+data2[label=="Other equity related investments", label:="Other equity investments"]
+
+# correct the infinte values
+data2[is.infinite(percent_change), percent_change:=100]
 
 p1 <- ggplot(data2, aes(y=percent_change, x=loc_name)) +
   geom_bar(stat = 'identity', color="#66C2A5", fill="#66C2A5") +
@@ -132,10 +146,17 @@ p1 <- ggplot(data2, aes(y=percent_change, x=loc_name)) +
        fill = '',
        caption = "Exact percent increase in Human Rights cannot be calculated for Senegal and DRC since funds in NFM2 FR were 0. ")+
   facet_grid(~label)+
-  theme_minimal(base_size=12)
+  theme_minimal(base_size=20)+
+  geom_text(aes(label =diff_label), position = position_stack(vjust = 0.5))
 p1
-ggsave("HRG-Equity_percent_change_frgm.png", plot = p1, path = out.path, width = 7.5, height = 5, units = "in")
+ggsave("HRG-Equity_percent_change_frgm.png", plot = p1, path = out.path, width = 13, height = 7, units = "in")
 
+# Additional code to visualize the question on synthesis report
+cc_frgm_equity_data$difference <- as.numeric(cc_frgm_equity_data$nfm2_approved + cc_frgm_equity_data$nfm2_funding_request17)
+
+
+# # cast wide the dataset cc_frgm_equity_data  to include the loc_name, gf_module, gf_intervention, label, 
+# equity_tables <- dcast(cc_frgm_equity_data, loc_name + gf_module + gf_intervention ~ )
 
 # #### CODE BELOW WAS TAKEN FROM FILE PREPPING OTHER EQUITY FIGURES--might need revising
 # 

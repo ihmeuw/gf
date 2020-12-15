@@ -53,15 +53,23 @@ data1$loc_name <- factor(data1$loc_name,
                                     'DRC',
                                     'Cambodia'))
 
+# add label that will be added to the figures
+data1$label <- format(round(data1$di, digits = -3), nsmall = 0, big.mark=",")
+
 # special synthesis figure for chapter 2.1  FR to GM shifts in RSSH
 p0 <- ggplot(data1, aes(y=percent_change, x=loc_name)) +
   geom_bar(stat = 'identity', color="#FC8D62", fill="#FC8D62") +
   coord_flip()+
-  labs(title=paste0("RSSH Percent Change NFM2 FR-GM"),
+  labs(title=paste0("RSSH Change NFM2 FR-GM"),
        y='Percent change',
        x='',
        fill = '')+
-  theme_minimal(base_size=14)
+  theme_minimal(base_size=20)+
+  geom_text(aes(label = label), position = position_stack(vjust = 0.5))
+  
+   # geom_text(size=5, aes(label=label),
+   #          hjust='inward',
+   #          nudge_x=0.05)
 
 p0
 ggsave("RSSH_percent_change_frgm.png", plot = p0, path = out.path, width = 7.5, height = 5, units = "in")
@@ -99,6 +107,7 @@ data2$loc_name <- factor(data2$loc_name,
                                     'Cambodia'))
 
 data2 <- data2[loc_name!="Sudan"]
+data2 <- data2[nfm2_funding_request17!=0 & nfm2_approved!=0]
 
 # special synthesis figure for chapter 2.1  FR to GM shifts in RSSH module categories
 p1 <- ggplot(data2, aes(y=percent_change, x=loc_name)) +
@@ -108,7 +117,7 @@ p1 <- ggplot(data2, aes(y=percent_change, x=loc_name)) +
        y='Percent change',
        x='',
        fill = '')+
-  theme_minimal(base_size=14)+
+  theme_minimal(base_size=20)+
   facet_wrap(~label)
 
 p1

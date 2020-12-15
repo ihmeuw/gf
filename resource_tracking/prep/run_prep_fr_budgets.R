@@ -435,6 +435,8 @@ fr_budgets[ implementer == 'PR Societe Civile' & fr_disease == 'hiv/tb', pr := '
 fr_budgets[ loc_name == 'gtm' & fr_disease == 'tb', pr := 'MSPAS']
 fr_budgets[ loc_name == 'gtm' & fr_disease == 'hiv', pr := 'INCAP']
 fr_budgets[ loc_name == 'gtm' & fr_disease == 'malaria', pr := 'MSPAS']
+fr_budgets[ file_name=='GTM_H_INCAP_DetailedBudget_1.xlsx', pr := 'INCAP']
+
 # SEN
 fr_budgets[ loc_name == 'sen' & fr_disease == 'tb', pr := 'MOH']
 fr_budgets[ loc_name == 'sen' & fr_disease == 'malaria', pr := 'MOH']
