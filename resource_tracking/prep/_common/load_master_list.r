@@ -61,7 +61,7 @@ load_master_list = function(purpose=NULL) {
   #Check remaining columns - you should have no NA values for these now. 
   stopifnot(unique(dt$loc_name)%in%c('cod', 'uga', 'gtm', 'sen'))
   stopifnot(unique(dt$grant_status)%in%c('active', 'not_active'))
-  stopifnot(unique(dt$disease%in%c('hiv', 'tb', 'malaria', 'rssh', 'hiv/tb')))
+  stopifnot(unique(dt$disease%in%c('hiv', 'tb', 'malaria', 'rssh', 'hiv/tb', 'tb/malaria')))
   stopifnot(unique(dt$file_currency)%in%c('USD', 'EUR', 'LOC'))
   stopifnot(unique(dt$geography_detail)%in%c('NATIONAL', 'SUBNATIONAL', 'NA'))
   stopifnot(unique(dt$file_iteration)%in%c("approved_gm", 'initial', 'revision', 'unclear'))

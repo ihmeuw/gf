@@ -435,11 +435,19 @@ fr_budgets[ implementer == 'PR Societe Civile' & fr_disease == 'hiv/tb', pr := '
 fr_budgets[ loc_name == 'gtm' & fr_disease == 'tb', pr := 'MSPAS']
 fr_budgets[ loc_name == 'gtm' & fr_disease == 'hiv', pr := 'INCAP']
 fr_budgets[ loc_name == 'gtm' & fr_disease == 'malaria', pr := 'MSPAS']
-fr_budgets[ file_name=='GTM_H_INCAP_DetailedBudget_1.xlsx', pr := 'INCAP']
 
 # SEN
 fr_budgets[ loc_name == 'sen' & fr_disease == 'tb', pr := 'MOH']
 fr_budgets[ loc_name == 'sen' & fr_disease == 'malaria', pr := 'MOH']
+
+# add PRs for newly added budget files
+fr_budgets[ file_name=='GTM_H_INCAP_DetailedBudget_1.xlsx', pr := 'INCAP']
+fr_budgets[ data_source=='budget' & grant=="COD-M-MOH", pr := "MOH"]
+fr_budgets[ data_source=='budget' & grant=="COD-M-SANRU", pr := "SANRU"]
+fr_budgets[ data_source=='budget' & grant=="COD-C-CORDAID", pr := "CORDAID"]
+fr_budgets[ data_source=='budget' & grant=="COD-H-CORDAID", pr := "MoFPED"]
+fr_budgets[ data_source=='budget' & grant=="COD-T-MOH", pr := "MOH"]
+fr_budgets[ data_source=='budget' & grant=="COD-H-MOH", pr := "MOH"]
 
 # Add equity/SO to FR budgets:
 fr_budgets[, isStrategicObjective := ifelse((equity == TRUE | rssh == TRUE), TRUE, FALSE)]
@@ -456,7 +464,7 @@ fr_budgets[loc_name == 'sen', loc_name := 'Senegal']
 fr_budgets[loc_name == 'gtm', loc_name := 'Guatemala']
 
 # print the major data sources
-unique(fr_budgets[data_source=="budget",.(loc_name, data_source, fr_disease, grant, pr)])
+unique(fr_budgets[data_source=="budget",.(loc_name, data_source, grant, grant_period, fr_disease, grant, pr)])
 # ----------------------------------------------
 
 # ----------------------------------------------

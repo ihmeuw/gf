@@ -84,16 +84,27 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   ############# Quick Fix: There are extra rows in some data files that are not approved funding but funds that belong on the UQD ####
   
   # Grab columns that indicate the Origin of funding (Approved, UQD, etc)
-  origin_col = grep("origin", names)
+  if (language == "eng"){
+    origin_col = grep("source of funds", names)
+    } else if (language == "fr"){
+    origin_col = grep("origine des fonds", names)
+    } else if (language=="esp"){
+      origin_col = grep("fuente de los fondos", names)
+        }
   
+  # if there are more than two identified keep the first
+  if (length(origin_col)>1){
+    origin_col <- origin_col[1]
+  }
+  
+  # if origin_col is identified name the column and then subset to only approved budget
   if (length(origin_col)>0){
-    # do not keep rows that are not approved funding
     names(gf_data)[origin_col] <- "source_of_funds"
     
-    # keep only approved funds
-    gf_data <- gf_data[source_of_funds=="Approved Funding"]
+    # remove UQD funds
+    gf_data <- gf_data[source_of_funds!="UQD"]
+    
   }
-
   
   ####################################################################################
   

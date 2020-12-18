@@ -1,5 +1,6 @@
 # Synthesis figure: scatterplot of revisions and absorption
 
+rm(list=ls())
 
 # set up
 library(data.table)
@@ -135,7 +136,7 @@ p4
 ggsave("scatterplot_absolute_change_revisions_2018absorption.png", path = out.path, plot=p4, width = 9.5, height=9, units = "in")
 
 #######################################
-###### Save new data-set to the 
+###### Save new data- plot_data3
 ####################################
 
 #reshape data to include the first year and second year
@@ -193,5 +194,24 @@ p6 <- ggplot(plot_data3, aes(y=difference, x=absorption_diff, color=type, shape=
 p6
 
 ggsave("scatterplot_absolute_change_revisions_2018-2019_absorption_abs_difference.png", path = out.path, plot=p6, width = 9.5, height=9, units = "in")
+
+
+plot_data3$loc_name <- factor(plot_data3$loc_name)
+
+p7 <- ggplot(plot_data3, aes(y=percent_change, x=absorption_diff, color=type, shape=loc_name))+
+  geom_point(size=5)+
+  scale_shape_manual(values = 1:nlevels(plot_data3$loc_name))+
+  labs(x="Difference in absorption pct between Year 1 and Year 2",
+       y="Percent change (during NFM2)",
+       title="",
+       caption="")+
+  guides(color=guide_legend(title="Type of funds", reverse = TRUE),
+         shape=guide_legend(title="Country"))+
+  theme_minimal(base_size = 16)+
+  geom_smooth(aes(group=type), method=lm, se=FALSE, fullrange=TRUE)+
+  scale_color_brewer(palette="Set2")
+p7
+
+ggsave("scatterplot_percent_change_revisions_2018-2019_absorption_abs_difference.png", path = out.path, plot=p7, width = 9.5, height=9, units = "in")
 
 
