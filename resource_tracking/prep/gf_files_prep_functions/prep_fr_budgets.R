@@ -264,9 +264,44 @@ prep_fr_budgets = function(dir, inFile, sheet_name, start_date, period, qtr_num,
   # 2. Subset rows
   #-------------------------------------
   stopifnot(nrow(gf_data)==initial_rows) #Make sure you haven't dropped anything until this point. 
+  
+  # # re-establish if the name is there since this has changed from earlier in the code
+  # correctly_named = grepl("modul", tolower(names(gf_data)))
+  # #If there isn't a column named 'module', find the row with the names on it. 
+  # if (!TRUE%in%correctly_named){
+  #   #Find the row that has the column names in it
+  #   name_row = 1 
+  #   while(is.na(gf_data[name_row, 2]) | is.na(gf_data[name_row, 6]) ){
+  #     name_row = name_row + 1
+  #   }
+  #   names = gf_data[name_row, ]
+  #   names = tolower(names)
+  # } else { #Otherwise, just grab the names of the data table. 
+  #   name_row = 1
+  #   names = tolower(names(gf_data))
+  #   names = fix_diacritics(names)
+  # }
+  # 
+
+  
+  #Some datasets have an extra title row with "[Module]" in the module column.
+  #It's easier to find this by grepping the budget column, though.
+  # extra_module_row <- grep("cash outflow", tolower(gf_data$budget_q1))
+  extra_module_row = c(grep("modul|macrocatégorie", tolower(gf_data$module)))
+  
   #Remove the name row and everything before it, because we know the spreadsheet hasn't started before that point
-  if(name_row!=1){
-    gf_data = gf_data[-(1:name_row)]
+  if (length(extra_module_row) > 0){
+    gf_data = gf_data[-(1:extra_module_row)]
+  }
+  
+  # search again if there is another extra module row
+  extra_module_row = c(grep("modul|macrocatégorie", tolower(gf_data$module)))
+  
+  if (length(extra_module_row) > 0){
+    if (verbose == TRUE){
+      print(paste0("Extra rows being dropped in the FR and NFM3 data prep process. First column: ", gf_data[extra_module_row, 1]))
+    }
+    gf_data <- gf_data[-extra_module_row, ,drop = FALSE]
   }
   
   #Remove rows where first 4 variables (module, intervention, activity, and cost category) are NA, checking that their sum is 0 for key variables first. 

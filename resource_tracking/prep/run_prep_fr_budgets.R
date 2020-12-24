@@ -448,6 +448,18 @@ fr_budgets[ data_source=='budget' & grant=="COD-C-CORDAID", pr := "CORDAID"]
 fr_budgets[ data_source=='budget' & grant=="COD-H-CORDAID", pr := "MoFPED"]
 fr_budgets[ data_source=='budget' & grant=="COD-T-MOH", pr := "MOH"]
 fr_budgets[ data_source=='budget' & grant=="COD-H-MOH", pr := "MOH"]
+fr_budgets[ data_source=='budget' & grant=="SEN-H-ANCS", pr := "ANCS"]
+fr_budgets[ data_source=='budget' & grant=="SEN-H-CNLS", pr := "CNLS"]
+fr_budgets[ data_source=='budget' & grant=="SEN-Z-MOH", pr := "MOH"]
+fr_budgets[ data_source=='budget' & grant=="SEN-Z-PLAN", pr := "PLAN"]
+
+# add stop if there are some budget rows missing PR
+check_prs <- unique(fr_budgets[data_source=="budget" & is.na(pr),.(loc_name, data_source, grant_period, grant, pr)])
+
+if (nrow(check_prs)>0){
+  print(check_prs)
+  stop(paste0("Some of the budgets don't have PR values specified. Assign manually in preceding code."))
+}
 
 # Add equity/SO to FR budgets:
 fr_budgets[, isStrategicObjective := ifelse((equity == TRUE | rssh == TRUE), TRUE, FALSE)]

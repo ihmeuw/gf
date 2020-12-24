@@ -22,7 +22,7 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 drc = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_23_2020.csv')))
 uga = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/UGA/test_uganda_focus_topic_search_11_23_2020.csv')))
 gtm = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/GTM/test_guatemala_focus_topic_search_7_23_2020.csv')))
-sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/SEN/test_senegal_focus_topic_search_7_31_2020.csv')))
+sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/SEN/test_senegal_focus_topic_search_12_18_2020.csv')))
 # combine keyword search results
 dt = rbindlist(list(drc,uga,gtm,sen), use.names = TRUE, fill = TRUE)
 
@@ -78,21 +78,26 @@ write.csv(dt_wide_percent, paste0(dir, 'modular_framework_mapping/keyword_search
 # -----------------------------------------------
 # merge fr budget data to keyword search results for all countries:
 # -----------------------------------------------
-# update these files with the keyword serach runs to use:
+# update these files with the keyword search runs to use:
 drc = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/DRC/test_drc_focus_topic_search_7_23_2020.csv')))
 uga = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/UGA/test_uganda_focus_topic_search_11_23_2020.csv')))
 gtm = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/GTM/test_guatemala_focus_topic_search_7_23_2020.csv')))
-sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/SEN/test_senegal_focus_topic_search_7_31_2020.csv')))
+sen = as.data.table(read.csv(paste0(dir, 'modular_framework_mapping/keyword_search/SEN/test_senegal_focus_topic_search_12_18_2020.csv')))
 # combine keyword search results
 dt = rbindlist(list(drc,uga,gtm,sen), use.names = TRUE, fill = TRUE)
 
-dt = dt[, -c('budget_version')]
+# distinguish between 2017 FRs and 2020 FRs as well as new approved grant awards
+dt <- dt[grant_period%in%c("2021-2023") & budget_version=="approved", budget_version:="approved_nfm3"]
+dt <- dt[!grant_period%in%c("2021-2023") & budget_version=="approved", budget_version:="approved_nfm2"]
+
+# dt = dt[, -c('budget_version')]
 
 # read in budget revisions data with FRs (this file contains all NFM2 and NFM3 FRs, and approved budgets, and revisions available for each country)
 dt_fr = as.data.table(read.csv(paste0(box, 'tableau_data/budgetRevisions_with_frBudgets_activityLevel.csv')))
 dt_fr = dt_fr[, -c('isTopicArea', 'topicAreaDesc')]
 dt_fr = dt_fr[ !budget_version %in% c('initial')]
 dt_fr = dt_fr[ !is.na(budget_version)]
+# dt_fr = dt_fr[ budget_version!="unknown"]
 
 # distinguish between 2017 FRs and 2020 FRs as well as new approved grant awards
 # dt_fr <- dt_fr[grant_period=="2021-2023" & budget_version=="funding_request", budget_version:="funding_request_20"]
@@ -101,7 +106,7 @@ dt_fr <- dt_fr[!grant_period%in%c("2021-2023") & budget_version=="approved", bud
 dt_fr <- dt_fr[grant_period%in%c("2021-2023") & budget_version=="approved", budget_version:="approved_nfm3"]
 
 # merge by the unique id's in the keyword search set
-budget_dt = merge(dt, dt_fr, all.y = TRUE, by = c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description"))
+budget_dt = merge(dt, dt_fr, all.y = TRUE, by = c("loc_name", "disease", "gf_module", "gf_intervention", "activity_description", "budget_version", "grant_period"))
 
 # subset data
 budget_dt = budget_dt[, c('loc_name', 'pr', 'fr_disease', 'gf_module', 'gf_intervention', 'activity_description', 'cep_topic_area', 

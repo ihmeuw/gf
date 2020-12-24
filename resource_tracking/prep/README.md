@@ -57,17 +57,18 @@ Unless otherwise stated, all files should be run in numerical/alphabetical order
 - "8b_commitments_obligations_clean.r" Cleans the raw extracted data from step 8a. Maps modules/interventions, converts currencies, and validates columns.
 
 ### PREP NFM3 FILES
-- Keyword searches
-	- "combine_frs_budget_revisions.r"
-  - "create_keyword_search_dataset.r"
-  - "focus_topic_search.r"
-  - "merge_keyword_search_results_with_budget_data.r"
-	- "prep_final_focus_topic_mapping.r" *I think this file doesn't fit in this sequence*
+- Keyword searches to identify focus topics in the database
+  - "focus_topic_search.r" *searches the budget for the keywords in each country*
+  - "merge_keyword_search_results_with_budget_data.r" *merges keyword findings with budget data*
 - Extracting NFM3 data
   - "run_prep_fr_budgets.r": extracts data from NFM3 and NFM2 funding request budgets; merges data together. Should be modified to also extract final approved NFM3 budgets.  
 	- "nfm3_verify_mapping.r": prepares new modular framework in order to map budgetary data. This file is soured in "run_prep_fr_budgets.r"
 	- "get_target_population_data.r": this script is not running. It was written to pull the target population tab from the NFM3 budgets.
-- Grant Cycle analyses
+	- Add focus topic indicator to budget dataset
+		-  "create_keyword_search_dataset.r" *This creates a dataset of all unique activities in the budgets*
+		- prep_final_focus_topic_mapping.R   *I don't think this file make sense in this order ...use this when there are new files added.*
+
+### Grant Cycle analyses
   - "prep_qualitative_data.r"
   - "get_data_for_2s_analysis.r"
 
