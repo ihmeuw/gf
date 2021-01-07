@@ -117,11 +117,16 @@ g = ggplot(plot_dt, aes(loc_name, plot_module, fill= module_percent_of_total_rss
   scale_fill_continuous(high = "#132B43", low = "#9fd4fc") +
   scale_y_discrete(limits = rev(levels(plot_dt$plot_module))) +
   theme(axis.text=element_text(size=12), legend.text = element_text(size=11), legend.title = element_text(size = 13)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = -0.01)) +
   geom_text(aes(label= paste0(plot_dt$module_percent_of_total_rssh, '%', '\n', plot_dt$indicators)), size = 3.5, color = '#FFFFFF')
   # scale_fill_continuous(type = 'viridis') 
   # 56B1F7 - alternate/close to default color 
   
-pdf(outFile, height = 9, width = 12)
+pdf(outFile, height = 8, width = 11)
+print(g)
+dev.off()
+
+pdf(paste0('C:/Users/', user, '/Box Sync/Global Fund Files/synthesis/figures/synthesis_ch3_rssh_heatmap.pdf'), height = 8, width = 11)
 print(g)
 dev.off()
 
