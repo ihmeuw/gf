@@ -5,6 +5,7 @@
 library(data.table)
 library(readxl)
 library(RColorBrewer)
+library(ggplot2)
 
 # input file
 box = paste0("C:/Users/frc2/Box Sync/Global Fund Files/")
@@ -65,3 +66,7 @@ ggsave("cumulative_absorption_synthesis_figure.png", path = out.path, plot = p1,
 setcolorder(plot_data, neworder = c('loc_name', 'type', 'year', 'cum_budget', 'cum_expend', 'absorption'))
 plot_data <- plot_data[order(loc_name, year, -type)]
 plot_data$absorption <- plot_data$absorption*100
+
+# save table to include as an annex at the end of the report
+
+# create overall summary values
