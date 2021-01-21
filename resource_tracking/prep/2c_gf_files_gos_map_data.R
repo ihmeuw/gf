@@ -322,6 +322,7 @@ if (prep_files){
   write.csv(most_recent_revisions_cep, paste0(export_dir, "most_recent_budgets_", country, "_", Sys.Date(), ".csv"), row.names=F)
   write.csv(revisions_cep, paste0(export_dir, "all_budget_revisions_", country, "_", Sys.Date(), ".csv"), row.names=F)
   write.csv(activity_revisions_cep, paste0(export_dir, "all_budget_revisions_activityLevel_", country, "_", Sys.Date(), ".csv"), row.names=F)
+  write.csv(yearly_revisions_cep, paste0(export_dir, "all_budget_revisions_yearlyLevel_", country, "_", Sys.Date(), ".csv"), row.names=F)
   
   write.csv(absorption_cep, paste0(export_dir, "most_recent_absorption_", country, "_", Sys.Date(), ".csv"), row.names=F)
   write.csv(cumulative_absorption_cep, paste0(export_dir, "cumulative_absorption_", country, "_", Sys.Date(), ".csv"), row.names=F)
@@ -333,6 +334,7 @@ if (prep_files){
   saveRDS(most_recent_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/most_recent_budgets_", country, "_", Sys.Date(), ".rds"))
   saveRDS(revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/all_budget_revisions_", country, "_", Sys.Date(), ".rds"))
   saveRDS(activity_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/all_budget_revisions_activityLevel_", country, "_", Sys.Date(), ".rds"))
+  saveRDS(yearly_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/all_budget_revisions_yearlyLevel_", country, "_", Sys.Date(), ".rds"))
   
   saveRDS(absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/most_recent_absorption_", country, "_", Sys.Date(), ".rds"))
   saveRDS(cumulative_absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/cumulative_absorption_", country, "_", Sys.Date(), ".rds"))
@@ -343,6 +345,7 @@ if (prep_files){
   saveRDS(most_recent_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/most_recent_budgets_", country, "_", Sys.Date(), ".rds"))
   saveRDS(revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/all_budget_revisions_", country, "_", Sys.Date(), ".rds"))
   saveRDS(activity_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/all_budget_revisions_activityLevel_", country, "_", Sys.Date(), ".rds"))
+  saveRDS(yearly_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/all_budget_revisions_yearlyLevel_", country, "_", Sys.Date(), ".rds"))
   
   saveRDS(absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/most_recent_absorption_", country, "_", Sys.Date(), ".rds"))
   saveRDS(cumulative_absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/cumulative_absorption_", country, "_", Sys.Date(), ".rds"))
