@@ -128,11 +128,11 @@ activity_revisions_cep = all_budgets[, .(budget=sum(budget, na.rm=T)), by=cep_co
 # 3c. same as all budget revisions, but at the year level
 # added 12/29
 #------------------------------------------------------
-gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'year',
+gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'cost_category', 'disease', 'year',
              'current_grant', 'data_source', 'file_iteration', 'budget_version', 'revision_type', 'gf_revision_type', 'version_date',
              'abbrev_mod', 'code','grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date',
              'isMostRecentRevision', 'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent', 'isStrategicObjective', 'SO')
-cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'year',
+cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'cost_category', 'disease', 'year',
              'file_iteration', 'budget_version', 'revision_type', 'gf_revision_type', 'version_date', 'isMostRecentRevision', 
              'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent', 'kp', 'rssh', 'equity', 'update_date',
              'isStrategicObjective', 'SO')
