@@ -46,7 +46,7 @@ ct_nfm3 <- as.data.table(read_xlsx(paste0(mapping_dir, "keyword_search/SEN/sen_c
 ct_nfm2_nfm3 <- rbind(ct_nfm2, ct_nfm3, fill=TRUE)
 
 # subset rows to those identified by the CT
-ct_feedback <- ct_feedback[final_decision==TRUE]
+ct_feedback <- ct_nfm2_nfm3[final_decision==TRUE]
 
 # rename columns in CT feedback
 setnames(ct_feedback, old = c("potentialTopicArea", "final_decision"), 

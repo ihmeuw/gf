@@ -41,11 +41,11 @@ setorderv(dt, cols = c('loc_name'))
 # -----------------------------------------------
 
 # -----------------------------------------------
-# data for 2020 FRs
+# data for 2020 FRs and NFM3 Approved budgets
 # -----------------------------------------------
 dt2 = as.data.table(read.csv(inFile_frs))
 # keep only 2020 FRs
-dt2 = dt2[grant_period == '2021-2023' & data_source=='funding_request']
+dt2 = dt2[grant_period == '2021-2023']
 
 # clean implementer
 dt2[ implementer == 'Ministry of Finance, Planning and Economic Development of the Government of the Republic of Uganda', pr := 'MoFPED']
@@ -71,8 +71,8 @@ dt2 = dt2[, .(budget = sum(budget, na.rm = TRUE)), by = c('loc_name', 'file_name
 setnames(dt2, "fr_disease", "fr_component")
 
 # add indicator for any rows that weren't in the previous file
-previous_file = fread(paste0(box, "tableau_data/rssh_2s_analysis_data_2020_08_19.csv"))
-previous_file = previous_file[,addition:="in previous 2s file from 08/19"]
+previous_file = fread(paste0(box, "tableau_data/rssh_2s_analysis_data_2020_10_12.csv"))
+previous_file = previous_file[,addition:="in previous 2s file from 10/12/2020"]
 previous_file = previous_file[,.(loc_name, activity_description, addition)]
 previous_file = unique(previous_file)
 
