@@ -55,6 +55,27 @@ file_list = file_list[(data_source == 'budget' & grant_period != ('2021-2023') |
 #----------------------------------------------------
 # 1. Rerun prep functions, or read in prepped files
 #----------------------------------------------------
+pudr_mod_approach_sheet_financials <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B', 'ALF RFR_7')
+general_detailed_budget_sheet_financials <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise",
+                                              'DETAIL', 'Detailed _ budget AGYW', 'Detailed Budget _ Human rights', 'DETAIL BUDGET V2')
+
+budget_cols = c("activity_description", "budget", "cost_category", "implementer", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a budget function. 
+pudr_cols = c("budget", "expenditure", "cumulative_budget", "cumulative_expenditure", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a pudr function. 
+
+#Add files here that had a sum total for 0 in raw file. 
+verified_0_budget <- c('UGD-708-G08-M_PUDR 30Nov2011.xls', 'UGD-708-G08-M_PUDR_30June2012.xls', "Core_SANRU_PU_P3141116.xlsm",
+                       "PSI PU NFM S1 2016 09102016.xlsm", "Core_PUDR_P30_HivosGT_231116_ LFA Signed.xlsx", 
+                       "Core_PUDR_MALARIA_P12_03-03-17_Revisado ALF.xlsx", "Informe PUDR P-30 Noviembre 2016_Rev ALF FINAL.xlsx")
+#Add PUDRs here that did not report any expenditure.
+verified_0_expenditure <- c("UGA-C-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "UGA-M-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", 
+                            "UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx", 
+                            "GTM-T-MSPAS_Progress Report jul _31Dec2018_v2  rev LFA.xlsx", "GTM-H-HIVOS_Progress Report_31Dec2018_v1.xlsx", 
+                            "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx", "Core_SANRU_PU_P3141116.xlsm", "PSI PU NFM S1 2016 09102016.xlsm", 
+                            "Core_PUDR_P30_HivosGT_231116_ LFA Signed.xlsx", "Core_PUDR_MALARIA_P12_03-03-17_Revisado ALF.xlsx",  
+                            "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.XLSX", "GTM-M-MSPAS_Progress Report_30Jun2019_REV LFA.xlsx",
+                            "Informe PUDR P-30 Noviembre 2016_Rev ALF FINAL.xlsx", "GTM-T-MSPAS_Progress Report_31Dec2019_v4.xlsx", 
+                            "GTM-T-MSPAS_Progress Report_31Dec2019_v Rev ALF_02032020.xlsx") #These files have 0 for all expenditure.
+
 if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   if (only_new_files==TRUE){
     already_prepped <- readRDS(paste0(export_dir, "raw_bound_gf_files.RDS"))
@@ -62,27 +83,6 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     print("Only the following files will be processed.")
     print(file_list[, unique(file_name)])
   }
-  
-  pudr_mod_approach_sheet_financials <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B', 'ALF RFR_7')
-  general_detailed_budget_sheet_financials <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise",
-                                      'DETAIL', 'Detailed _ budget AGYW', 'Detailed Budget _ Human rights', 'DETAIL BUDGET V2')
-  
-  budget_cols = c("activity_description", "budget", "cost_category", "implementer", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a budget function. 
-  pudr_cols = c("budget", "expenditure", "cumulative_budget", "cumulative_expenditure", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a pudr function. 
-  
-  #Add files here that had a sum total for 0 in raw file. 
-  verified_0_budget <- c('UGD-708-G08-M_PUDR 30Nov2011.xls', 'UGD-708-G08-M_PUDR_30June2012.xls', "Core_SANRU_PU_P3141116.xlsm",
-                         "PSI PU NFM S1 2016 09102016.xlsm", "Core_PUDR_P30_HivosGT_231116_ LFA Signed.xlsx", 
-                         "Core_PUDR_MALARIA_P12_03-03-17_Revisado ALF.xlsx", "Informe PUDR P-30 Noviembre 2016_Rev ALF FINAL.xlsx")
-  #Add PUDRs here that did not report any expenditure.
-  verified_0_expenditure <- c("UGA-C-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "UGA-M-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", 
-                              "UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx", 
-                              "GTM-T-MSPAS_Progress Report jul _31Dec2018_v2  rev LFA.xlsx", "GTM-H-HIVOS_Progress Report_31Dec2018_v1.xlsx", 
-                              "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx", "Core_SANRU_PU_P3141116.xlsm", "PSI PU NFM S1 2016 09102016.xlsm", 
-                              "Core_PUDR_P30_HivosGT_231116_ LFA Signed.xlsx", "Core_PUDR_MALARIA_P12_03-03-17_Revisado ALF.xlsx",  
-                              "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.XLSX", "GTM-M-MSPAS_Progress Report_30Jun2019_REV LFA.xlsx",
-                              "Informe PUDR P-30 Noviembre 2016_Rev ALF FINAL.xlsx", "GTM-T-MSPAS_Progress Report_31Dec2019_v4.xlsx", 
-                              "GTM-T-MSPAS_Progress Report_31Dec2019_v Rev ALF_02032020.xlsx") #These files have 0 for all expenditure.
   
   # this part of the code includes PUDRs with zero expenditure, or else removes both PUDRs and Budgets with zero expenditure. Added by FRC on 6/8/2020
   if (include_zero_pudrs ==TRUE) {
@@ -92,6 +92,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   }
   
   for(i in 1:nrow(file_list)){
+    if(nrow(file_list) == 0) break
     # Set up file path 
     folder = "budgets"
     folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
@@ -202,7 +203,11 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   
   #If you only prepped new files, bind this together with the already-prepped data. 
   if (only_new_files==TRUE){
-    resource_database = rbind(resource_database, already_prepped, fill=T)
+    if (!exists('resource_database')){
+      resource_database = copy(already_prepped)
+    } else {
+      resource_database = rbind(resource_database, already_prepped, fill=T)
+    }
     
     #Check to make sure there aren't duplicates in final files. 
     dup_files = unique(resource_database[file_iteration=='approved_gm' & grant!="unknown", .(grant, grant_period, data_source, start_date, period_financial, file_name)])[order(grant, grant_period, data_source, start_date, period_financial)]
