@@ -121,6 +121,22 @@ all_budget_revisions_act = merge(all_budget_revisions_act, topic_areas_activity,
 all_budget_revisions_act = add_fr_es_to_dt(all_budget_revisions_act)
 
 write.csv(all_budget_revisions_act, paste0(final_write, "all_budget_revisions_activityLevel.csv"), row.names=F)
+
+# -------------
+# yearly level budget revisions
+cod4_act = fread(paste0(cod_prepped, list.files(cod_prepped, pattern="all_budget_revisions_yearlyLevel")))
+cod4_act[, loc_name:="DRC"]
+gtm4_act = fread(paste0(gtm_prepped, list.files(gtm_prepped, pattern="all_budget_revisions_yearlyLevel")))
+gtm4_act[, loc_name:="Guatemala"]
+uga4_act = fread(paste0(uga_prepped, list.files(uga_prepped, pattern="all_budget_revisions_yearlyLevel")))
+uga4_act[, loc_name:="Uganda"]
+sen4_act = fread(paste0(sen_prepped, list.files(sen_prepped, pattern="all_budget_revisions_yearlyLevel")))
+sen4_act[, loc_name:="Senegal"]
+
+all_budget_revisions_yearlyLevel = rbindlist(list(cod4_act, gtm4_act, uga4_act, sen4_act), use.names = TRUE, fill = TRUE)
+
+write.csv(all_budget_revisions_yearlyLevel, paste0(final_write, "all_budget_revisions_yearlyLevel.csv"), row.names=F)
+
 #---------------------------------------------
 # 4. CURRENT ABSORPTION 
 #---------------------------------------------
