@@ -5,7 +5,6 @@
 
 # To do - Matt said something about including/visualizing the relative changes 
 #       - figure out what to do with GTM years? 
-#       - fix COD data - why are there years 2028-2031 for COD-H-MOH? 
 #       - NAs in budget_version for COD-M-MOH and COD-M-SANRU
 # -------------------------------------------------------------------
 
@@ -25,7 +24,7 @@ library(scales)
 library(grid)
 library(lattice)
 library(RColorBrewer)
-
+library(janitor)
 # -------------------------------------------------------------------
 # files and directories
 # -------------------------------------------------------------------
@@ -36,28 +35,33 @@ box = paste0("C:/Users/", user, "/Box Sync/Global Fund Files/")
 # output file
 out_dir = 'J:/Project/Evaluation/GF/resource_tracking/visualizations2020/Synthesis/'
 outFile1 = paste0(out_dir, "synthesis_barplot_yearly_by_module_and_grant_check.pdf")
-outFile2 = paste0(out_dir, "synthesis_barplot_yearly_by_module_and_country.pdf")
-outFile3 = paste0(out_dir, "synthesis_barplot_yearly_by_country_rsshequity.pdf")
-  
+outFile2 = paste0(out_dir, "synthesis_barplot_yearly_by_module_and_country2.pdf")
+outFile3 = paste0(out_dir, "synthesis_barplot_yearly_by_country_rsshequity2.pdf")
+
 # -------------------------------------------------------------------
 # read in and set up data
 # -------------------------------------------------------------------
-dt = as.data.table(read.csv(paste0(box, 'UGA/prepped_data/all_budget_revisions_yearlyLevel_uga_2021-01-13.csv')))
+dt = as.data.table(read.csv(paste0(box, "tableau_data/all_budget_revisions_yearlyLevel.csv")))
 
 # subset to just budgets for active grants, excluding file_iteration = initial
 dt = dt[file_iteration %in% c('approved_gm', 'revision')]
 
-# fix problems with 'year' variable... 
-check = unique(dt[,.(year, grant_period, grant)])
+# # fix problems with 'year' variable... 
+# check = unique(dt[,.(year, grant_period, grant)])
+# fix years in the COD-H-MOH grant
+dt[grant == 'COD-H-MOH' & year > 2021, year := (year - 10)]
 
-# subset to NFM2
-dt = dt[grant_period %in% c('2018-2020')]
+# only keep GTM H-INCAP grant
+dt = dt[loc_name != 'Guatemala' | grant == 'GTM-H-INCAP']
+# standardize GTM data to the yearly data in other countries
+gtm_quarters = unique(dt[loc_name == 'Guatemala', .(loc_name, year, quarter)])
+setorderv(gtm_quarters, c('year', 'quarter'))
+gtm_quarters[, quarter_ext := .I]
+gtm_quarters[quarter_ext == 1, gtm_year := 'Q1']
+gtm_quarters[quarter_ext >=2 & quarter_ext <=5, gtm_year := 'Q2-Q5']
+gtm_quarters[quarter_ext >=6 & quarter_ext <=9, gtm_year := 'Q6-Q9']
 
-# # *****
-# # subset out the problematic grants for now...
-# dt = dt[!grant %in% c('COD-H-MOH')]
-# dt = dt[!country %in% c('GTM')]
-# # *****
+dt = merge(dt, gtm_quarters, by = c('loc_name','year','quarter'), all.x = TRUE)
 
 # create simplified modules for HIV, TB, and malaria modules
 dt[, gf_module := as.character(gf_module)]
@@ -135,19 +139,23 @@ grants = unique(dt2$grant)
 grants_with_catalytic = dt2[budget_version == 'approved_catalytic', unique(grant)]
 grants_wo_catalytic = grants[!grants %in% grants_with_catalytic]
 
-# sum to yearly level by grant -- # add loc_name when we have multiple countries added - we will use the same 
+# fix guatemala years to show the comparable time periods:
+dt2[, year := as.character(year)]
+dt2[loc_name == 'Guatemala', year:=gtm_year]
+dt2 = dt2[!is.na(year), ]
+dt2$year = factor(dt2$year, levels = c('2018', '2019', '2020', '2021', 'Q1', 'Q2-Q5', 'Q6-Q9'))
+
+# sum to yearly level by grant 
 # for rssh/equity figures
-dt_yearly = dt2[, .(budget=sum(budget, na.rm=TRUE)), by=.(grant, grant_period, budget_version, gf_module, simplified_mod, gf_intervention, rssh, equity, year)]
+dt_yearly = dt2[, .(budget=sum(budget, na.rm=TRUE)), by=.(loc_name, grant, grant_period, budget_version, gf_module, simplified_mod, gf_intervention, cost_category, rssh, equity, year)]
 
 # for grants that don't have approved + catalytic, copy over the approved amounts
-dt_wide = dcast.data.table(dt_yearly, grant + grant_period + gf_module + simplified_mod + gf_intervention + rssh + equity + year ~ budget_version, value.var = 'budget')
+dt_wide = dcast.data.table(dt_yearly, loc_name + grant + grant_period + gf_module + simplified_mod + gf_intervention + cost_category + rssh + equity + year ~ budget_version, value.var = 'budget')
 dt_wide[grant %in% grants_wo_catalytic, approved_catalytic := approved]
 
 # sum by country -- # add loc_name when we have multiple countries added
 ids = names(dt_wide)[!names(dt_wide) %in% c('approved', 'approved_catalytic', 'most_recent_revision')]
 dt_long = melt.data.table(dt_wide, id.vars = ids, variable.name = 'budget_version', value.name = 'budget')
-# temporary addition before we have all countries
-dt_long[, loc_name := 'UGA']
 
 # add a variable for displaying the budget version name in the figures
 dt_long[budget_version == 'approved', figure_budget_version := 'NFM2 Award']
@@ -158,31 +166,57 @@ dt_long[budget_version == 'most_recent_revision', figure_budget_version := 'NFM2
 # colorblindness-friendly colors 
 colors = c('#D55E00', '#C378A2', '#56B4E9', '#009E73', '#0072B2', '#565656', '#DEAE43', '#F0E442') #*Add more
 colors = c(colors, colors, colors)
-names(colors) = levels(dt_country$simplified_mod)
 # -------------------------------------------------------------------
 
 # -------------------------------------------------------------------
 # Country-level figures:
 # -------------------------------------------------------------------
 dt_country = dt_long[, .(budget=sum(budget, na.rm=TRUE)), by=.(loc_name, figure_budget_version, simplified_mod, year)]
-
 # take out 0 budget so that 2021 doesn't show up blank in the figure
 dt_country = dt_country[budget!=0,]
+
+dt_country_cc = dt_long[, .(budget=sum(budget, na.rm=TRUE)), by=.(loc_name, figure_budget_version, cost_category, year)]
+# take out 0 budget so that 2021 doesn't show up blank in the figure
+dt_country_cc = dt_country_cc[budget!=0,]
+# simplify cost category
+dt_country_cc[, cost_category := as.character(cost_category)]
+dt_country_cc[, simplified_cost_category := unlist(lapply(cost_category, function (x) {unlist(strsplit(x, ".", fixed=TRUE))[1] }))]
+
+dt_country_cc = dt_country_cc[, .(budget=sum(budget, na.rm=TRUE)), by=.(loc_name, figure_budget_version, simplified_cost_category, year)]
+dt_country_cc[, simplified_cost_category := as.integer(simplified_cost_category)]
+
+# read in the spreadsheet I made to merge on cost grouping names
+ccs = as.data.table(read.csv(paste0('J:/Project/Evaluation/GF/resource_tracking/documentation/Global_Fund_cost_groupings.csv')))
+dt_country_cc = merge(dt_country_cc, ccs[, .(cost_category_number, cost_category_label)], by.x = 'simplified_cost_category', by.y = 'cost_category_number')
+
+# colors for cost groupings:
+colors_set1 = brewer.pal(8, 'Set1')
+colors_set2 = brewer.pal(8, 'Set2')
+colors2 = c(colors_set1, colors_set2)
+names(colors2) = levels(dt_country_cc$cost_category_label)
 
 # create a list of plots
 list_of_plots = NULL
 i=1
 for (country in unique(dt_country$loc_name)) {
   # bar plots
-  list_of_plots[[i]] = ggplot(dt_country[loc_name == country, ], aes(x = figure_budget_version, y = (budget/1000000), fill = simplified_mod)) +
+  list_of_plots[[i]] = ggplot(dt_country[loc_name == country & figure_budget_version!="NFM2 Award", ], aes(x = year, y = (budget/1000000), fill = simplified_mod)) +
     geom_bar(position = "stack", stat = "identity") +
-    facet_grid(~year) +
-    scale_fill_manual(name = 'Module', values = colors) +
-    labs(title = paste0('Country: ', country), x = 'Budget Version', y = 'Budget (Millions USD)') +
-    theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1))
-  
-  i=i+1
+    facet_grid(~figure_budget_version) +
+    scale_fill_manual(name = 'Module', values = rev(colorRampPalette(brewer.pal(8, "Dark2"))(19))) +
+    labs(title = paste0(country, '; entire 2018-2020 portfolio by Module'), x = 'Budget Version', y = 'Budget (Millions USD)') +
+    theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1), text = element_text(size = 24))
+    i=i+1
+    
+    list_of_plots[[i]] = ggplot(dt_country_cc[loc_name == country & figure_budget_version!="NFM2 Award", ], aes(x = year, y = (budget/1000000), fill = cost_category_label)) +
+      geom_bar(position = "stack", stat = "identity") +
+      facet_grid(~figure_budget_version) +
+      scale_fill_manual(name = 'Cost Category', values = colorRampPalette(brewer.pal(8, "Dark2"))(13)) +
+      labs(title = paste0(country, '; entire 2018-2020 portfolio by Cost Grouping'), x = 'Budget Version', y = 'Budget (Millions USD)') +
+      theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1), text = element_text(size = 24))
+    i=i+1
 }
+
 # print out the list of plots into a pdf
 pdf(outFile2, height = 9, width = 12)
 for(i in seq(length(list_of_plots))) { 
@@ -205,26 +239,25 @@ dt_equity = dt_equity[budget!=0,]
 # create a list of plots
 list_of_plots = NULL
 i=1
-
 for (country in unique(dt_rssh$loc_name)) {
   # bar plots
-  list_of_plots[[i]] = ggplot(dt_rssh[loc_name == country, ], aes(x = figure_budget_version, y = (budget/1000000), fill = simplified_mod)) +
+  list_of_plots[[i]] = ggplot(dt_rssh[loc_name == country & figure_budget_version!="NFM2 Award", ], aes(x = year, y = (budget/1000000), fill = simplified_mod)) +
     geom_bar(position = "stack", stat = "identity") +
-    facet_grid(~year) +
+    facet_grid(~figure_budget_version) +
     scale_fill_manual(name = 'Module', values = colors) +
-    labs(title = paste0('Country: ', country, '; RSSH'), x = 'Budget Version', y = 'Budget (Millions USD)') +
-    theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1))
+    labs(title = paste0(country,'; RSSH'), x = 'Budget Version', y = 'Budget (Millions USD)') +
+    theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1), text = element_text(size = 24))
   
   i=i+1
 }
 for (country in unique(dt_equity$loc_name)) {
   # bar plots
-  list_of_plots[[i]] = ggplot(dt_equity[loc_name == country, ], aes(x = figure_budget_version, y = (budget/1000000), fill = simplified_mod)) +
+  list_of_plots[[i]] = ggplot(dt_equity[loc_name == country & figure_budget_version!="NFM2 Award", ], aes(x = year, y = (budget/1000000), fill = simplified_mod)) +
     geom_bar(position = "stack", stat = "identity") +
-    facet_grid(~year) +
+    facet_grid(~figure_budget_version) +
     scale_fill_manual(name = 'Module', values = colors) +
-    labs(title = paste0('Country: ', country, '; HRG/equity'), x = 'Budget Version', y = 'Budget (Millions USD)') +
-    theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1))
+    labs(title = paste0(country, '; HRG/equity'), x = 'Budget Version', y = 'Budget (Millions USD)') +
+    theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1), text = element_text(size = 24))
   
   i=i+1
 }
@@ -235,5 +268,96 @@ for(i in seq(length(list_of_plots))) {
   print(list_of_plots[[i]])
 } 
 dev.off()
+# -------------------------------------------------------------------
 
+# -------------------------------------------------------------------
+# group figures by country
+# -------------------------------------------------------------------
+for (country in unique(dt_country$loc_name)) {
+
+  outFile_country = paste0(out_dir, "synthesis_barplot_yearly_", country, ".pdf")
+  
+  pdf(outFile_country, height = 9, width = 12)
+    g1 = ggplot(dt_country[loc_name == country & figure_budget_version!="NFM2 Award", ], aes(x = year, y = (budget/1000000), fill = simplified_mod)) +
+            geom_bar(position = "stack", stat = "identity") +
+            facet_grid(~figure_budget_version) +
+            scale_fill_manual(name = 'Module', values = rev(colorRampPalette(brewer.pal(8, "Dark2"))(19))) +
+            labs(title = paste0(country, '; annual budget across grants by module'), x = 'Budget Version', y = 'Budget (Millions USD)') +
+            theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1), text = element_text(size = 24))
+    if(country == 'Guatemala') g1 = g1 + labs(title = paste0('GTM-H-INCAP; annual budget by module'))
+    print(g1)
+    
+    g2 = ggplot(dt_country_cc[loc_name == country & figure_budget_version!="NFM2 Award", ], aes(x = year, y = (budget/1000000), fill = cost_category_label)) +
+      geom_bar(position = "stack", stat = "identity") +
+      facet_grid(~figure_budget_version) +
+      scale_fill_manual(name = 'Cost Category', values = colorRampPalette(brewer.pal(8, "Dark2"))(13)) +
+      labs(title = paste0(country, '; annual budget across grants by cost grouping'), x = 'Budget Version', y = 'Budget (Millions USD)') +
+      theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1), text = element_text(size = 24))
+    if(country == 'Guatemala') g2 = g2 + labs(title = paste0('GTM-H-INCAP; annual budget by cost grouping'))
+    print(g2)
+    
+    g3 = ggplot(dt_rssh[loc_name == country & figure_budget_version!="NFM2 Award", ], aes(x = year, y = (budget/1000000), fill = simplified_mod)) +
+      geom_bar(position = "stack", stat = "identity") +
+      facet_grid(~figure_budget_version) +
+      scale_fill_manual(name = 'Module', values = colors) +
+      labs(title = paste0(country,'; annual budget for RSSH interventions across grants by module'), x = 'Budget Version', y = 'Budget (Millions USD)') +
+      theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1), text = element_text(size = 24))
+    if(country == 'Guatemala') g3 = g3 + labs(title = paste0('GTM-H-INCAP; annual budget for RSSH interventions across \ngrants by module'))
+    print(g3)
+    
+    g4 = ggplot(dt_equity[loc_name == country & figure_budget_version!="NFM2 Award", ], aes(x = year, y = (budget/1000000), fill = simplified_mod)) +
+      geom_bar(position = "stack", stat = "identity") +
+      facet_grid(~figure_budget_version) +
+      scale_fill_manual(name = 'Module', values = colors) +
+      labs(title = paste0(country, '; annual budget for HRG/equity interventions across grants by module'), x = 'Budget Version', y = 'Budget (Millions USD)') +
+      theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1), text = element_text(size = 24))
+    if(country == 'Guatemala') g4 = g4 + labs(title = paste0('GTM-H-INCAP; annual budget for HRG/equity interventions \nacross grants by module'))
+    print(g4)
+    
+  dev.off()
+}
+# -------------------------------------------------------------------
+
+# -------------------------------------------------------------------
+# Make and save data tables for each country/figure
+# -------------------------------------------------------------------
+for (country in unique(dt_country$loc_name)) {
+  
+  table = dt_country[loc_name == country & figure_budget_version %in% c("NFM2 Award+CMF", "NFM2 Revision"), ]
+  table[, budget := round(budget)]
+  table = data.table(dcast(table, loc_name + simplified_mod ~ figure_budget_version + year, value.var = "budget", fun.aggregate = sum ))
+  table = table %>% adorn_totals('row')
+  setnames(table, 'loc_name', 'Country')
+  setnames(table, 'simplified_mod', 'GF Module')
+  outrTable = paste0(out_dir, 'tables_for_annual_budget_comparisons/', country, '_table_modules_year.csv')
+  write.csv(table, outrTable, row.names = FALSE)
+  
+  table = dt_country_cc[loc_name == country & figure_budget_version %in% c("NFM2 Award+CMF", "NFM2 Revision"), ]
+  table[, simplified_cost_category := NULL]
+  table[, budget := round(budget)]
+  table = data.table(dcast(table, loc_name + cost_category_label ~ figure_budget_version + year, value.var = "budget", fun.aggregate = sum ))
+  table = table %>% adorn_totals('row')
+  setnames(table, 'loc_name', 'Country')
+  setnames(table, 'cost_category_label', 'Cost Grouping')
+  outrTable = paste0(out_dir, 'tables_for_annual_budget_comparisons/', country, '_table_costGroupings_year.csv')
+  write.csv(table, outrTable, row.names = FALSE)
+  
+  table = dt_rssh[loc_name == country & figure_budget_version %in% c("NFM2 Award+CMF", "NFM2 Revision"), ]
+  table[, budget := round(budget)]
+  table = data.table(dcast(table, loc_name + simplified_mod ~ figure_budget_version + year, value.var = "budget", fun.aggregate = sum ))
+  table = table %>% adorn_totals('row')
+  setnames(table, 'loc_name', 'Country')
+  setnames(table, 'simplified_mod', 'GF Module')
+  outrTable = paste0(out_dir, 'tables_for_annual_budget_comparisons/', country, '_table_rssh_modules_year.csv')
+  write.csv(table, outrTable, row.names = FALSE)
+  
+  table = dt_equity[loc_name == country & figure_budget_version %in% c("NFM2 Award+CMF", "NFM2 Revision"), ]
+  table[, budget := round(budget)]
+  table = data.table(dcast(table, loc_name + simplified_mod ~ figure_budget_version + year, value.var = "budget", fun.aggregate = sum ))
+  table = table %>% adorn_totals('row')
+  setnames(table, 'loc_name', 'Country')
+  setnames(table, 'simplified_mod', 'GF Module')
+  outrTable = paste0(out_dir, 'tables_for_annual_budget_comparisons/', country, '_table_hrg_modules_year.csv')
+  write.csv(table, outrTable, row.names = FALSE)
+}
 # -------------------------------------------------------------------

@@ -79,7 +79,7 @@ if (prep_files | prep_gos){
   source(paste0(code_dir, "2e_gf_aggregate_files.R"))
 }
 
-# Need to revisit to implement (AB - 6/11)
+# Need to revisit to implement (AB - 6/11/20)
   source(paste0(code_dir, "2f_gf_verify_outputs.R")) 
    
   rmarkdown::render(input=paste0(code_dir, "2g_gf_visualize_data.rmd"),
