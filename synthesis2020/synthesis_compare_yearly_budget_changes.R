@@ -53,15 +53,27 @@ dt[grant == 'COD-H-MOH' & year > 2021, year := (year - 10)]
 
 # only keep GTM H-INCAP grant
 dt = dt[loc_name != 'Guatemala' | grant == 'GTM-H-INCAP']
-# standardize GTM data to the yearly data in other countries
-gtm_quarters = unique(dt[loc_name == 'Guatemala', .(loc_name, year, quarter)])
-setorderv(gtm_quarters, c('year', 'quarter'))
-gtm_quarters[, quarter_ext := .I]
-gtm_quarters[quarter_ext == 1, gtm_year := 'Q1']
-gtm_quarters[quarter_ext >=2 & quarter_ext <=5, gtm_year := 'Q2-Q5']
-gtm_quarters[quarter_ext >=6 & quarter_ext <=9, gtm_year := 'Q6-Q9']
+# revision 3 starts at Q1 2018, but that data is really Q4 2018, and so on: Q2 2018 here is actually Q4 2019
+gtm_quarter_fix = unique(dt[loc_name == 'Guatemala' & budget_version == 'approved', .(year, quarter)])
+gtm_quarter_fix2 = unique(dt[loc_name == 'Guatemala' & budget_version == 'revision3', .(loc_name, budget_version, year, quarter)])
+setnames(gtm_quarter_fix, 'year', 'year_fix')
+setnames(gtm_quarter_fix, 'quarter', 'qtr_fix')
+gtm_quarter_fix = cbind(gtm_quarter_fix, gtm_quarter_fix2)
 
-dt = merge(dt, gtm_quarters, by = c('loc_name','year','quarter'), all.x = TRUE)
+dt = merge(dt, gtm_quarter_fix, by = c('loc_name', 'budget_version', 'year', 'quarter'), all.x = TRUE)
+dt[loc_name == 'Guatemala' & budget_version == 'revision3', year := year_fix]
+dt[loc_name == 'Guatemala' & budget_version == 'revision3', quarter := qtr_fix]
+dt[, c('year_fix', 'qtr_fix'):= NULL]
+
+# # standardize GTM data to the yearly data in other countries
+# gtm_quarters = unique(dt[loc_name == 'Guatemala', .(loc_name, year, quarter)])
+# setorderv(gtm_quarters, c('year', 'quarter'))
+# gtm_quarters[, quarter_ext := .I]
+# gtm_quarters[quarter_ext %in% 1:4, gtm_year := 'Year1']
+# gtm_quarters[quarter_ext %in% 5:8, gtm_year := 'Year2']
+# gtm_quarters[quarter_ext == 9, gtm_year := 'Year3']
+# 
+# dt = merge(dt, gtm_quarters, by = c('loc_name','year','quarter'), all.x = TRUE)
 
 # create simplified modules for HIV, TB, and malaria modules
 dt[, gf_module := as.character(gf_module)]
@@ -143,7 +155,7 @@ grants_wo_catalytic = grants[!grants %in% grants_with_catalytic]
 dt2[, year := as.character(year)]
 dt2[loc_name == 'Guatemala', year:=gtm_year]
 dt2 = dt2[!is.na(year), ]
-dt2$year = factor(dt2$year, levels = c('2018', '2019', '2020', '2021', 'Q1', 'Q2-Q5', 'Q6-Q9'))
+dt2$year = factor(dt2$year, levels = c('2018', '2019', '2020', '2021', 'Year1', 'Year2', 'Year3'))
 
 # sum to yearly level by grant 
 # for rssh/equity figures
@@ -276,6 +288,15 @@ dev.off()
 for (country in unique(dt_country$loc_name)) {
 
   outFile_country = paste0(out_dir, "synthesis_barplot_yearly_", country, ".pdf")
+
+  if (country == 'Guatemala'){
+    if( 'Year1' %in% dt_country[loc_name == 'Guatemala', unique(year)] ){
+      gtm_caption = 'Note: Year 1 includes 2018 Q4 - 2019 Q3, \nYear 2 includes 2019 Q4 - 2020 Q3, and Year 3 is 2020 Q4.'
+      outFile_country = paste0(out_dir, "synthesis_barplot_yearly_", country, "_grantYear.pdf")
+    } else{
+      gtm_caption = 'Note: 2018 includes just the last quarter of 2018.'
+      outFile_country = paste0(out_dir, "synthesis_barplot_yearly_", country, "_calendarYear.pdf")
+    }}
   
   pdf(outFile_country, height = 9, width = 12)
     g1 = ggplot(dt_country[loc_name == country & figure_budget_version!="NFM2 Award", ], aes(x = year, y = (budget/1000000), fill = simplified_mod)) +
@@ -284,7 +305,7 @@ for (country in unique(dt_country$loc_name)) {
             scale_fill_manual(name = 'Module', values = rev(colorRampPalette(brewer.pal(8, "Dark2"))(19))) +
             labs(title = paste0(country, '; annual budget across grants by module'), x = 'Budget Version', y = 'Budget (Millions USD)') +
             theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1), text = element_text(size = 24))
-    if(country == 'Guatemala') g1 = g1 + labs(title = paste0('GTM-H-INCAP; annual budget by module'))
+    if(country == 'Guatemala') g1 = g1 + labs(title = paste0('GTM-H-INCAP; annual budget by module'), subtitle = gtm_caption)
     print(g1)
     
     g2 = ggplot(dt_country_cc[loc_name == country & figure_budget_version!="NFM2 Award", ], aes(x = year, y = (budget/1000000), fill = cost_category_label)) +
@@ -293,7 +314,7 @@ for (country in unique(dt_country$loc_name)) {
       scale_fill_manual(name = 'Cost Category', values = colorRampPalette(brewer.pal(8, "Dark2"))(13)) +
       labs(title = paste0(country, '; annual budget across grants by cost grouping'), x = 'Budget Version', y = 'Budget (Millions USD)') +
       theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1), text = element_text(size = 24))
-    if(country == 'Guatemala') g2 = g2 + labs(title = paste0('GTM-H-INCAP; annual budget by cost grouping'))
+    if(country == 'Guatemala') g2 = g2 + labs(title = paste0('GTM-H-INCAP; annual budget by cost grouping'), subtitle = gtm_caption)
     print(g2)
     
     g3 = ggplot(dt_rssh[loc_name == country & figure_budget_version!="NFM2 Award", ], aes(x = year, y = (budget/1000000), fill = simplified_mod)) +
@@ -302,7 +323,7 @@ for (country in unique(dt_country$loc_name)) {
       scale_fill_manual(name = 'Module', values = colors) +
       labs(title = paste0(country,'; annual budget for RSSH interventions across grants by module'), x = 'Budget Version', y = 'Budget (Millions USD)') +
       theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1), text = element_text(size = 24))
-    if(country == 'Guatemala') g3 = g3 + labs(title = paste0('GTM-H-INCAP; annual budget for RSSH interventions across \ngrants by module'))
+    if(country == 'Guatemala') g3 = g3 + labs(title = paste0('GTM-H-INCAP; annual budget for RSSH interventions across \ngrants by module'), subtitle = gtm_caption)
     print(g3)
     
     g4 = ggplot(dt_equity[loc_name == country & figure_budget_version!="NFM2 Award", ], aes(x = year, y = (budget/1000000), fill = simplified_mod)) +
@@ -311,7 +332,7 @@ for (country in unique(dt_country$loc_name)) {
       scale_fill_manual(name = 'Module', values = colors) +
       labs(title = paste0(country, '; annual budget for HRG/equity interventions across grants by module'), x = 'Budget Version', y = 'Budget (Millions USD)') +
       theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1), text = element_text(size = 24))
-    if(country == 'Guatemala') g4 = g4 + labs(title = paste0('GTM-H-INCAP; annual budget for HRG/equity interventions \nacross grants by module'))
+    if(country == 'Guatemala') g4 = g4 + labs(title = paste0('GTM-H-INCAP; annual budget for HRG/equity interventions \nacross grants by module'), subtitle = gtm_caption)
     print(g4)
     
   dev.off()
