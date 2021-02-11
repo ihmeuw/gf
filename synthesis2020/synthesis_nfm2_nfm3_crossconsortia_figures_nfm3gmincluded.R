@@ -406,18 +406,18 @@ e5 <- ggplot(plot_equity_3[simple_version%in%c("NFM2 Award",
        x='Budget Versions',
        fill = "HRG-Equity Categories") +
   scale_fill_brewer(palette = "Dark2")+
-  scale_y_continuous(limits = c(0,65000000),labels = function(x)x/1000000)+
+  scale_y_continuous(limits = c(0,75000000),labels = function(x)x/1000000)+
   geom_text(data=plot_equity_3[label=="Human rights related investments" & simple_version%in%c("NFM2 Award",
                                                                                                "NFM2 Revision*")],
             aes(label=paste0(round(hrg_prop_total*100),'%')),
-            y=63500000) +
+            y=74500000) +
   facet_grid(loc_name ~ ., switch = "y")
 
 #calculating averages across countries
-calculations <- unique(plot_equity_3[simple_version%in%c("NFM2 Award","NFM2 Revision*"),c("loc_name","version","simple_version","hrg_budget_total","total_budget","hrg_prop")])
+calculations <- unique(plot_equity_3[simple_version%in%c("NFM2 Award","NFM2 Revision*"),c("loc_name","version","simple_version","hrg_budget_total","total_budget","hrg_prop_total")])
 calculations[,sum(hrg_budget_total),by = simple_version]
 calculations[,sum(total_budget),by = simple_version]
-calculations[,mean(hrg_prop),by = simple_version]
+calculations[,mean(hrg_prop_total),by = simple_version]
 
 #reordering for below figure
 plot_equity_3[,simple_version:=factor(simple_version, levels = c("NFM2 Award","NFM3 FR"))]
