@@ -213,10 +213,6 @@ ihme_pce_hrge_module_interventions <- unique(dt_fr_gm_fr_equity_wide[,c("gf_modu
 ihme_pce_hrge_module_interventions[crg_hr==FALSE & kp==FALSE,other_equity:=TRUE]
 ihme_pce_hrge_module_interventions[crg_hr==TRUE & kp==TRUE,kp:=FALSE]
 
-#saving dataset of equity related modules and interventions (by CRG HR groups and KVP)
-path <- paste0("C:/Users/mts24/Documents/PCE/Synthesis")
-write.xlsx2(ihme_pce_hrge_module_interventions, file = paste0(data_path,"/draft_hrgequity_related_modules_interventions.xlsx"))
-
 country_equity_subanalyses <- dt_fr_gm_fr_equity_wide[,.(fr17_hr=sum(nfm2_funding_request17), approved_hr=sum(nfm2_approved),
                                                          approved_catalytic_hr=sum(nfm2_approved_catalytic_funds),mostrecent_hr=sum(nfm2_most_recent_revision), 
                                                          fr20_hr=sum(nfm3_funding_request20)),
@@ -265,6 +261,11 @@ dt_fr_gm_fr_equity_wide[loc_name=='Uganda',sum(nfm2_approved),by=c("crg_hr","crg
 ###################################
 #Saving Output
 data_path <- paste0("C:/Users/",user,"/Box Sync/Global Fund Files/synthesis/data")
+
+#saving dataset of equity related modules and interventions (by CRG HR groups and KVP)
+path <- paste0("C:/Users/mts24/Documents/PCE/Synthesis")
+write.xlsx2(ihme_pce_hrge_module_interventions, file = paste0(data_path,"/draft_hrgequity_related_modules_interventions.xlsx"))
+
 
 dt_fr_gm_fr_country_disease_wide <- dt_fr_gm_fr_country_disease_wide[,c("loc_name","grant","disease","gf_module","nfm2_funding_request17",
                                                                            "nfm2_approved","nfm2_approved_catalytic_funds","nfm2_most_recent_revision",

@@ -356,7 +356,7 @@ e <- ggplot(plot_equity_3, aes(y=budget, x=simple_version, fill=label)) +
   facet_grid(loc_name ~ ., switch = "y",scales = "free_y")+
   geom_text(data=plot_equity_3[label=="Human rights related investments"],
             aes(label=paste0(round(hrg_prop_total*100),'%')),
-            y=120800000, size = 6)+
+            y=119200000, size = 6)+
   guides(fill = guide_legend(reverse=TRUE))
 
 
