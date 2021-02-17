@@ -2,7 +2,7 @@
 ## *USER GUIDE*
 
 Last updated by Francisco Rios Casas (frc2@uw.edu)
-September 2020
+February 2021
 
 Unless otherwise stated, all files should be run in numerical/alphabetical order. Files are called in order in the master file list (step 1).
 
@@ -12,7 +12,7 @@ Unless otherwise stated, all files should be run in numerical/alphabetical order
 	- "load_master_list.r" This is a series of verification checks that reads in the current master file list (on Box) and makes sure it's ready to be used to prep data (no conflicting files, complete information entered, etc.)
 	- "set_up_r.r" This file is sourced at the beginning of file prep to load libraries and set up filepaths.
 	- "shared_functions.r" This file is a set of shared functions for resource tracking prep. There are in-line comments that explain what each function does.
-	  - "gf_files_prep_functions", "ghe_sicoin_prep_functions", "odah_prep_functions": These folders have functions that interact with the raw data files in steps 2, 3, and 4 respectively. There are headers and in-line comments that explain what each file does.
+	- "gf_files_prep_functions", "ghe_sicoin_prep_functions", "odah_prep_functions": These folders have functions that interact with the raw data files in steps 2, 3, and 4 respectively. There are headers and in-line comments that explain what each file does.
 
 ### MASTER FILE (1)
 - "1_master_file.r": This file is the master script from which all the other files run. There are a set of boolean logic switches in this file which can turn on different sections of the database to process.  
@@ -69,7 +69,7 @@ Unless otherwise stated, all files should be run in numerical/alphabetical order
 		- prep_final_focus_topic_mapping.R   *I don't think this file make sense in this order ...use this when there are new files added.*
 
 ### Grant Cycle analyses
-  - "prep_qualitative_data.r"
+  - "prep_qualitative_data.r": this file 
   - "get_data_for_2s_analysis.r"
 
 ### OTHER FILES
