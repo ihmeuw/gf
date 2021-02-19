@@ -3,6 +3,9 @@
 # PURPOSE: Prep commonly-formatted FR budgets using the prep_fr_budgets() function - runs all countries at once
 # DATE: Last updated June 2020.
 
+# NOTE Feb 2021: This file is being archived since it was never successfully completed. This file originally was intended to help extract
+# data on key populations from the Populations tab on Funding Requests
+
 # TO DO: 
 # ----------------------------------------------
 rm(list=ls())

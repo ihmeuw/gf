@@ -211,7 +211,7 @@ if(nrow(dropped_mods) >0){
 
 # source the new file that verifies the new modular framework
 include_stops = TRUE
-source(paste0(code_dir, "nfm3_verify_mapping.R"))
+source(paste0(code_dir, "9a_nfm3_verify_mapping.R"))
 
 ### Map 2020 FR budgets using the new modular framework
 prepped_frs_nfm3 <- prepped_frs[grant_period%in%c("2021-2023")]
@@ -498,5 +498,5 @@ write.csv(fr_budgets, paste0(box, "tableau_data/fr_budgets_all.csv"), row.names=
 # -----------------------------------------------
 # Update Focus Topic Mapping
 # -----------------------------------------------
-source("./resource_tracking/prep/update_focus_topics.r")
+source("./resource_tracking/prep/9b_update_focus_topics.r")
 # ----------------------------------------------

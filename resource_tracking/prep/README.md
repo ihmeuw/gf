@@ -56,23 +56,28 @@ Unless otherwise stated, all files should be run in numerical/alphabetical order
 - "8a_commitments_obligations_prep.r" Extracts raw commitments/obligations from the PUDRs. It's similar in structure to "2b_gf_files_prep_data.r".
 - "8b_commitments_obligations_clean.r" Cleans the raw extracted data from step 8a. Maps modules/interventions, converts currencies, and validates columns.
 
-### PREP NFM3 FILES
-- Keyword searches to identify focus topics in the database
-  - "focus_topic_search.r" *searches the budget for the keywords in each country*
-  - "merge_keyword_search_results_with_budget_data.r" *merges keyword findings with budget data*
-- Extracting NFM3 data
-  - "run_prep_fr_budgets.r": extracts data from NFM3 and NFM2 funding request budgets; merges data together. Should be modified to also extract final approved NFM3 budgets.  
-	- "nfm3_verify_mapping.r": prepares new modular framework in order to map budgetary data. This file is soured in "run_prep_fr_budgets.r"
-	- "get_target_population_data.r": this script is not running. It was written to pull the target population tab from the NFM3 budgets.
-	- Add focus topic indicator to budget dataset
-		-  "create_keyword_search_dataset.r" *This creates a dataset of all unique activities in the budgets*
-		- prep_final_focus_topic_mapping.R   *I don't think this file make sense in this order ...use this when there are new files added.*
+### PREP NFM2 FRs and NFM3 FRs and APPROVED FILES
 
-### Grant Cycle analyses
-  - "prep_qualitative_data.r": this file 
-  - "get_data_for_2s_analysis.r"
+- Extracting NFM2 FRs and all NFM3 data (FRs and Approved)
+  - "9_run_prep_fr_budgets.r": extracts data from NFM3 and NFM2 funding request budgets as well as updated to extract data from NFM3 final approved budgets; merges data together.  
+  - "9a_nfm3_verify_mapping.r": prepares new modular framework in order to map budgetary data. This file is sourced in "9_run_prep_fr_budgets.r"
+  - "9b_update_focus_topics.r": 
+	- Add focus topic indicators to budget dataset. This file sources the four scripts which together help map focus topics onto budget data and then save all types of data (funding requests, approved budgets, revisions) together.
+
+### Data prep necessary for 2020-2021 PCE analyses
+  - "10_prep_qualitative_data.r": Extracts qualitative data (LFA comments, PR comments) from financial and performance indicator tabs in PUDRs and saves them into an excel file with multiple sheets on "J:/Project/Evaluation/GF/resource_tracking/qualitative_data/". 
+  - "11_get_data_for_2s_analysis.r": sets prepped data to the relevant fields for the 4S Framework Analysis.
+  
+### Keyword searches to identify focus topics in the database
+ - "focus_topic_search.r" *searches the budget for the keywords in each country*
+ - "merge_keyword_search_results_with_budget_data.r" *merges keyword findings with budget data*
+ - "focus_topic_search.r" DESCRIPTION PENDING
+ - "create_keyword_search_dataset.r" DESCRIPTION PENDING
+ - "prep_final_focus_topic_mapping.r" DESCRIPTION PENDING	
+ - "combine_frs_budget_revisions.r" DESCRIPTION PENDING
 
 ### OTHER FILES
 - "match_box_to_j.r" As of January 2020, this script is not running. The vision was to have an automatic script that backs up the Box file system to the J drive to make sure they're always the same.
 - "reporting_completeness_gf.rmd" This script checks the reporting completeness for Global Fund budgets and PUDRs, and outputs an automated R-markdown report.
 - "unclassified_files.rmd" This script recursively searches the Box account, and flags files that are not classified in the Master File List. (As of January 2020, this may still be set up to search the J:drive, but this is an easy fix.)
+
