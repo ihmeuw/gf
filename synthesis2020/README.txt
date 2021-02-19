@@ -17,8 +17,7 @@ Code:
 	to create the line graph of average absorption for all NFM modules, HRG-Equity related modules, and RSSH modules by country and year. This figure was used within the 
 	synthesis report and slides. This code was written by Matt Schneider, adpated from Francisco Rios Casas.
 
-05_synthesis_nfm2_nfm3_crossconsortia_figures_nfm3gmincluded.R: Creates budget figures for synthesis 2020 report and slides, including horizontal bar charts for HRG-Equity and
-	RSSH investment changes during NFM2 implementation and changing trajectory between NFM2 and NFM3. This code was written by Matt Schneider, adpated from Francisco Rios Casas.
+05_synthesis_nfm2_nfm3_crossconsortia_figures_nfm3gmincluded.R: Creates budget figures for synthesis 2020 report and slides, including horizontal bar charts for HRG-Equity and RSSH investment changes during NFM2 implementation and changing trajectory between NFM2 and NFM3. This code was written by Matt Schneider, adpated from Francisco Rios Casas.
 
 synthesis_performance_compilation_regression_analysis.R: was used to create the analysis presented during our synthesis workshop looking at the relationship between absorption, performance,
 	and budget revisions.
