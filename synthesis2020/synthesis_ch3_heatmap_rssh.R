@@ -63,7 +63,7 @@ dt[gf_module == 'Procurement and supply chain management systems', gf_module := 
 
 # calculate each module % of total
 dt[, rssh_total_by_country := sum(budget), by = c('loc_name')]
-dt[, module_percent_of_total_rssh := round((budget/rssh_total_by_country)*100, 2)]
+dt[, module_percent_of_total_rssh := round((budget/rssh_total_by_country)*100)]
 dt = dt[budget > 0]
 # -------------------------------------------------------------------
 # add in table of indicators for captions: 
@@ -109,6 +109,9 @@ plot_dt[, plot_module := factor(plot_module, levels = c('HMIS and M&E',
                                                     'HRH, incl. CHWs',
                                                     'Laboratory systems',
                                                     'Financial management\nsystems'))]
+# # quick fix for cambodia hmis 
+# plot_dt[is.na(module_percent_of_total_rssh), module_percent_of_total_rssh := 0]
+# plot_dt[is.na(version), version := 'nfm3_funding_request20']
 
 # -------------------------------------------------------------------
 # plot into a heatmap
