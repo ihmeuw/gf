@@ -153,7 +153,7 @@ grants_wo_catalytic = grants[!grants %in% grants_with_catalytic]
 
 # fix guatemala years to show the comparable time periods:
 dt2[, year := as.character(year)]
-dt2[loc_name == 'Guatemala', year:=gtm_year]
+#dt2[loc_name == 'Guatemala', year:=gtm_year]
 dt2 = dt2[!is.na(year), ]
 dt2$year = factor(dt2$year, levels = c('2018', '2019', '2020', '2021', 'Year1', 'Year2', 'Year3'))
 
@@ -353,6 +353,21 @@ for (country in unique(dt_country$loc_name)) {
   outrTable = paste0(out_dir, 'tables_for_annual_budget_comparisons/', country, '_table_modules_year.csv')
   write.csv(table, outrTable, row.names = FALSE)
   
+  percent_table = dt_country[loc_name == country & figure_budget_version %in% c("NFM2 Award+CMF", "NFM2 Revision"), ]
+  percent_table[, budget := round(budget)]
+  # cast wide just the budget version to be able to calculate percentage difference (among years too)
+  percent_table = data.table(dcast(percent_table, loc_name + simplified_mod + year ~ figure_budget_version, value.var = "budget", fun.aggregate = sum ))
+  # calculate percentage change
+  percent_table[, percent_change := round(((`NFM2 Revision`-`NFM2 Award+CMF`)/`NFM2 Award+CMF`)*100)]
+  percent_table = percent_table[,.(loc_name, simplified_mod, year, percent_change)]
+  # cast the year wide now:
+  percent_table = data.table(dcast(percent_table, loc_name + simplified_mod ~ year, value.var = "percent_change"))
+  setnames(percent_table, 'loc_name', 'Country')
+  setnames(percent_table, 'simplified_mod', 'GF Module')
+  outrTable = paste0(out_dir, 'tables_for_annual_budget_comparisons/', country, '_table_modules_year_percentChange.csv')
+  write.csv(percent_table, outrTable, row.names = FALSE)
+
+  #--------------------------------  
   table = dt_country_cc[loc_name == country & figure_budget_version %in% c("NFM2 Award+CMF", "NFM2 Revision"), ]
   table[, simplified_cost_category := NULL]
   table[, budget := round(budget)]
@@ -363,6 +378,22 @@ for (country in unique(dt_country$loc_name)) {
   outrTable = paste0(out_dir, 'tables_for_annual_budget_comparisons/', country, '_table_costGroupings_year.csv')
   write.csv(table, outrTable, row.names = FALSE)
   
+  percent_table = dt_country_cc[loc_name == country & figure_budget_version %in% c("NFM2 Award+CMF", "NFM2 Revision"), ]
+  percent_table[, simplified_cost_category := NULL]
+  percent_table[, budget := round(budget)]
+  # cast wide just the budget version to be able to calculate percentage difference (among years too)
+  percent_table = data.table(dcast(percent_table, loc_name + cost_category_label + year ~ figure_budget_version, value.var = "budget", fun.aggregate = sum ))
+  # calculate percentage change
+  percent_table[, percent_change := round(((`NFM2 Revision`-`NFM2 Award+CMF`)/`NFM2 Award+CMF`)*100)]
+  percent_table = percent_table[,.(loc_name, cost_category_label, year, percent_change)]
+  # cast the year wide now:
+  percent_table = data.table(dcast(percent_table, loc_name + cost_category_label ~ year, value.var = "percent_change"))
+  setnames(percent_table, 'loc_name', 'Country')
+  setnames(percent_table, 'cost_category_label', 'Cost Grouping')
+  outrTable = paste0(out_dir, 'tables_for_annual_budget_comparisons/', country, '_table_costGroupings_year_percentChange.csv')
+  write.csv(percent_table, outrTable, row.names = FALSE)
+  
+  #--------------------------------  
   table = dt_rssh[loc_name == country & figure_budget_version %in% c("NFM2 Award+CMF", "NFM2 Revision"), ]
   table[, budget := round(budget)]
   table = data.table(dcast(table, loc_name + simplified_mod ~ figure_budget_version + year, value.var = "budget", fun.aggregate = sum ))
@@ -372,6 +403,21 @@ for (country in unique(dt_country$loc_name)) {
   outrTable = paste0(out_dir, 'tables_for_annual_budget_comparisons/', country, '_table_rssh_modules_year.csv')
   write.csv(table, outrTable, row.names = FALSE)
   
+  percent_table = dt_rssh[loc_name == country & figure_budget_version %in% c("NFM2 Award+CMF", "NFM2 Revision"), ]
+  percent_table[, budget := round(budget)]
+  # cast wide just the budget version to be able to calculate percentage difference (among years too)
+  percent_table = data.table(dcast(percent_table, loc_name + simplified_mod + year ~ figure_budget_version, value.var = "budget", fun.aggregate = sum ))
+  # calculate percentage change
+  percent_table[, percent_change := round(((`NFM2 Revision`-`NFM2 Award+CMF`)/`NFM2 Award+CMF`)*100)]
+  percent_table = percent_table[,.(loc_name, simplified_mod, year, percent_change)]
+  # cast the year wide now:
+  percent_table = data.table(dcast(percent_table, loc_name + simplified_mod ~ year, value.var = "percent_change"))
+  setnames(percent_table, 'loc_name', 'Country')
+  setnames(percent_table, 'simplified_mod', 'GF Module')
+  outrTable = paste0(out_dir, 'tables_for_annual_budget_comparisons/', country, '_table_rssh_modules_year_percentChange.csv')
+  write.csv(percent_table, outrTable, row.names = FALSE)
+  
+  #--------------------------------  
   table = dt_equity[loc_name == country & figure_budget_version %in% c("NFM2 Award+CMF", "NFM2 Revision"), ]
   table[, budget := round(budget)]
   table = data.table(dcast(table, loc_name + simplified_mod ~ figure_budget_version + year, value.var = "budget", fun.aggregate = sum ))
@@ -379,6 +425,22 @@ for (country in unique(dt_country$loc_name)) {
   setnames(table, 'loc_name', 'Country')
   setnames(table, 'simplified_mod', 'GF Module')
   outrTable = paste0(out_dir, 'tables_for_annual_budget_comparisons/', country, '_table_hrg_modules_year.csv')
-  write.csv(table, outrTable, row.names = FALSE)
+  write.csv(table, outrTable, row.names = FALSE)  
+  
+  percent_table = dt_equity[loc_name == country & figure_budget_version %in% c("NFM2 Award+CMF", "NFM2 Revision"), ]
+  percent_table[, budget := round(budget)]
+  # cast wide just the budget version to be able to calculate percentage difference (among years too)
+  percent_table = data.table(dcast(percent_table, loc_name + simplified_mod + year ~ figure_budget_version, value.var = "budget", fun.aggregate = sum ))
+  # calculate percentage change
+  percent_table[, percent_change := round(((`NFM2 Revision`-`NFM2 Award+CMF`)/`NFM2 Award+CMF`)*100)]
+  percent_table = percent_table[,.(loc_name, simplified_mod, year, percent_change)]
+  # cast the year wide now:
+  percent_table = data.table(dcast(percent_table, loc_name + simplified_mod ~ year, value.var = "percent_change"))
+  setnames(percent_table, 'loc_name', 'Country')
+  setnames(percent_table, 'simplified_mod', 'GF Module')
+  outrTable = paste0(out_dir, 'tables_for_annual_budget_comparisons/', country, '_table_hrg_modules_year_percentChange.csv')
+  write.csv(percent_table, outrTable, row.names = FALSE)
+  
+  #--------------------------------  
 }
 # -------------------------------------------------------------------
