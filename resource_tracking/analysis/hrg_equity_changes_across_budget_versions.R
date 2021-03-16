@@ -63,7 +63,7 @@ g1 = ggplot(wide[loc_name != 'Guatemala'], aes(x = grant, y = percent_equity_bud
   theme(legend.position="bottom") + 
   theme(text=element_text(size=18)) +
   #theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  xlim(0,100) +
+  ylim(0,100) +
   coord_flip() +
   geom_text(aes(x = grant, y = percent_equity_budget, label = paste0(percent_equity_budget, '%'), group = budget_version), 
             hjust = -0.3, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE) +
@@ -124,8 +124,9 @@ outFile_png = 'J:/Project/Evaluation/GF/resource_tracking/visualizations2020/hrg
 png(outFile_png, height = 9, width = 12, units = "in", res = 300)
 print(g1)
 dev.off()
-# -------------------------------------------------------------------
 
+# -------------------------------------------------------------------
+# Calculate percent change
 values = wide[loc_name != 'Guatemala', .(grant, budget_version, equity_budget)]
 values = dcast.data.table(values, grant ~ budget_version)
 values = values[!is.na(approved_catalytic_matching_funds)]
@@ -135,4 +136,45 @@ values = values[!is.na(most_recent_revision )]
   sum(values$most_recent_revision) - sum(values$approved_catalytic_matching_funds)
   ((sum(values$most_recent_revision) - sum(values$approved_catalytic_matching_funds)) / sum(values$approved_catalytic_matching_funds))*100
 
+# -------------------------------------------------------------------
+# INCLUDE FUNDING REQUESTS:  
 
+# sum by HRG equity, grant, country
+dt2 = data[grant_period == '2018-2020',]
+dt2 = dt2[ budget_version == 'funding_request17',]          
+dt2 = dt2[, .(budget=sum(budget, na.rm = TRUE)), by = .(loc_name, equity, budget_version)]
+dt2_wide = dcast.data.table(dt2, loc_name + budget_version ~ equity)
+
+setnames(dt2_wide, 'TRUE', 'equity_budget')
+setnames(dt2_wide, 'FALSE', 'non_equity_budget')
+
+dt2_wide[, budget_total := equity_budget + non_equity_budget]
+dt2_wide[, percent_equity_budget := round((equity_budget/budget_total)*100)]
+
+dt_w_fr = rbindlist(list(wide, dt2_wide), use.names = TRUE, fill = TRUE)
+dt_w_fr[, c('percent_equity_budget') := NULL]
+
+sd = c('non_equity_budget', 'equity_budget', 'budget_total')
+check = dt_w_fr[, lapply(.SD, sum), by = c('loc_name', 'budget_version'), .SDcols = sd]
+check[, percent_equity_budget := round((equity_budget/budget_total)*100)]
+
+colors2 = c('#D55E00','#56B4E9','#C378A2', '#AED581')
+names(colors2) = levels(check$budget_version)
+
+g5 = ggplot(check, aes(x = loc_name, y = percent_equity_budget, fill = budget_version)) + 
+  theme_bw() + 
+  geom_bar(stat = 'identity', position=position_dodge()) +
+  labs(fill = 'Budget Version', x = 'Country', y = 'Percentage', title = 'Percent of budget related to HRG-Equity across grants') +
+  # theme(legend.position="bottom") + 
+  theme(text=element_text(size=18)) +
+  # theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0,100) +
+  coord_flip() +
+  geom_text(aes(x = loc_name, y = percent_equity_budget, label = paste0(percent_equity_budget, '%'), group = budget_version), 
+            hjust = -0.3, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE) +
+  scale_fill_manual(name = 'Budget Version', values = colors2)
+
+outFile_png2 = 'J:/Project/Evaluation/GF/resource_tracking/visualizations2020/hrg_equity_across_budget_versions_percentage_wFRs.png'
+png(outFile_png2, height = 8, width = 10, units = "in", res = 300)
+print(g5)
+dev.off()
