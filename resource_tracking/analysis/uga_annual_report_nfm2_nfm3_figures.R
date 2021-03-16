@@ -18,7 +18,7 @@ library(RColorBrewer)
 # Files and directories
 
 # input file
-box = paste0("C:/Users/mts24/Box Sync/Global Fund Files/")
+box = paste0("C:/Users/abatzel/Box Sync/Global Fund Files/")
 inFile = paste0(box, 'synthesis/data/draft_synthesis_budget_quant.xlsx')
 ehgFile = paste0(box, 'synthesis/data/Synthesis Budget Variance 181120.xlsx')
 
