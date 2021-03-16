@@ -56,7 +56,7 @@ path <- paste0("C:/Users/",user,"/Box Sync/Global Fund Files/synthesis/data")
 ##reading in latest budget data - includes NFM2 funding requests, approved for grant making budgets, all revisions, and 
 ##                                NFM3 funding requests and grant making budgets
 ##this dataset if budgets down to activities and cost categories
-all_abs_data <- fread(input = paste0(c,"/Users/mts24/Box Sync/Global Fund Files/tableau_data/all_absorption.csv")) #absorption by intervention and grant for each year (semester)
+all_abs_data <- fread(input = paste0(c,"/Users/", user, "/Box Sync/Global Fund Files/tableau_data/all_absorption.csv")) #absorption by intervention and grant for each year (semester)
 ##need to update RSSH interventions we are considering also part of HRG-Equity
 rssh_equity_int <- c("Supportive policy and programmatic environment")
 all_abs_data[gf_module=="Community responses and systems" | 
@@ -73,7 +73,7 @@ all_abs_data[pr %in% c("MOH", "MoFPED", "MSPAS","PNLP","CNLS"), pr_type:="Govern
 
 ##reportetd cumulative budget data
 ##notice that Uganda has an updated PUDR and is getting double counted (either need to drop newest data or older data as to not double count)
-cum_abs_data <- fread(input = paste0(c,"/Users/mts24/Box Sync/Global Fund Files/tableau_data/cumulative_absorption.csv")) #cumulcative (first 2 years for most grants) absorption by intervention and grant
+cum_abs_data <- fread(input = paste0(c,"/Users/", user, "/Box Sync/Global Fund Files/tableau_data/cumulative_absorption.csv")) #cumulcative (first 2 years for most grants) absorption by intervention and grant
 
 cum_abs_data <- cum_abs_data[end_date=="2019-12-31"]
 
