@@ -178,3 +178,30 @@ outFile_png2 = 'J:/Project/Evaluation/GF/resource_tracking/visualizations2020/hr
 png(outFile_png2, height = 8, width = 10, units = "in", res = 300)
 print(g5)
 dev.off()
+
+
+# -------------------------------------------------------------------
+# read in data
+data = as.data.table(read.csv(inFile))
+dt = data[grant_period == '2021-2023',]
+dt = dt[ isMostRecentRevision == TRUE | budget_version %in% c('funding_request20', 'approved'),]          
+
+loc = 'Uganda'
+# HRG-Equity
+# modules
+hrge = dt[loc_name == loc & equity == TRUE, .(budget=sum(budget, na.rm = TRUE)), by = .(loc_name, budget_version, gf_module, equity)]
+hrge_wide = dcast.data.table(hrge, loc_name + gf_module ~ budget_version, value.var = 'budget')
+hrge_wide[, percent_change := ((approved-funding_request20)/funding_request20)*100]
+# interventions
+i_hrge = dt[loc_name == loc & equity == TRUE, .(budget=sum(budget, na.rm = TRUE)), by = .(loc_name, budget_version, gf_module, gf_intervention, equity)]
+i_hrge_wide = dcast.data.table(i_hrge, loc_name + gf_module + gf_intervention ~ budget_version, value.var = 'budget')
+i_hrge_wide[, percent_change := ((approved-funding_request20)/funding_request20)*100]
+# RSSH
+# modules
+rssh = dt[loc_name == loc & rssh == TRUE, .(budget=sum(budget, na.rm = TRUE)), by = .(loc_name, budget_version, gf_module, rssh)]
+rssh_wide = dcast.data.table(rssh, loc_name + gf_module ~ budget_version, value.var = 'budget')
+rssh_wide[, percent_change := ((approved-funding_request20)/funding_request20)*100]
+# interventions
+i_rssh = dt[loc_name == loc & rssh == TRUE, .(budget=sum(budget, na.rm = TRUE)), by = .(loc_name, budget_version, gf_module, gf_intervention, rssh)]
+i_rssh_wide = dcast.data.table(i_rssh, loc_name + gf_module + gf_intervention ~ budget_version, value.var = 'budget')
+i_rssh_wide[, percent_change := ((approved-funding_request20)/funding_request20)*100]
