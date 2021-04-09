@@ -79,10 +79,10 @@ for(country in countries_to_run) {
     dt = dt[, c('loc_name', 'grant', 'cycle', 'grant_period', 'version', 'module', 'intervention', 'activity_description', 'cost_input', 'budget', final_coding_col), with = FALSE]
     
     # save each prepped data sheet to prepped_dt 
-    if(nrow(prepped_dt) == 0){
+    if(nrow(prepped_dt_country) == 0){
       prepped_dt_country = dt
     } else {
-      prepped_dt_country = rbindlist(list(prepped_dt, dt), use.names = TRUE, fill = TRUE)
+      prepped_dt_country = rbindlist(list(prepped_dt_country, dt), use.names = TRUE, fill = TRUE)
     }
   }
   # save country data
