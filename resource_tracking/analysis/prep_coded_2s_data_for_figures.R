@@ -43,12 +43,6 @@ for(country in countries_to_run) {
   for(sheet in sheets){
     inSheet = paste0(country, sheet)
     
-    if(inSheet %in% c('UGA2017(GA)', 'UGA2020(FR)')){
-      final_coding_col = 'sensitivity_2'
-    } else if(inSheet %in% c('UGA2020(GA)')) {
-      final_coding_col = 'finaldesignation'
-    }
-    
     # read in data
     dt = as.data.table(read_xlsx(inFile, sheet = inSheet))
     
@@ -57,6 +51,12 @@ for(country in countries_to_run) {
     colnames(dt) = tolower(colnames(dt))
     colnames(dt) = gsub(pattern = ' ', replacement = '_', x = colnames(dt))
     dt = dt[-c(1),]
+    
+    if(inSheet %in% c('UGA2017(GA)', 'UGA2020(FR)')){
+      final_coding_col = 'sensitivity_2'
+    } else if(inSheet %in% c('UGA2020(GA)')) {
+      final_coding_col = 'finaldesignation'
+    }
     
     # keep just relevant columns and final coding designation
     dt[, loc_name := country]
