@@ -43,12 +43,6 @@ for(country in countries_to_run) {
   for(sheet in sheets){
     inSheet = paste0(country, sheet)
     
-    if(inSheet %in% c('UGA2017(GA)', 'UGA2020(FR)')){
-      final_coding_col = 'sensitivity_2'
-    } else if(inSheet %in% c('UGA2020(GA)')) {
-      final_coding_col = 'finaldesignation'
-    }
-    
     # read in data
     dt = as.data.table(read_xlsx(inFile, sheet = inSheet))
     
@@ -57,6 +51,12 @@ for(country in countries_to_run) {
     colnames(dt) = tolower(colnames(dt))
     colnames(dt) = gsub(pattern = ' ', replacement = '_', x = colnames(dt))
     dt = dt[-c(1),]
+    
+    if(inSheet %in% c('UGA2017(GA)', 'UGA2020(FR)')){
+      final_coding_col = 'sensitivity_2'
+    } else if(inSheet %in% c('UGA2020(GA)')) {
+      final_coding_col = 'finaldesignation'
+    }
     
     # keep just relevant columns and final coding designation
     dt[, loc_name := country]
@@ -79,10 +79,10 @@ for(country in countries_to_run) {
     dt = dt[, c('loc_name', 'grant', 'cycle', 'grant_period', 'version', 'module', 'intervention', 'activity_description', 'cost_input', 'budget', final_coding_col), with = FALSE]
     
     # save each prepped data sheet to prepped_dt 
-    if(nrow(prepped_dt) == 0){
+    if(nrow(prepped_dt_country) == 0){
       prepped_dt_country = dt
     } else {
-      prepped_dt_country = rbindlist(list(prepped_dt, dt), use.names = TRUE, fill = TRUE)
+      prepped_dt_country = rbindlist(list(prepped_dt_country, dt), use.names = TRUE, fill = TRUE)
     }
   }
   # save country data
