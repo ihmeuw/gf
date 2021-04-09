@@ -32,14 +32,25 @@ inFile = paste0(box, '2s_data/2S Analysis Template.xlsx')
 # -----------------------------------------------
 # read in data and prep one sheet at a time
 # -----------------------------------------------
-countries_to_run = c('UGA')
-sheets = c('2017(GA)', '2020(FR)', '2020(GA)')
+countries_to_run = c('UGA', 'GTM')
+
+# sheets = c('2020(GA)', ' 2017', ' 2020') # this might not work without more specific if else statement...
+#### FRC: I turned this part into an if statement and moved it into the loop below since it looks like sometimes countries share 
+#### sheet names but not always
+
 prepped_dt = data.table()
 prepped_dt_country = data.table()
 
 # loop through countries and sheets  to prep
 
 for(country in countries_to_run) {
+  
+  if (country=='UGA') {
+    sheets = c('2017(GA)', '2020(FR)', '2020(GA)')
+  } else if (country=='GTM') {
+    sheets = c(' 2017', ' 2020', '2020(GA)')
+  }
+  
   for(sheet in sheets){
     inSheet = paste0(country, sheet)
     
@@ -52,22 +63,40 @@ for(country in countries_to_run) {
     colnames(dt) = gsub(pattern = ' ', replacement = '_', x = colnames(dt))
     dt = dt[-c(1),]
     
-    if(inSheet %in% c('UGA2017(GA)', 'UGA2020(FR)')){
+    if(inSheet %in% c('UGA2017(GA)', 'UGA2020(FR)', 'GTM 2017', 'GTM 2020')){
       final_coding_col = 'sensitivity_2'
-    } else if(inSheet %in% c('UGA2020(GA)')) {
+    } else if(inSheet %in% c('UGA2020(GA)', 'GTM2020(GA)')) {
       final_coding_col = 'finaldesignation'
     }
     
+    # remove extra row for guatemala (contains summed total of data)--might not apply elsewhere
+    if (inSheet%in%c("GTM2020(GA)", "GTM 2020")){
+      dt = dt[!(is.na(activity_description))]
+    }
+    
     # keep just relevant columns and final coding designation
-    dt[, loc_name := country]
+    if (!"country"%in%colnames(dt)) {
+      dt[, loc_name := country]
+    } else if ("country"%in%colnames(dt)) {
+      dt[, country:=NULL]
+      dt[, loc_name := country]
+      }
+    
     dt[, cycle := ifelse(grepl('2017', inSheet), 'NFM2', 'NFM3') ]
+    if (country == "UGA"){
     dt[, version := ifelse(grepl('FR', inSheet), 'funding_request', 'approved_budget') ]
+    } else {
+        dt[, version := ifelse(grepl('GA', inSheet), 'approved_budget', 'funding_request') ]}
     
     # not sure if this will apply to other countries but need to make the NFM3 award match other data
     if (sheet == '2020(GA)'){
       # finaldesignation applies to just the newly coded activities, so we will use the previous
       # coding (final_designation), for all activities that were already coded but are in the award budget
-      dt = dt[is.na(finaldesignation), finaldesignation := final_designation]
+      if (country=='UGA') {
+        dt = dt[is.na(finaldesignation), finaldesignation := final_designation]
+      }else if (country=='GTM'){
+        dt = dt[is.na(finaldesignation), finaldesignation := final_designation_fr]
+      }
       setnames(dt, 'gf_module', 'module')
       setnames(dt, 'gf_intervention', 'intervention')
       setnames(dt, 'cost_category', 'cost_input')
@@ -85,9 +114,9 @@ for(country in countries_to_run) {
       prepped_dt_country = rbindlist(list(prepped_dt_country, dt), use.names = TRUE, fill = TRUE)
     }
   }
-  # save country data
-  saveRDS(prepped_dt_country, paste0(box, '2s_data/prepped_2s_data_', country, '.rds'))
-  write.csv(prepped_dt_country, paste0(box, '2s_data/prepped_2s_data_', country, '.csv'), row.names = FALSE)
+  # save country data individually
+  saveRDS(prepped_dt_country[loc_name==country], paste0(box, '2s_data/prepped_2s_data_', country, '.rds'))
+  write.csv(prepped_dt_country[loc_name==country], paste0(box, '2s_data/prepped_2s_data_', country, '.csv'), row.names = FALSE)
   if(nrow(prepped_dt) == 0){
     prepped_dt = prepped_dt_country
   } else {
@@ -104,6 +133,7 @@ write.csv(prepped_dt, paste0(box, '2s_data/prepped_2s_data_all_countries.csv'), 
 # make figures/save by country
 # -----------------------------------------------
 # Compare NFM2 Award to NFM3 Award overall, by grant, by grant/module, by module
+
 
 # Compare NFM3 FR to NFM3 Award overall, by module, (by intervention?)
 
