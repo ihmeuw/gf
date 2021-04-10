@@ -230,7 +230,7 @@ for (country in unique(prepped_dt$loc_name)){
   list_of_plots[[i+2]] = ggplot(graph_module_nfm3[loc_name == country], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
     geom_bar(stat = 'identity', position=position_dodge()) +
     facet_grid(rows = 'module', scales = 'free_y') +
-    labs(fill = '2S Coding', x = 'Budget Version', y = 'Budget (millions USD)', title = '2S funding, comparing NFM3 funding request to NFM3 award') +
+    labs(fill = '2S Coding', x = 'Budget Version', y = 'Budget (millions USD)', title = '2S funding by module, comparing NFM3 funding request to NFM3 award') +
     geom_text(aes(x = version, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
               hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
     scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
