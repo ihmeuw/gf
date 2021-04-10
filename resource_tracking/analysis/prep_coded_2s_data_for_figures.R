@@ -39,7 +39,6 @@ countries_to_run = c('UGA', 'GTM')
 #### sheet names but not always
 
 prepped_dt = data.table()
-prepped_dt_country = data.table()
 
 # loop through countries and sheets  to prep
 
@@ -50,6 +49,7 @@ for(country in countries_to_run) {
   } else if (country=='GTM') {
     sheets = c(' 2017', ' 2020', '2020(GA)')
   }
+  prepped_dt_country = data.table()
   
   for(sheet in sheets){
     inSheet = paste0(country, sheet)
@@ -106,6 +106,8 @@ for(country in countries_to_run) {
     }
     
     dt = dt[, c('loc_name', 'grant', 'cycle', 'grant_period', 'version', 'module', 'intervention', 'activity_description', 'cost_input', 'budget', final_coding_col), with = FALSE]
+    setnames(dt, final_coding_col, 'coding_2s')
+    dt[, grant := gsub(pattern = '-', '_', grant)]
     
     # save each prepped data sheet to prepped_dt 
     if(nrow(prepped_dt_country) == 0){
@@ -123,23 +125,128 @@ for(country in countries_to_run) {
     prepped_dt = rbindlist(list(prepped_dt, prepped_dt_country), use.names = TRUE, fill = TRUE)
   }
 }
+prepped_dt[, budget := as.numeric(budget)]
+prepped_dt = prepped_dt[budget != 0, ]
 
 # save full data
 saveRDS(prepped_dt, paste0(box, '2s_data/prepped_2s_data_all_countries.rds'))
 write.csv(prepped_dt, paste0(box, '2s_data/prepped_2s_data_all_countries.csv'), row.names = FALSE)
+
+# # check/compare budget values to tableau to ensure accuracy
+# check = prepped_dt[loc_name == 'UGA' & cycle == 'NFM3', .(budget = sum(budget)), by=.(module, intervention, cycle, version)]
+# check = dcast.data.table(check, module + intervention + cycle ~ version, value.var = 'budget')
 # -----------------------------------------------
 
 # -----------------------------------------------
 # make figures/save by country
 # -----------------------------------------------
-# Compare NFM2 Award to NFM3 Award overall, by grant, by grant/module, by module
+# few changes to data for figures...
+prepped_dt[, coding_2s := as.factor(coding_2s)]
+prepped_dt[, version := as.factor(version)]
+prepped_dt[, version := ordered(version, c('approved_budget', 'funding_request'))]
+prepped_dt[, cycle := as.factor(cycle)]
+prepped_dt[, cycle := ordered(cycle, c('NFM3', 'NFM2'))]
 
+prepped_dt[module == 'Health management information systems and M&E', plot_module := 'HMIS and M&E']
+prepped_dt[module == 'Health management information system and monitoring and evaluation', plot_module := 'HMIS and M&E']
+prepped_dt[module == 'Health products management systems', plot_module := 'Health products\nmanagement systems']
+prepped_dt[module == 'Integrated service delivery and quality improvement', plot_module := 'Int. service delivery\nand QE']
+prepped_dt[module == 'Community responses and systems', plot_module := 'CSS']
+prepped_dt[module == 'Community systems strengthening', plot_module := 'CSS']
+prepped_dt[module == 'Procurement and supply chain management systems', plot_module := 'P&SCM systems']
+prepped_dt[module == 'Human resources for health, including community health workers', plot_module := 'HRH, incl. CHWs']
+prepped_dt[module == 'Laboratory systems', plot_module := 'Laboratory systems']
+prepped_dt[module == 'Financial management systems', plot_module := 'Financial management\nsystems']
+prepped_dt[module == 'National health strategies', plot_module := 'National health\nstrategies']
 
-# Compare NFM3 FR to NFM3 Award overall, by module, (by intervention?)
+colors = c('#D55E00','#56B4E9') #'#C378A2'
+names(colors) = levels(prepped_dt$coding_2s)
 
+# Sum to compare NFM2 Award to NFM3 Award overall, by grant, by grant/module, by module
+overall_comp = prepped_dt[version == 'approved_budget', .(budget = sum(budget)), by = .(loc_name, cycle, coding_2s)]
+graph_grant = prepped_dt[version == 'approved_budget', .(budget = sum(budget)), by = .(loc_name, grant, cycle, coding_2s)]
+graph_grant_module = prepped_dt[version == 'approved_budget', .(budget = sum(budget)), by = .(loc_name, grant, cycle, module, plot_module, coding_2s)]
+graph_module = prepped_dt[version == 'approved_budget', .(budget = sum(budget)), by = .(loc_name, cycle, module, plot_module, coding_2s)]
+
+# Sum to compare NFM3 FR to NFM3 Award overall, by module, (by intervention?)
+overall_comp_nfm3 = prepped_dt[cycle == 'NFM3', .(budget = sum(budget)), by = .(loc_name, version, coding_2s)]
+graph_module_nfm3 = prepped_dt[cycle == 'NFM3', .(budget = sum(budget)), by = .(loc_name, version, module, plot_module, coding_2s)]
+graph_intervention_nfm3 = prepped_dt[cycle == 'NFM3', .(budget = sum(budget)), by = .(loc_name, version, module, plot_module, intervention, coding_2s)]
+
+list_of_plots = NULL
+
+for (country in unique(prepped_dt$loc_name)){
+  # figure outFiles:
+  outFile_box = paste0(box, '2s_data/figures/2S_figures_', country, '.pdf')
+  outFile_j = paste0('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/2S_figures/2S_figures_', country, '.pdf')
+  
+  list_of_plots[[1]] = ggplot(overall_comp[loc_name == country], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
+    geom_bar(stat = 'identity', position=position_dodge()) +
+    labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = '2S funding, comparing NFM2 award to NFM3 award') +
+    geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
+              hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
+    theme(legend.position="bottom")
+  
+  list_of_plots[[2]] = ggplot(graph_grant[loc_name == country], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
+    geom_bar(stat = 'identity', position=position_dodge()) +
+    labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = '2S funding by grant, comparing NFM2 award to NFM3 award') +
+    facet_grid(rows = 'grant', scales = 'free_y') +
+    geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
+              hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
+    theme(legend.position="bottom")
+  
+  i = 3
+  for(g in unique(graph_grant_module[loc_name == country, grant])){
+    list_of_plots[[i]] = ggplot(graph_grant_module[loc_name == country & grant == g, ], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
+      geom_bar(stat = 'identity', position='stack') +
+      labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = paste0('2S funding by module for ', g,', comparing NFM2 award to NFM3 award')) +
+      facet_grid(rows = 'plot_module', scales = 'free_y') +
+      #geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
+                #hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+      scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
+      theme(legend.position="bottom")
+    i = i+1
+  }
+  
+  list_of_plots[[i]] = ggplot(graph_module[loc_name == country], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
+    geom_bar(stat = 'identity', position='stack') +
+    labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = '2S funding by module, comparing NFM2 award to NFM3 award across all grants') +
+    facet_grid(rows = 'plot_module', scales = 'free_y') +
+    #geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
+              #hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
+    theme(legend.position="bottom")
+  
+  list_of_plots[[i+1]] = ggplot(overall_comp_nfm3[loc_name == country], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
+    geom_bar(stat = 'identity', position=position_dodge()) +
+    labs(fill = '2S Coding', x = 'Budget Version', y = 'Budget (millions USD)', title = '2S funding, comparing NFM3 funding request to NFM3 award') +
+    geom_text(aes(x = version, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
+              hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
+    theme(legend.position="bottom")
+  
+  list_of_plots[[i+2]] = ggplot(graph_module_nfm3[loc_name == country], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
+    geom_bar(stat = 'identity', position=position_dodge()) +
+    facet_grid(rows = 'module', scales = 'free_y') +
+    labs(fill = '2S Coding', x = 'Budget Version', y = 'Budget (millions USD)', title = '2S funding, comparing NFM3 funding request to NFM3 award') +
+    geom_text(aes(x = version, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
+              hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
+    theme(legend.position="bottom")
+  
+  # save figures
+  pdf(outFile_box, height = 12, width = 15)
+  for(i in seq(length(list_of_plots))) {
+    print(list_of_plots[[i]])
+  }
+  dev.off()
+  
+  pdf(outFile_j, height = 12, width = 15)
+  for(i in seq(length(list_of_plots))) {
+    print(list_of_plots[[i]])
+  }
+  dev.off()
+}
 # -----------------------------------------------
-
-
-
-
-
