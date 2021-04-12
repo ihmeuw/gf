@@ -14,7 +14,12 @@ dt.1 <- dt.1[,.(loc_name, gf_module, gf_intervention, activity_description, cost
 ##### Subset budget to only data for survey interventions
 dt.2 <- all_data[loc_name=="Guatemala" & grant_period=="2021-2023" & gf_module=="Health management information system and monitoring and evaluation" & gf_intervention=="Surveys"]
 
-dt.1 <- dt.1[,.(loc_name, gf_module, gf_intervention, activity_description, cost_category, file_name, grant, budget_version, budget)]
+dt.1 <- dt.2[,.(loc_name, gf_module, gf_intervention, activity_description, cost_category, file_name, grant, budget_version, budget)]
 
 ##### run keyword search
+dt.3 <- all_data[loc_name=="Guatemala" & grant_period=="2021-2023"]
+dt.3 <- dt.3[,.(loc_name, gf_module, gf_intervention, activity_description, cost_category, file_name, grant, budget_version, budget)]
 
+# set up
+
+id_keyword_for_extension()
