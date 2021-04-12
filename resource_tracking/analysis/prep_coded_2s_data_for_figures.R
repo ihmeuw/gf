@@ -86,7 +86,15 @@ for(country in countries_to_run) {
     if (country == "UGA"){
     dt[, version := ifelse(grepl('FR', inSheet), 'funding_request', 'approved_budget') ]
     } else {
-        dt[, version := ifelse(grepl('GA', inSheet), 'approved_budget', 'funding_request') ]}
+      if (inSheet=="GTM 2020"){
+        dt[, version := 'funding_request']
+      }else {
+        dt[, version := 'approved_budget']
+      }
+    }
+        
+      # }  
+      # dt[, version := ifelse(grepl('GA', inSheet), 'approved_budget', 'funding_request') ]}
     
     # not sure if this will apply to other countries but need to make the NFM3 award match other data
     if (sheet == '2020(GA)'){
@@ -147,17 +155,24 @@ prepped_dt[, version := ordered(version, c('approved_budget', 'funding_request')
 prepped_dt[, cycle := as.factor(cycle)]
 prepped_dt[, cycle := ordered(cycle, c('NFM3', 'NFM2'))]
 
+# GTM module names are still in Spanish
+prepped_dt[module == 'Sistema de información de gestión de la salud y el seguimiento y la evaluación', plot_module := "HMIS and M&E"]
+prepped_dt[module == 'Prestación de servicios integrados y la mejora de la calidad', plot_module := "Int. service del\nand QE"]
+prepped_dt[module == 'Sistemas de gestión de la cadena de adquisiciones y suministros', plot_module := "P&SCM \nsyst"]
+prepped_dt[module == 'Respuestas y los sistemas comunitarios', plot_module := "CSS"]
+
 prepped_dt[module == 'Health management information systems and M&E', plot_module := 'HMIS and M&E']
 prepped_dt[module == 'Health management information system and monitoring and evaluation', plot_module := 'HMIS and M&E']
-prepped_dt[module == 'Health products management systems', plot_module := 'Health products\nmanagement systems']
-prepped_dt[module == 'Integrated service delivery and quality improvement', plot_module := 'Int. service delivery\nand QE']
+prepped_dt[module == 'Health products management systems', plot_module := 'Health products\nmngmt syst']
+prepped_dt[module == 'Integrated service delivery and quality improvement', plot_module := 'Int. service del\nand QE']
 prepped_dt[module == 'Community responses and systems', plot_module := 'CSS']
 prepped_dt[module == 'Community systems strengthening', plot_module := 'CSS']
-prepped_dt[module == 'Procurement and supply chain management systems', plot_module := 'P&SCM systems']
+prepped_dt[module == 'Procurement and supply chain management systems', plot_module := 'P&SCM \nsyst']
 prepped_dt[module == 'Human resources for health, including community health workers', plot_module := 'HRH, incl. CHWs']
-prepped_dt[module == 'Laboratory systems', plot_module := 'Laboratory systems']
-prepped_dt[module == 'Financial management systems', plot_module := 'Financial management\nsystems']
-prepped_dt[module == 'National health strategies', plot_module := 'National health\nstrategies']
+prepped_dt[module == 'Laboratory systems', plot_module := 'Lab\nsystems']
+prepped_dt[module == 'Financial management systems', plot_module := 'Fin mngmt\nsyst']
+prepped_dt[module == 'National health strategies', plot_module := 'Natl health\nstrats']
+prepped_dt[module == 'Health sector governance and planning', plot_module := 'Health Gov \n& planning']
 
 colors = c('#D55E00','#56B4E9') #'#C378A2'
 names(colors) = levels(prepped_dt$coding_2s)
@@ -180,11 +195,19 @@ for (country in unique(prepped_dt$loc_name)){
   outFile_box = paste0(box, '2s_data/figures/2S_figures_', country, '.pdf')
   outFile_j = paste0('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/2S_figures/2S_figures_', country, '.pdf')
   
+  # list_of_plots[[1]] = ggplot(overall_comp[loc_name == country], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
+  #   geom_bar(stat = 'identity', position=position_dodge()) +
+  #   labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = '2S funding, comparing NFM2 award to NFM3 award') +
+  #   geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
+  #             hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+  #   scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
+  #   theme(legend.position="bottom")
+  
   list_of_plots[[1]] = ggplot(overall_comp[loc_name == country], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
-    geom_bar(stat = 'identity', position=position_dodge()) +
+    geom_bar(stat = 'identity', position='stack') +
     labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = '2S funding, comparing NFM2 award to NFM3 award') +
     geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
-              hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+              position = position_stack(vjust = .5), inherit.aes = TRUE)  +
     scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
     theme(legend.position="bottom")
   
@@ -219,17 +242,25 @@ for (country in unique(prepped_dt$loc_name)){
     scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
     theme(legend.position="bottom")
   
+  # list_of_plots[[i+1]] = ggplot(overall_comp_nfm3[loc_name == country], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
+  #   geom_bar(stat = 'identity', position=position_dodge()) +
+  #   labs(fill = '2S Coding', x = 'Budget Version', y = 'Budget (millions USD)', title = '2S funding, comparing NFM3 funding request to NFM3 award') +
+  #   geom_text(aes(x = version, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
+  #             hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+  #   scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
+  #   theme(legend.position="bottom")
+  
   list_of_plots[[i+1]] = ggplot(overall_comp_nfm3[loc_name == country], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
-    geom_bar(stat = 'identity', position=position_dodge()) +
+    geom_bar(stat = 'identity', position='stack') +
     labs(fill = '2S Coding', x = 'Budget Version', y = 'Budget (millions USD)', title = '2S funding, comparing NFM3 funding request to NFM3 award') +
     geom_text(aes(x = version, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
-              hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+              position = position_stack(vjust = .5), inherit.aes = TRUE)  +
     scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
     theme(legend.position="bottom")
   
   list_of_plots[[i+2]] = ggplot(graph_module_nfm3[loc_name == country], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
     geom_bar(stat = 'identity', position=position_dodge()) +
-    facet_grid(rows = 'module', scales = 'free_y') +
+    facet_grid(rows = 'plot_module', scales = 'free_y') +
     labs(fill = '2S Coding', x = 'Budget Version', y = 'Budget (millions USD)', title = '2S funding by module, comparing NFM3 funding request to NFM3 award') +
     geom_text(aes(x = version, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
               hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
