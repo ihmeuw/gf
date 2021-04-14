@@ -27,6 +27,19 @@ user=as.character(Sys.info()[7])
 box = paste0("C:/Users/",user,"/Box Sync/Global Fund Files/")
 
 inFile = paste0(box, '2s_data/2S Analysis Template.xlsx')
+
+user=as.character(Sys.info()[7])
+if (Sys.info()[1]=='Windows'){
+  if(user == 'abatzel'){ 
+    repo_root = "C:/local/gf/"
+  } else {
+    repo_root = paste0("C:/Users/", user, "/Documents/gf/")} #Change to the root of your repository
+  setwd(repo_root)
+} else {
+  setwd(paste0("/ihme/homes/",user,"/gf/"))
+}
+source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
+source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
 # -----------------------------------------------
 
 # -----------------------------------------------
@@ -136,14 +149,88 @@ for(country in countries_to_run) {
 prepped_dt[, budget := as.numeric(budget)]
 prepped_dt = prepped_dt[budget != 0, ]
 
-# save full data
-saveRDS(prepped_dt, paste0(box, '2s_data/prepped_2s_data_all_countries.rds'))
-write.csv(prepped_dt, paste0(box, '2s_data/prepped_2s_data_all_countries.csv'), row.names = FALSE)
-
 # # check/compare budget values to tableau to ensure accuracy
 # check = prepped_dt[loc_name == 'UGA' & cycle == 'NFM3', .(budget = sum(budget)), by=.(module, intervention, cycle, version)]
 # check = dcast.data.table(check, module + intervention + cycle ~ version, value.var = 'budget')
 # -----------------------------------------------
+
+
+###############################################
+# clean raw module names for making figures
+###############################################
+# read in the data that was just prepped---won't be saved after this...
+# raw_data <- readRDS(pase0(prepped_dt, paste0(box, '2s_data/prepped_2s_data_all_countries.rds')))
+raw_data <- prepped_dt
+
+# read NFM2 and NFM3 module maps
+nfm2_mf_map <- readRDS("J:\\Project\\Evaluation\\GF\\resource_tracking\\modular_framework_mapping\\gf_mapping.rds")
+nfm2_mf_map$cycle <- "NFM2"
+nfm3_mf_map <- readRDS("J:\\Project\\Evaluation\\GF\\resource_tracking\\modular_framework_mapping\\gf_mapping_nfm3.rds")
+nfm3_mf_map$cycle <- "NFM3"
+
+module_map <- rbind(nfm2_mf_map, nfm3_mf_map, fill=TRUE)
+module_map <- unique(module_map)
+
+# source shared functions
+source('./resource_tracking/prep/_common/shared_functions.r', encoding="UTF-8")
+
+#Remove whitespaces, punctuation, and unwanted characters from module and intervention. 
+raw_data = strip_chars(raw_data)
+
+#Correct common acronyms in the resource database and the module map. 
+raw_data[, module:=replace_acronyms(module)]
+raw_data[, intervention:=replace_acronyms(intervention)]
+
+module_map[, module:=replace_acronyms(module)]
+module_map[, intervention:=replace_acronyms(intervention)]
+
+#Make some raw corrections here - These weren't accurate enough to put in the map, but we still need to account for them. 
+if (!'activity_description'%in%names(raw_data)){ #If this column doesn't exist, add it as 'NA' so the code below can run
+  raw_data[, activity_description:=NA]
+}
+# raw_data = correct_modules_interventions(raw_data)
+
+# Check for unmapped modules/interventions before mapping
+gf_concat <- paste0(module_map$module, module_map$intervention)
+rt_concat <- paste0(raw_data$module, raw_data$intervention)
+unmapped_mods <- raw_data[!rt_concat%in%gf_concat]
+
+if(nrow(unmapped_mods)>0){
+  print(unique(unmapped_mods[, c("module", "intervention"), with= FALSE]))
+  print(unique(unmapped_mods$fileName)) #For documentation in the comments above. 
+  stop("You have unmapped original modules/interventions!")
+}
+
+mergeVars = c('cycle', 'module', 'intervention')
+#module_map = unique(module_map)
+module_map = module_map[!is.na(code)]
+
+mapped_data <- merge(raw_data, module_map, by=mergeVars, all.x = TRUE, allow.cartesian = TRUE)
+dropped_mods <- mapped_data[is.na(mapped_data$gf_module), ]
+
+if(nrow(dropped_mods) >0){
+  # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
+  print(unique(dropped_mods[, c("cycle", "module", "intervention"), with= FALSE]))
+  stop("Modules/interventions were dropped!")
+}
+
+# subset mapped_data to what we will use
+keep <- c('loc_name', 'grant', 'grant_period', 'cycle', 'version', 
+          'gf_module', 'gf_intervention', 'activity_description', 'cost_input', 
+          'budget', 'coding_2s',
+          'gf_module_fr', 'gf_intervention_fr', 
+          'gf_module_esp', 'gf_intervention_esp')
+
+prepped_dt <- mapped_data[,..keep]
+
+# rename the modules to match the plot data
+setnames(prepped_dt, 
+         c("gf_module", "gf_intervention"),
+         c("module", "intervention"))
+
+# save full data
+saveRDS(prepped_dt, paste0(box, '2s_data/prepped_2s_data_all_countries.rds'))
+write.csv(prepped_dt, paste0(box, '2s_data/prepped_2s_data_all_countries.csv'), row.names = FALSE)
 
 # -----------------------------------------------
 #################################################
