@@ -140,10 +140,24 @@ prepped_dt = prepped_dt[budget != 0, ]
 saveRDS(prepped_dt, paste0(box, '2s_data/prepped_2s_data_all_countries.rds'))
 write.csv(prepped_dt, paste0(box, '2s_data/prepped_2s_data_all_countries.csv'), row.names = FALSE)
 
-# check/compare budget values to tableau to ensure accuracy
-check = prepped_dt[loc_name == 'UGA' & cycle == 'NFM3', .(budget = sum(budget)), by=.(module, intervention, cycle, version)]
-check = dcast.data.table(check, module + intervention + cycle ~ version, value.var = 'budget')
+# # check/compare budget values to tableau to ensure accuracy
+# check = prepped_dt[loc_name == 'UGA' & cycle == 'NFM3', .(budget = sum(budget)), by=.(module, intervention, cycle, version)]
+# check = dcast.data.table(check, module + intervention + cycle ~ version, value.var = 'budget')
 # -----------------------------------------------
+
+# -----------------------------------------------
+#################################################
+# -----------------------------------------------
+
+# # -----------------------------------------------
+# # Save/check UGA data for David to use
+# # -----------------------------------------------
+# dt_uga = prepped_dt[loc_name == 'UGA']
+# nrow(dt_uga) == nrow(unique(dt_uga[,.(cycle, version, module, intervention, activity_description, cost_input)]))
+# dt_uga = dt_uga[,.(grant, cycle, version, module, intervention, activity_description, cost_input, budget, coding_2s)]
+# setorderv(dt_uga, c('module', 'intervention', 'activity_description' ))
+# write.csv(dt_uga, paste0(box, '2s_data/UGA_2sata_activityLevel.csv'), row.names = FALSE)
+# # -----------------------------------------------
 
 # -----------------------------------------------
 #################################################
