@@ -27,27 +27,29 @@
 id_keywords_for_extension <- function(country, include_module_intervention = FALSE, inFile) {
   
   # # example - can uncomment the lines below to troubleshoot/test
-  # country <- 'Senegal'
-  # include_module_intervention = FALSE
   
+  # country <- 'Guatemala'
+  # include_module_intervention = FALSE
+  # inFile <- paste0(dir, "other/specialized_datasets/gtm/incap_nfm_nfm3_budgets.csv")
   # step 0: make sure inputs are currect
   # if () stop("Error: country must be either 'sen', 'uga', 'gtm', or 'cod'") or (Senegal, Uganda, Guatemala, DRC)
   # if (class(inFile)!='character') stop('Error: inFile argument must be a string!')
   # if (class(year)=='character') stop('Error: year argument must be a number!')
   # -----------------------------------------------------------------------------
-  outFile = paste0(dir, "/modular_framework_mapping/keyword_search/GTM/test_", tolower(country), "_keyword_search_", 
+  outFile = paste0(dir, "modular_framework_mapping/keyword_search/GTM/2021_extension/test_", tolower(country), "_keyword_search_", 
                    month(Sys.Date()), "_", day(Sys.Date()), "_", year(Sys.Date()), ".csv")
   
   # step 1: read in data at activity level
   data <- as.data.table(read.csv(inFile)) #make sure this can access the correct data source
   data <- data[loc_name==country]
   # just resetting these because I had manually entered some but I want it to be set here instead:
+  data[, topicAreaDesc:=NA]
   data[, topicAreaDesc := NULL]
   data[, topicAreaDesc := '']
   data[, keyword_topic_area := FALSE]
   
   # step 2: read in keywords for each focus topic
-  key_words_file <- fread(paste0(mapping_dir, "keyword_search/focus_topic_keyword_search_log.csv"))
+  key_words_file <- fread(paste0(mapping_dir, "keyword_search/gtm_extension_key_words.csv"))
   topic_areas = key_words_file[loc_name==country, unique(focus_topic)]
   
   # use activity description or the combination of module/intervention/activity to search for key words
@@ -85,17 +87,17 @@ id_keywords_for_extension <- function(country, include_module_intervention = FAL
   
   # Step 4: check out the results compare to what the CEPs have ID'ed previously
   # which module/intervention pairs were identified that are also not currently being hand coded?
-  new_ids = data[cep_topic_area == FALSE & keyword_topic_area == TRUE,]
-  
-  # insert print statement
-  print(paste0("There were ", length(unique(new_ids$activity_description)),  " additional activities identified as focus topics through keyword search." ))
-  
-  # Are any of the previously ID'ed activities now NOT ID'ed? 
-  missing_ids = data[cep_topic_area == TRUE & keyword_topic_area == FALSE,]
-  
-  # insert print statements
-  print(paste0("There were ", length(unique(missing_ids$activity_description)),  " activities missing from what were originally ID'ed by CEPs." ))
-  print(paste0("There were ", length(unique(new_ids$gf_intervention)), " additional interventions identified as focus topics through keyword search."))
-  print(paste0("There were ", length(unique(missing_ids$gf_intervention)), " interventions missing from what were originally ID'ed by CEPs."))
+  # new_ids = data[cep_topic_area == FALSE & keyword_topic_area == TRUE,]
+  # 
+  # # insert print statement
+  # print(paste0("There were ", length(unique(new_ids$activity_description)),  " additional activities identified as focus topics through keyword search." ))
+  # 
+  # # Are any of the previously ID'ed activities now NOT ID'ed? 
+  # missing_ids = data[cep_topic_area == TRUE & keyword_topic_area == FALSE,]
+  # 
+  # # insert print statements
+  # print(paste0("There were ", length(unique(missing_ids$activity_description)),  " activities missing from what were originally ID'ed by CEPs." ))
+  # print(paste0("There were ", length(unique(new_ids$gf_intervention)), " additional interventions identified as focus topics through keyword search."))
+  # print(paste0("There were ", length(unique(missing_ids$gf_intervention)), " interventions missing from what were originally ID'ed by CEPs."))
 }
 # -----------------------------------------------
