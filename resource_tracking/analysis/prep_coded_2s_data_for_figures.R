@@ -140,13 +140,17 @@ prepped_dt = prepped_dt[budget != 0, ]
 saveRDS(prepped_dt, paste0(box, '2s_data/prepped_2s_data_all_countries.rds'))
 write.csv(prepped_dt, paste0(box, '2s_data/prepped_2s_data_all_countries.csv'), row.names = FALSE)
 
-# # check/compare budget values to tableau to ensure accuracy
-# check = prepped_dt[loc_name == 'UGA' & cycle == 'NFM3', .(budget = sum(budget)), by=.(module, intervention, cycle, version)]
-# check = dcast.data.table(check, module + intervention + cycle ~ version, value.var = 'budget')
+# check/compare budget values to tableau to ensure accuracy
+check = prepped_dt[loc_name == 'UGA' & cycle == 'NFM3', .(budget = sum(budget)), by=.(module, intervention, cycle, version)]
+check = dcast.data.table(check, module + intervention + cycle ~ version, value.var = 'budget')
 # -----------------------------------------------
 
 # -----------------------------------------------
-# make figures/save by country
+#################################################
+# -----------------------------------------------
+
+# -----------------------------------------------
+# additional data prep for figs
 # -----------------------------------------------
 # few changes to data for figures...
 prepped_dt[, coding_2s := as.factor(coding_2s)]
@@ -173,10 +177,18 @@ prepped_dt[module == 'Laboratory systems', plot_module := 'Lab\nsystems']
 prepped_dt[module == 'Financial management systems', plot_module := 'Fin mngmt\nsyst']
 prepped_dt[module == 'National health strategies', plot_module := 'Natl health\nstrats']
 prepped_dt[module == 'Health sector governance and planning', plot_module := 'Health Gov \n& planning']
+# -----------------------------------------------
 
+# -----------------------------------------------
+# set colors to apply to all figures
+# -----------------------------------------------
 colors = c('#D55E00','#56B4E9') #'#C378A2'
 names(colors) = levels(prepped_dt$coding_2s)
+# -----------------------------------------------
 
+# -----------------------------------------------
+# sum across different variables for figs
+# -----------------------------------------------
 # Sum to compare NFM2 Award to NFM3 Award overall, by grant, by grant/module, by module
 overall_comp = prepped_dt[version == 'approved_budget', .(budget = sum(budget)), by = .(loc_name, cycle, coding_2s)]
 graph_grant = prepped_dt[version == 'approved_budget', .(budget = sum(budget)), by = .(loc_name, grant, cycle, coding_2s)]
@@ -186,86 +198,172 @@ graph_module = prepped_dt[version == 'approved_budget', .(budget = sum(budget)),
 # Sum to compare NFM3 FR to NFM3 Award overall, by module, (by intervention?)
 overall_comp_nfm3 = prepped_dt[cycle == 'NFM3', .(budget = sum(budget)), by = .(loc_name, version, coding_2s)]
 graph_module_nfm3 = prepped_dt[cycle == 'NFM3', .(budget = sum(budget)), by = .(loc_name, version, module, plot_module, coding_2s)]
-graph_intervention_nfm3 = prepped_dt[cycle == 'NFM3', .(budget = sum(budget)), by = .(loc_name, version, module, plot_module, intervention, coding_2s)]
+# -----------------------------------------------
 
-list_of_plots = NULL
-
+# -----------------------------------------------
+# loop through countries and make/save main figures
+# -----------------------------------------------
 for (country in unique(prepped_dt$loc_name)){
+  list_of_plots = NULL
   # figure outFiles:
   outFile_box = paste0(box, '2s_data/figures/2S_figures_', country, '.pdf')
   outFile_j = paste0('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/2S_figures/2S_figures_', country, '.pdf')
+
+  # Overall, NFM3 FR to NRM3 GA (side by side bars)
+  # list_of_plots[[x]] = ggplot(overall_comp_nfm3[loc_name == country], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
+  #   geom_bar(stat = 'identity', position=position_dodge()) +
+  #   labs(fill = '2S Coding', x = 'Budget Version', y = 'Budget (millions USD)', title = '2S funding, comparing NFM3 funding request to NFM3 award') +
+  #   geom_text(aes(x = version, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
+  #             hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+  #   scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 15) +
+  #   theme(legend.position="bottom")
   
-  # list_of_plots[[1]] = ggplot(overall_comp[loc_name == country], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
+  # Overall, NFM3 FR to NFM3 GA (stacked bars)
+  list_of_plots[[1]] = ggplot(overall_comp_nfm3[loc_name == country], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
+    geom_bar(stat = 'identity', position='stack') +
+    labs(fill = '2S Coding', x = 'Budget Version', y = 'Budget (millions USD)', title = '2S funding, comparing NFM3 funding request to NFM3 award') +
+    geom_text(aes(x = version, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
+              position = position_stack(vjust = .5), inherit.aes = TRUE)  +
+    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 15) +
+    theme(legend.position="bottom")
+  
+  # Overall by Module, NFM3 FR to NFM3 GA
+  list_of_plots[[2]] = ggplot(graph_module_nfm3[loc_name == country], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
+    geom_bar(stat = 'identity', position=position_dodge()) +
+    facet_grid(rows = 'plot_module', scales = 'free_y') +
+    labs(fill = '2S Coding', x = 'Budget Version', y = 'Budget (millions USD)', title = '2S funding by module, comparing NFM3 funding request to NFM3 award') +
+    geom_text(aes(x = version, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
+              hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 15) +
+    theme(legend.position="bottom")
+  
+  # Overall, NFM2 to NFM3 (Side by side bars)
+  # list_of_plots[[x]] = ggplot(overall_comp[loc_name == country], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
   #   geom_bar(stat = 'identity', position=position_dodge()) +
   #   labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = '2S funding, comparing NFM2 award to NFM3 award') +
   #   geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
   #             hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
-  #   scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
+  #   scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 15) +
   #   theme(legend.position="bottom")
   
-  list_of_plots[[1]] = ggplot(overall_comp[loc_name == country], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
+  # Overall, NFM2 to NFM3 (Stacked bars)
+  list_of_plots[[3]] = ggplot(overall_comp[loc_name == country], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
     geom_bar(stat = 'identity', position='stack') +
     labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = '2S funding, comparing NFM2 award to NFM3 award') +
     geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
               position = position_stack(vjust = .5), inherit.aes = TRUE)  +
-    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
+    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 15) +
     theme(legend.position="bottom")
   
-  list_of_plots[[2]] = ggplot(graph_grant[loc_name == country], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
+  # Overall by module, NFM2 to NFM3
+  list_of_plots[[4]] = ggplot(graph_module[loc_name == country], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
+    geom_bar(stat = 'identity', position='stack') +
+    labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = '2S funding by module, comparing NFM2 award to NFM3 award across all grants') +
+    facet_grid(rows = 'plot_module', scales = 'free_y') +
+    #geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
+    #hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 15) +
+    theme(legend.position="bottom")
+  
+  # By grant, NFM2 to NFM3
+  list_of_plots[[5]] = ggplot(graph_grant[loc_name == country], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
     geom_bar(stat = 'identity', position=position_dodge()) +
     labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = '2S funding by grant, comparing NFM2 award to NFM3 award') +
     facet_grid(rows = 'grant', scales = 'free_y') +
     geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
               hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
-    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
+    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 15) +
     theme(legend.position="bottom")
+
+  # save figures
+  pdf(outFile_box, height = 12, width = 15)
+  for(i in seq(length(list_of_plots))) {
+    print(list_of_plots[[i]])
+  }
+  dev.off()
   
-  i = 3
+  pdf(outFile_j, height = 12, width = 15)
+  for(i in seq(length(list_of_plots))) {
+    print(list_of_plots[[i]])
+  }
+  dev.off()
+}
+# -----------------------------------------------
+
+# -----------------------------------------------
+# loop through countries and make/save figures by grant and module, just NFM2GA vs NFM3GA because 'grant' not in FR
+# -----------------------------------------------
+for (country in unique(prepped_dt$loc_name)){
+  list_of_plots = NULL
+  # figure outFiles:
+  outFile_box = paste0(box, '2s_data/figures/2S_figures_', country, '_byGrantModule_NFM2GA_NFM3GA.pdf')
+  outFile_j = paste0('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/2S_figures/2S_figures_', country, '_byGrantModule_NFM2GA_NFM3GA.pdf')
+  
+  i = 1
+  # By grant and module, NFM2 to NFM3
   for(g in unique(graph_grant_module[loc_name == country, grant])){
     list_of_plots[[i]] = ggplot(graph_grant_module[loc_name == country & grant == g, ], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
       geom_bar(stat = 'identity', position='stack') +
       labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = paste0('2S funding by module for ', g,', comparing NFM2 award to NFM3 award')) +
       facet_grid(rows = 'plot_module', scales = 'free_y') +
       #geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
-                #hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
-      scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
+      #hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+      scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 15) +
       theme(legend.position="bottom")
     i = i+1
   }
+  # save figures
+  pdf(outFile_box, height = 12, width = 15)
+  for(i in seq(length(list_of_plots))) {
+    print(list_of_plots[[i]])
+  }
+  dev.off()
   
-  list_of_plots[[i]] = ggplot(graph_module[loc_name == country], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
-    geom_bar(stat = 'identity', position='stack') +
-    labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = '2S funding by module, comparing NFM2 award to NFM3 award across all grants') +
-    facet_grid(rows = 'plot_module', scales = 'free_y') +
-    #geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
-              #hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
-    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
-    theme(legend.position="bottom")
-  
-  # list_of_plots[[i+1]] = ggplot(overall_comp_nfm3[loc_name == country], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
-  #   geom_bar(stat = 'identity', position=position_dodge()) +
-  #   labs(fill = '2S Coding', x = 'Budget Version', y = 'Budget (millions USD)', title = '2S funding, comparing NFM3 funding request to NFM3 award') +
-  #   geom_text(aes(x = version, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
-  #             hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
-  #   scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
-  #   theme(legend.position="bottom")
-  
-  list_of_plots[[i+1]] = ggplot(overall_comp_nfm3[loc_name == country], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
-    geom_bar(stat = 'identity', position='stack') +
-    labs(fill = '2S Coding', x = 'Budget Version', y = 'Budget (millions USD)', title = '2S funding, comparing NFM3 funding request to NFM3 award') +
-    geom_text(aes(x = version, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
-              position = position_stack(vjust = .5), inherit.aes = TRUE)  +
-    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
-    theme(legend.position="bottom")
-  
-  list_of_plots[[i+2]] = ggplot(graph_module_nfm3[loc_name == country], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
-    geom_bar(stat = 'identity', position=position_dodge()) +
-    facet_grid(rows = 'plot_module', scales = 'free_y') +
-    labs(fill = '2S Coding', x = 'Budget Version', y = 'Budget (millions USD)', title = '2S funding by module, comparing NFM3 funding request to NFM3 award') +
-    geom_text(aes(x = version, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
-              hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
-    scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 14) +
-    theme(legend.position="bottom")
+  pdf(outFile_j, height = 12, width = 15)
+  for(i in seq(length(list_of_plots))) {
+    print(list_of_plots[[i]])
+  }
+  dev.off()
+} 
+# -----------------------------------------------
+
+# -----------------------------------------------
+# loop through countries and make/save figures by intervention (both NFM2GA vs NFM3GA and NFM3FR vs. NFM3GA)
+# -----------------------------------------------
+graph_intervention_bothCycles = prepped_dt[, .(budget = sum(budget)), by = .(loc_name, version, cycle, module, plot_module, intervention, coding_2s)]
+
+for (country in c('UGA')){ 
+  list_of_plots = NULL  
+  i = 1
+  # figure outFiles:
+  outFile_box = paste0(box, '2s_data/figures/2S_figures_', country, '_byIntervention.pdf')
+  outFile_j = paste0('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/2S_figures/2S_figures_', country, '_byIntervention.pdf')
+
+  for(mod in c('HMIS and M&E', 'CSS')){
+    #NFM2GA to NFM3GA, by intervention
+    list_of_plots[[i]] = ggplot(graph_intervention_bothCycles[loc_name == country & plot_module == mod & version == 'approved_budget', ], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
+      geom_bar(stat = 'identity', position=position_dodge()) +
+      labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = paste0('2S funding by intervention for ', mod,', comparing NFM2 award to NFM3 award')) +
+      facet_grid(rows = 'intervention', scales = 'free_y') +
+      geom_text(aes(x = version, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
+                hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+      scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 15) +
+      theme(legend.position="bottom")
+   
+    i = i+1
+    
+    #NFM3FR to NFM3GA, by intervention
+    list_of_plots[[i]] = ggplot(graph_intervention_bothCycles[loc_name == country & plot_module == mod & cycle == 'NFM3', ], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
+      geom_bar(stat = 'identity', position=position_dodge()) +
+      labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = paste0('2S funding by intervention for ', mod,', comparing NFM3 FR to NFM3 award')) +
+      facet_grid(rows = 'intervention', scales = 'free_y') +
+      geom_text(aes(x = version, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
+                hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+      scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 15) +
+      theme(legend.position="bottom")
+    
+    i = i+1
+  }
   
   # save figures
   pdf(outFile_box, height = 12, width = 15)
