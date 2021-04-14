@@ -167,11 +167,11 @@ prepped_dt[module == 'Respuestas y los sistemas comunitarios', plot_module := "C
 
 prepped_dt[module == 'Health management information systems and M&E', plot_module := 'HMIS and M&E']
 prepped_dt[module == 'Health management information system and monitoring and evaluation', plot_module := 'HMIS and M&E']
-prepped_dt[module == 'Health products management systems', plot_module := 'Health products\nmngmt syst']
+prepped_dt[module == 'Health products management systems', plot_module := 'Health prod mngmt\nsyst (P&SCM syst)']
 prepped_dt[module == 'Integrated service delivery and quality improvement', plot_module := 'Int. service del\nand QE']
 prepped_dt[module == 'Community responses and systems', plot_module := 'CSS']
 prepped_dt[module == 'Community systems strengthening', plot_module := 'CSS']
-prepped_dt[module == 'Procurement and supply chain management systems', plot_module := 'P&SCM \nsyst']
+prepped_dt[module == 'Procurement and supply chain management systems', plot_module := 'Health prod mngmt\nsyst (P&SCM syst)']
 prepped_dt[module == 'Human resources for health, including community health workers', plot_module := 'HRH, incl. CHWs']
 prepped_dt[module == 'Laboratory systems', plot_module := 'Lab\nsystems']
 prepped_dt[module == 'Financial management systems', plot_module := 'Fin mngmt\nsyst']
@@ -257,11 +257,11 @@ for (country in unique(prepped_dt$loc_name)){
   
   # Overall by module, NFM2 to NFM3
   list_of_plots[[4]] = ggplot(graph_module[loc_name == country], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
-    geom_bar(stat = 'identity', position='stack') +
+    geom_bar(stat = 'identity', position=position_dodge()) +
     labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = '2S funding by module, comparing NFM2 award to NFM3 award across all grants') +
     facet_grid(rows = 'plot_module', scales = 'free_y') +
-    #geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s), 
-    #hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+    geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 1), 'million'), group = coding_2s),
+      hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
     scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 15) +
     theme(legend.position="bottom")
   
@@ -347,20 +347,8 @@ for (country in c('UGA')){
   # figure outFiles:
   outFile_box = paste0(box, '2s_data/figures/2S_figures_', country, '_byIntervention.pdf')
   outFile_j = paste0('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/2S_figures/2S_figures_', country, '_byIntervention.pdf')
-
+  
   for(mod in c('HMIS and M&E', 'CSS')){
-    #NFM2GA to NFM3GA, by intervention
-    list_of_plots[[i]] = ggplot(graph_intervention_bothCycles[loc_name == country & plot_module == mod & version == 'approved_budget', ], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
-      geom_bar(stat = 'identity', position=position_dodge()) +
-      labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = paste0('2S funding by intervention for ', mod,', comparing NFM2 award to NFM3 award')) +
-      facet_grid(rows = 'plot_intervention', scales = 'free_y') +
-      geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 2), 'million'), group = coding_2s), 
-                hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
-      scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 15) +
-      theme(legend.position="bottom")
-   
-    i = i+1
-    
     #NFM3FR to NFM3GA, by intervention
     list_of_plots[[i]] = ggplot(graph_intervention_bothCycles[loc_name == country & plot_module == mod & cycle == 'NFM3', ], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
       geom_bar(stat = 'identity', position=position_dodge()) +
@@ -372,6 +360,18 @@ for (country in c('UGA')){
       theme(legend.position="bottom")
     
     i = i+1
+
+      #NFM2GA to NFM3GA, by intervention
+      list_of_plots[[i]] = ggplot(graph_intervention_bothCycles[loc_name == country & plot_module == mod & version == 'approved_budget', ], aes(x = cycle, y = budget/1000000, fill = coding_2s)) + 
+        geom_bar(stat = 'identity', position=position_dodge()) +
+        labs(fill = '2S Coding', x = 'Grant Cycle', y = 'Budget (millions USD)', title = paste0('2S funding by intervention for ', mod,', comparing NFM2 award to NFM3 award')) +
+        facet_grid(rows = 'plot_intervention', scales = 'free_y') +
+        geom_text(aes(x = cycle, y = budget/1000000, label = paste0('US$',round(budget/1000000, 2), 'million'), group = coding_2s), 
+                  hjust = -0.05, vjust = 0.3, position = position_dodge(width = 1), inherit.aes = TRUE)  +
+        scale_fill_manual(name = '2S Coding', values = colors) + coord_flip() + theme_bw(base_size = 15) +
+        theme(legend.position="bottom")
+      
+      i = i+1
   }
   
   # save figures
