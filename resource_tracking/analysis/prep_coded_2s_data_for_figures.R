@@ -32,7 +32,7 @@ inFile = paste0(box, '2s_data/2S Analysis Template.xlsx')
 # -----------------------------------------------
 # read in data and prep one sheet at a time
 # -----------------------------------------------
-countries_to_run = c('DRC')
+countries_to_run = c('DRC', 'UGA', 'GTM')
 
 # sheets = c('2020(GA)', ' 2017', ' 2020') # this might not work without more specific if else statement...
 #### FRC: I turned this part into an if statement and moved it into the loop below since it looks like sometimes countries share 
@@ -86,6 +86,7 @@ for(country in countries_to_run) {
       }
     
     dt[, cycle := ifelse(grepl('2017', inSheet), 'NFM2', 'NFM3') ]
+    
     if (country == "UGA"){
       dt[, version := ifelse(grepl('FR', inSheet), 'funding_request', 'approved_budget') ]
     } else {
@@ -97,7 +98,7 @@ for(country in countries_to_run) {
     }
 
     # not sure if this will apply to other countries but need to make the NFM3 award match other data
-    if (sheet == '2020(GA)' & country %in% c('UGA', 'GTM')){
+    if (sheet %in% c('2020(GA)', ' 2020(GA)')){
       # finaldesignation applies to just the newly coded activities, so we will use the previous
       # coding (final_designation), for all activities that were already coded but are in the award budget
       if (country=='UGA') {
@@ -111,6 +112,11 @@ for(country in countries_to_run) {
       # use file name to create grant variable - we want this to be able to compare NFM2 and NFM3
       dt[, grant := lapply(file_name, function(x){paste(unlist(str_split(x, '_'))[c(1,2,3)], collapse = '_')})]
       dt[, grant := unlist(grant)]
+    }
+    
+    if (inSheet == 'DRC 2020 (update)'){
+      setnames(dt, 'activity', 'activity_description')
+      dt[, grant := NA]
     }
     
     dt = dt[, c('loc_name', 'grant', 'cycle', 'grant_period', 'version', 'module', 'intervention', 'activity_description', 'cost_input', 'budget', final_coding_col), with = FALSE]
