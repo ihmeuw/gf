@@ -222,7 +222,7 @@ for (country in unique(prepped_dt$loc_name)){
   # figure outFiles:
   outFile_box = paste0(box, '2s_data/figures/2S_figures_', country, '.pdf')
   outFile_j = paste0('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/2S_figures/2S_figures_', country, '.pdf')
-
+  
   # Overall, NFM3 FR to NRM3 GA (side by side bars)
   # list_of_plots[[x]] = ggplot(overall_comp_nfm3[loc_name == country], aes(x = version, y = budget/1000000, fill = coding_2s)) + 
   #   geom_bar(stat = 'identity', position=position_dodge()) +
@@ -301,6 +301,14 @@ for (country in unique(prepped_dt$loc_name)){
     print(list_of_plots[[i]])
   }
   dev.off()
+  
+  # save individual files as pngs
+  for(i in seq(length(list_of_plots))) {
+    file = paste0(box, '2s_data/figures/', country, '_pngs/2s_figures_', country, '_', i, '.png')
+    png(file, height = 12, width = 15, units = "in", res = 300)
+    print(list_of_plots[[i]])
+    dev.off()
+  }
 }
 # -----------------------------------------------
 
@@ -338,6 +346,14 @@ for (country in unique(prepped_dt$loc_name)){
     print(list_of_plots[[i]])
   }
   dev.off()
+  
+  # save individual files as pngs
+  for(i in seq(length(list_of_plots))) {
+    file = paste0(box, '2s_data/figures/', country, '_pngs/2S_figures_', country, '_byGrantModule_NFM2GA_NFM3GA_', i, '.png')
+    png(file, height = 12, width = 15, units = "in", res = 300)
+    print(list_of_plots[[i]])
+    dev.off()
+  }
 } 
 # -----------------------------------------------
 
@@ -400,5 +416,13 @@ for (country in c('UGA')){
     print(list_of_plots[[i]])
   }
   dev.off()
+  
+  # save individual files as pngs
+  for(i in seq(length(list_of_plots))) {
+    file = paste0(box, '2s_data/figures/', country, '_pngs/2S_figures_', country, '_byIntervention_', i, '.png')
+    png(file, height = 12, width = 15, units = "in", res = 300)
+    print(list_of_plots[[i]])
+    dev.off()
+  }
 }
 # -----------------------------------------------
