@@ -45,7 +45,7 @@ source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
 # -----------------------------------------------
 # read in data and prep one sheet at a time
 # -----------------------------------------------
-countries_to_run = c('UGA', 'GTM')
+countries_to_run = c('DRC', 'UGA', 'GTM')
 
 # sheets = c('2020(GA)', ' 2017', ' 2020') # this might not work without more specific if else statement...
 #### FRC: I turned this part into an if statement and moved it into the loop below since it looks like sometimes countries share 
@@ -61,7 +61,10 @@ for(country in countries_to_run) {
     sheets = c('2017(GA)', '2020(FR)', '2020(GA)')
   } else if (country=='GTM') {
     sheets = c(' 2017', ' 2020', '2020(GA)')
+  } else if (country=='DRC') {
+    sheets = c(' 2017', ' 2020 (update)', ' 2020(GA)')
   }
+    
   prepped_dt_country = data.table()
   
   for(sheet in sheets){
@@ -76,11 +79,11 @@ for(country in countries_to_run) {
     colnames(dt) = gsub(pattern = ' ', replacement = '_', x = colnames(dt))
     dt = dt[-c(1),]
     
-    if(inSheet %in% c('UGA2017(GA)', 'UGA2020(FR)', 'GTM 2017', 'GTM 2020')){
+    if(inSheet %in% c('UGA2017(GA)', 'UGA2020(FR)', 'GTM 2017', 'GTM 2020', 'DRC 2017')){
       final_coding_col = 'sensitivity_2'
-    } else if(inSheet %in% c('UGA2020(GA)', 'GTM2020(GA)')) {
+    } else if(inSheet %in% c('UGA2020(GA)', 'GTM2020(GA)', 'DRC 2020 (update)', 'DRC 2020')) {
       final_coding_col = 'finaldesignation'
-    }
+    } 
     
     # remove extra row for guatemala (contains summed total of data)--might not apply elsewhere
     if (inSheet%in%c("GTM2020(GA)", "GTM 2020")){
@@ -96,34 +99,37 @@ for(country in countries_to_run) {
       }
     
     dt[, cycle := ifelse(grepl('2017', inSheet), 'NFM2', 'NFM3') ]
+    
     if (country == "UGA"){
-    dt[, version := ifelse(grepl('FR', inSheet), 'funding_request', 'approved_budget') ]
+      dt[, version := ifelse(grepl('FR', inSheet), 'funding_request', 'approved_budget') ]
     } else {
-      if (inSheet=="GTM 2020"){
+      if (inSheet %in% c("GTM 2020", 'DRC 2020 (update)')){
         dt[, version := 'funding_request']
       }else {
         dt[, version := 'approved_budget']
       }
     }
-        
-      # }  
-      # dt[, version := ifelse(grepl('GA', inSheet), 'approved_budget', 'funding_request') ]}
-    
+
     # not sure if this will apply to other countries but need to make the NFM3 award match other data
-    if (sheet == '2020(GA)'){
+    if (sheet %in% c('2020(GA)', ' 2020(GA)')){
       # finaldesignation applies to just the newly coded activities, so we will use the previous
       # coding (final_designation), for all activities that were already coded but are in the award budget
       if (country=='UGA') {
         dt = dt[is.na(finaldesignation), finaldesignation := final_designation]
       }else if (country=='GTM'){
         dt = dt[is.na(finaldesignation), finaldesignation := final_designation_fr]
-      }
+      } #in DRC, the finaldesignation column is fully filled out. 
       setnames(dt, 'gf_module', 'module')
       setnames(dt, 'gf_intervention', 'intervention')
       setnames(dt, 'cost_category', 'cost_input')
       # use file name to create grant variable - we want this to be able to compare NFM2 and NFM3
       dt[, grant := lapply(file_name, function(x){paste(unlist(str_split(x, '_'))[c(1,2,3)], collapse = '_')})]
       dt[, grant := unlist(grant)]
+    }
+    
+    if (inSheet == 'DRC 2020 (update)'){
+      setnames(dt, 'activity', 'activity_description')
+      dt[, grant := NA]
     }
     
     dt = dt[, c('loc_name', 'grant', 'cycle', 'grant_period', 'version', 'module', 'intervention', 'activity_description', 'cost_input', 'budget', final_coding_col), with = FALSE]
