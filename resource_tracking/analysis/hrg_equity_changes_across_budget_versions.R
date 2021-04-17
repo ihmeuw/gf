@@ -205,3 +205,18 @@ rssh_wide[, percent_change := ((approved-funding_request20)/funding_request20)*1
 i_rssh = dt[loc_name == loc & rssh == TRUE, .(budget=sum(budget, na.rm = TRUE)), by = .(loc_name, budget_version, gf_module, gf_intervention, rssh)]
 i_rssh_wide = dcast.data.table(i_rssh, loc_name + gf_module + gf_intervention ~ budget_version, value.var = 'budget')
 i_rssh_wide[, percent_change := ((approved-funding_request20)/funding_request20)*100]
+# -------------------------------------------------------------------
+
+# -------------------------------------------------------------------
+# save a data set for the UGA team to use
+data = as.data.table(read.csv(inFile))
+dt = data[grant_period == '2021-2023',]
+out_dt = dt[ loc_name == 'Uganda' & budget_version %in% c('funding_request20', 'approved'),]          
+setnames(out_dt, 'SO', 'strategicObjective')
+out_dt = out_dt[, .(loc_name, gf_module, gf_intervention, activity_description, cost_category, budget_version, file_name, grant, disease, fr_disease, rssh, equity, isStrategicObjective, strategicObjective, budget)]
+out_dt[, grant_cycle := 'NFM3']
+out_dt_SO = out_dt[isStrategicObjective == TRUE, ]
+write.csv(out_dt_SO, paste0("C:/Users/abatzel/Box Sync/Global Fund Files/UGA/data_for_idrc/nfm3_frgm_data_uganda_equity_rssh.csv"), row.names = FALSE)
+write.csv(out_dt, paste0("C:/Users/abatzel/Box Sync/Global Fund Files/UGA/data_for_idrc/nfm3_frgm_data_uganda.csv"), row.names = FALSE)
+
+# -------------------------------------------------------------------
