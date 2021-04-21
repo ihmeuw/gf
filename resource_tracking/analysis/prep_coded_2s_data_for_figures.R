@@ -45,7 +45,7 @@ source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
 # -----------------------------------------------
 # read in data and prep one sheet at a time
 # -----------------------------------------------
-countries_to_run = c('DRC', 'UGA', 'GTM')
+countries_to_run = c('DRC', 'UGA', 'GTM', 'SEN')
 
 # sheets = c('2020(GA)', ' 2017', ' 2020') # this might not work without more specific if else statement...
 #### FRC: I turned this part into an if statement and moved it into the loop below since it looks like sometimes countries share 
@@ -62,7 +62,9 @@ for(country in countries_to_run) {
   } else if (country=='GTM') {
     sheets = c(' 2017', ' 2020', '2020(GA)')
   } else if (country=='DRC') {
-    sheets = c(' 2017', ' 2020 (update)', ' 2020(GA)')
+    sheets = c(' 2017', ' 2020 (update)', ' 2020(GA)') 
+  } else if (country=='SEN') {
+    sheets = c(' 2017', ' 2020(GA)', ' 2020(FR)')
   }
     
   prepped_dt_country = data.table()
@@ -79,11 +81,13 @@ for(country in countries_to_run) {
     colnames(dt) = gsub(pattern = ' ', replacement = '_', x = colnames(dt))
     dt = dt[-c(1),]
     
-    if(inSheet %in% c('UGA2017(GA)', 'UGA2020(FR)', 'GTM 2017', 'GTM 2020', 'DRC 2017')){
+    if(inSheet %in% c('UGA2017(GA)', 'UGA2020(FR)', 'GTM 2017', 'GTM 2020', 'DRC 2017', 'SEN 2017')){
       final_coding_col = 'sensitivity_2'
-    } else if(inSheet %in% c('UGA2020(GA)', 'GTM2020(GA)', 'DRC 2020 (update)', 'DRC 2020')) {
+    } else if(inSheet %in% c('UGA2020(GA)', 'GTM2020(GA)', 'DRC 2020 (update)', 'DRC 2020', 'SEN 2020(GA)')) {
       final_coding_col = 'finaldesignation'
-    } 
+    } else if (inSheet == 'SEN 2020(FR)'){
+      final_coding_col = 'sensitivity_analysis_2'
+    }
     
     # remove extra row for guatemala (contains summed total of data)--might not apply elsewhere
     if (inSheet%in%c("GTM2020(GA)", "GTM 2020")){
@@ -103,7 +107,7 @@ for(country in countries_to_run) {
     if (country == "UGA"){
       dt[, version := ifelse(grepl('FR', inSheet), 'funding_request', 'approved_budget') ]
     } else {
-      if (inSheet %in% c("GTM 2020", 'DRC 2020 (update)')){
+      if (inSheet %in% c('GTM 2020', 'DRC 2020 (update)', 'SEN 2020(FR)')){
         dt[, version := 'funding_request']
       }else {
         dt[, version := 'approved_budget']
@@ -118,7 +122,7 @@ for(country in countries_to_run) {
         dt = dt[is.na(finaldesignation), finaldesignation := final_designation]
       }else if (country=='GTM'){
         dt = dt[is.na(finaldesignation), finaldesignation := final_designation_fr]
-      } #in DRC, the finaldesignation column is fully filled out. 
+      } #in DRC and in Senegal, the finaldesignation column is fully filled out. 
       setnames(dt, 'gf_module', 'module')
       setnames(dt, 'gf_intervention', 'intervention')
       setnames(dt, 'cost_category', 'cost_input')
@@ -267,10 +271,10 @@ prepped_dt[, cycle := as.factor(cycle)]
 prepped_dt[, cycle := ordered(cycle, c('NFM3', 'NFM2'))]
 
 # GTM module names are still in Spanish
-prepped_dt[module == 'Sistema de información de gestión de la salud y el seguimiento y la evaluación', plot_module := "HMIS and M&E"]
-prepped_dt[module == 'Prestación de servicios integrados y la mejora de la calidad', plot_module := "Int. service del\nand QE"]
-prepped_dt[module == 'Sistemas de gestión de la cadena de adquisiciones y suministros', plot_module := "P&SCM \nsyst"]
-prepped_dt[module == 'Respuestas y los sistemas comunitarios', plot_module := "CSS"]
+# prepped_dt[module == 'Sistema de información de gestión de la salud y el seguimiento y la evaluación', plot_module := "HMIS and M&E"]
+# prepped_dt[module == 'Prestación de servicios integrados y la mejora de la calidad', plot_module := "Int. service del\nand QE"]
+# prepped_dt[module == 'Sistemas de gestión de la cadena de adquisiciones y suministros', plot_module := "P&SCM \nsyst"]
+# prepped_dt[module == 'Respuestas y los sistemas comunitarios', plot_module := "CSS"]
 
 prepped_dt[module == 'Health management information systems and M&E', plot_module := 'HMIS and M&E']
 prepped_dt[module == 'Health management information system and monitoring and evaluation', plot_module := 'HMIS and M&E']
