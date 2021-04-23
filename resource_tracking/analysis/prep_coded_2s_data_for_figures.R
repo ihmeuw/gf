@@ -156,6 +156,7 @@ for(country in countries_to_run) {
     prepped_dt = rbindlist(list(prepped_dt, prepped_dt_country), use.names = TRUE, fill = TRUE)
   }
 }
+
 prepped_dt[, budget := as.numeric(budget)]
 prepped_dt = prepped_dt[budget != 0, ]
 
@@ -187,8 +188,7 @@ module_map <- module_map[disease=="rssh"]
 module_map <- module_map[,.(module, intervention, 
                             gf_module, gf_intervention, 
                             gf_module_fr, gf_intervention_fr,
-                            gf_module_esp, gf_intervention_esp,
-                            cycle)]
+                            gf_module_esp, gf_intervention_esp)]
 
 module_map <- module_map[!duplicated(module_map[,c('module','intervention')]),]
 
@@ -224,7 +224,7 @@ if(nrow(unmapped_mods)>0){
 
 mergeVars = c('module', 'intervention')
 #module_map = unique(module_map)
-module_map = module_map[!is.na(code)]
+# module_map = module_map[!is.na(code)]
 
 mapped_data <- merge(raw_data, module_map, by=mergeVars, all.x = TRUE, allow.cartesian = FALSE)
 dropped_mods <- mapped_data[is.na(mapped_data$gf_module), ]
