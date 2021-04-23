@@ -45,7 +45,7 @@ source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
 # -----------------------------------------------
 # read in data and prep one sheet at a time
 # -----------------------------------------------
-countries_to_run = c('DRC', 'UGA', 'GTM')
+countries_to_run = c('DRC', 'UGA', 'GTM', 'SEN')
 
 # sheets = c('2020(GA)', ' 2017', ' 2020') # this might not work without more specific if else statement...
 #### FRC: I turned this part into an if statement and moved it into the loop below since it looks like sometimes countries share 
@@ -62,7 +62,9 @@ for(country in countries_to_run) {
   } else if (country=='GTM') {
     sheets = c(' 2017', ' 2020', '2020(GA)')
   } else if (country=='DRC') {
-    sheets = c(' 2017', ' 2020 (update)', ' 2020(GA)')
+    sheets = c(' 2017', ' 2020 (update)', ' 2020(GA)') 
+  } else if (country=='SEN') {
+    sheets = c(' 2017', ' 2020(GA)', ' 2020(FR)')
   }
     
   prepped_dt_country = data.table()
@@ -79,11 +81,13 @@ for(country in countries_to_run) {
     colnames(dt) = gsub(pattern = ' ', replacement = '_', x = colnames(dt))
     dt = dt[-c(1),]
     
-    if(inSheet %in% c('UGA2017(GA)', 'UGA2020(FR)', 'GTM 2017', 'GTM 2020', 'DRC 2017')){
+    if(inSheet %in% c('UGA2017(GA)', 'UGA2020(FR)', 'GTM 2017', 'GTM 2020', 'DRC 2017', 'SEN 2017')){
       final_coding_col = 'sensitivity_2'
-    } else if(inSheet %in% c('UGA2020(GA)', 'GTM2020(GA)', 'DRC 2020 (update)', 'DRC 2020')) {
+    } else if(inSheet %in% c('UGA2020(GA)', 'GTM2020(GA)', 'DRC 2020 (update)', 'DRC 2020', 'SEN 2020(GA)')) {
       final_coding_col = 'finaldesignation'
-    } 
+    } else if (inSheet == 'SEN 2020(FR)'){
+      final_coding_col = 'sensitivity_analysis_2'
+    }
     
     # remove extra row for guatemala (contains summed total of data)--might not apply elsewhere
     if (inSheet%in%c("GTM2020(GA)", "GTM 2020")){
@@ -103,7 +107,7 @@ for(country in countries_to_run) {
     if (country == "UGA"){
       dt[, version := ifelse(grepl('FR', inSheet), 'funding_request', 'approved_budget') ]
     } else {
-      if (inSheet %in% c("GTM 2020", 'DRC 2020 (update)')){
+      if (inSheet %in% c('GTM 2020', 'DRC 2020 (update)', 'SEN 2020(FR)')){
         dt[, version := 'funding_request']
       }else {
         dt[, version := 'approved_budget']
@@ -118,7 +122,7 @@ for(country in countries_to_run) {
         dt = dt[is.na(finaldesignation), finaldesignation := final_designation]
       }else if (country=='GTM'){
         dt = dt[is.na(finaldesignation), finaldesignation := final_designation_fr]
-      } #in DRC, the finaldesignation column is fully filled out. 
+      } #in DRC and in Senegal, the finaldesignation column is fully filled out. 
       setnames(dt, 'gf_module', 'module')
       setnames(dt, 'gf_intervention', 'intervention')
       setnames(dt, 'cost_category', 'cost_input')
@@ -166,16 +170,27 @@ prepped_dt = prepped_dt[budget != 0, ]
 ###############################################
 # read in the data that was just prepped---won't be saved after this...
 # raw_data <- readRDS(pase0(prepped_dt, paste0(box, '2s_data/prepped_2s_data_all_countries.rds')))
+
+initial_rows = nrow(prepped_dt) # save to run a check later
+
 raw_data <- prepped_dt
 
-# read NFM2 and NFM3 module maps
+# read NFM2 and NFM3 module maps but only for RSSH
 nfm2_mf_map <- readRDS("J:\\Project\\Evaluation\\GF\\resource_tracking\\modular_framework_mapping\\gf_mapping.rds")
 nfm2_mf_map$cycle <- "NFM2"
 nfm3_mf_map <- readRDS("J:\\Project\\Evaluation\\GF\\resource_tracking\\modular_framework_mapping\\gf_mapping_nfm3.rds")
 nfm3_mf_map$cycle <- "NFM3"
 
 module_map <- rbind(nfm2_mf_map, nfm3_mf_map, fill=TRUE)
-module_map <- unique(module_map)
+
+module_map <- module_map[disease=="rssh"]
+module_map <- module_map[,.(module, intervention, 
+                            gf_module, gf_intervention, 
+                            gf_module_fr, gf_intervention_fr,
+                            gf_module_esp, gf_intervention_esp,
+                            cycle)]
+
+module_map <- module_map[!duplicated(module_map[,c('module','intervention')]),]
 
 # source shared functions
 source('./resource_tracking/prep/_common/shared_functions.r', encoding="UTF-8")
@@ -207,16 +222,16 @@ if(nrow(unmapped_mods)>0){
   stop("You have unmapped original modules/interventions!")
 }
 
-mergeVars = c('cycle', 'module', 'intervention')
+mergeVars = c('module', 'intervention')
 #module_map = unique(module_map)
 module_map = module_map[!is.na(code)]
 
-mapped_data <- merge(raw_data, module_map, by=mergeVars, all.x = TRUE, allow.cartesian = TRUE)
+mapped_data <- merge(raw_data, module_map, by=mergeVars, all.x = TRUE, allow.cartesian = FALSE)
 dropped_mods <- mapped_data[is.na(mapped_data$gf_module), ]
 
 if(nrow(dropped_mods) >0){
   # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
-  print(unique(dropped_mods[, c("cycle", "module", "intervention"), with= FALSE]))
+  print(unique(dropped_mods[, c("module", "intervention"), with= FALSE]))
   stop("Modules/interventions were dropped!")
 }
 
@@ -228,6 +243,12 @@ keep <- c('loc_name', 'grant', 'grant_period', 'cycle', 'version',
           'gf_module_esp', 'gf_intervention_esp')
 
 prepped_dt <- mapped_data[,..keep]
+
+
+if(!nrow(mapped_data)==initial_rows){
+  # Check if anything is duplicated in the merge -> if you get an error. Check the module map
+    stop("Modules/interventions were duplicated or dropped!")
+}
 
 # rename the modules to match the plot data
 setnames(prepped_dt, 
@@ -267,10 +288,10 @@ prepped_dt[, cycle := as.factor(cycle)]
 prepped_dt[, cycle := ordered(cycle, c('NFM3', 'NFM2'))]
 
 # GTM module names are still in Spanish
-prepped_dt[module == 'Sistema de información de gestión de la salud y el seguimiento y la evaluación', plot_module := "HMIS and M&E"]
-prepped_dt[module == 'Prestación de servicios integrados y la mejora de la calidad', plot_module := "Int. service del\nand QE"]
-prepped_dt[module == 'Sistemas de gestión de la cadena de adquisiciones y suministros', plot_module := "P&SCM \nsyst"]
-prepped_dt[module == 'Respuestas y los sistemas comunitarios', plot_module := "CSS"]
+# prepped_dt[module == 'Sistema de información de gestión de la salud y el seguimiento y la evaluación', plot_module := "HMIS and M&E"]
+# prepped_dt[module == 'Prestación de servicios integrados y la mejora de la calidad', plot_module := "Int. service del\nand QE"]
+# prepped_dt[module == 'Sistemas de gestión de la cadena de adquisiciones y suministros', plot_module := "P&SCM \nsyst"]
+# prepped_dt[module == 'Respuestas y los sistemas comunitarios', plot_module := "CSS"]
 
 prepped_dt[module == 'Health management information systems and M&E', plot_module := 'HMIS and M&E']
 prepped_dt[module == 'Health management information system and monitoring and evaluation', plot_module := 'HMIS and M&E']
