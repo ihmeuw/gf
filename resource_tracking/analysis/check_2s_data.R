@@ -13,6 +13,7 @@ library(scales)
 library(grid)
 library(lattice)
 library(RColorBrewer)
+library(stringr)
 
 # -------------------------------------------------------------------
 # Files and directories
@@ -40,14 +41,16 @@ check_2s_coded = data_2s[,.(budget_2s = sum(budget_2s, na.rm = TRUE)), by = .(lo
 
 data = as.data.table(read.csv(inFile))
 data_tableau = data[rssh==TRUE & budget_version %in% c('funding_request20', 'funding_request20_CT', 'approved'), .(budget=sum(budget, na.rm=TRUE)), by = .(loc_name, gf_module, gf_intervention, activity_description, grant_period, budget_version )]
-data_tableau[ grant_period == '2018-2020', cycle := 'NFM2']
+data_tableau[ grant_period %in% c('2018-2020', '2019-2021', '2019-2022'), cycle := 'NFM2']
 data_tableau[ grant_period == '2021-2023', cycle := 'NFM3']
 data_tableau[ budget_version == 'approved', version := 'approved_budget']
 data_tableau[ budget_version == 'funding_request20', version := 'funding_request']
 data_tableau[ budget_version == 'funding_request20_CT', version := 'funding_request_CT']
+
 setnames(data_tableau, 'budget', 'correct_budget')
 setnames(data_tableau, 'gf_module', 'module')
 setnames(data_tableau, 'gf_intervention', 'intervention')
+# setnames(data_tableau, 'budget_version', 'version')
 # data_tableau_module = data_tableau[, .(correct_budget=sum(correct_budget, na.rm=TRUE)), by = .(loc_name, module, version, cycle )]
 # data_tableau_intervention = data_tableau[, .(correct_budget=sum(correct_budget, na.rm=TRUE)), by = .(loc_name, module, intervention, version, cycle )]
 
@@ -59,17 +62,22 @@ setnames(data_tableau, 'gf_intervention', 'intervention')
 # y[, discrepancy := round(correct_budget) - round(budget_2s)]
 # y[discrepancy > 5 | discrepancy < -5, check := 'flag']
 
-check_2s_coded[, activity_description := trimws(activity_description)]
-check_2s_coded[, activity_description := gsub('  ', ' ', activity_description)]
-data_tableau[, activity_description := trimws(activity_description)]
-data_tableau[, activity_description :=  gsub('  ', ' ', activity_description)]
+# removing whitespace from beginning and end of all merging variables just in case
+cols_trim <- c("activity_description","module","intervention")
+check_2s_coded[,(cols_trim) :=lapply(.SD,trimws),.SDcols = cols_trim]
+data_tableau[,(cols_trim) := lapply(.SD, trimws),.SDcols = cols_trim]
 
-z = merge(check_2s_coded, data_tableau, all = TRUE, by = c('loc_name', 'module', 'intervention', 'activity_description', 'version', 'cycle'))
+# this should trim any spaces greater than 2
+check_2s_coded[, activity_description := gsub('\\s+', ' ', activity_description)]
+data_tableau[, activity_description := gsub('\\s+', ' ', activity_description)]
+
+# merge together
+z = merge(check_2s_coded, data_tableau, all = TRUE, by = c('loc_name', 'module', 'intervention', 'activity_description', 'version', 'cycle', 'grant_period'))
 
 # z = z[intervention == 'Surveys']
 # z = z[, -c('grant_period.x', 'grant_period.y')]
-# z[, discrepancy := round(correct_budget) - round(budget_2s)]
-# z[discrepancy > 5 | discrepancy < -5, check := 'flag']
+z[, discrepancy := round(correct_budget) - round(budget_2s)]
+z[discrepancy > 5 | discrepancy < -5, check := 'flag']
 
 # -------------------------------------------------------------------
 
