@@ -22,8 +22,6 @@ library(stringr)
 user=as.character(Sys.info()[7])
 box = paste0("C:/Users/",user,"/Box Sync/Global Fund Files/")
 
-inFile = paste0(box, '2s_data/2S Analysis Template.xlsx')
-
 user=as.character(Sys.info()[7])
 if (Sys.info()[1]=='Windows'){
   if(user == 'abatzel'){ 
@@ -41,7 +39,7 @@ source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
 # -----------------------------------------------
 # additional data prep for figs
 # -----------------------------------------------
-prepped_dt = as.data.table(read.csv(paste0(box, '2s_data/prepped_2s_data_all_countries.csv')))
+prepped_dt = as.data.table(read.csv(paste0(box, '2s_data/CORRECTED_prepped_2s_data_all_countries.csv')))
 
 # few changes to data for figures...
 prepped_dt[, coding_2s := as.factor(coding_2s)]
