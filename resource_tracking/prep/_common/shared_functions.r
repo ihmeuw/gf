@@ -106,6 +106,42 @@ strip_chars <- function(dt){
   return(dt)
 }
 
+# ------------------------------------------------------------
+# Function to clean up the population column in the RT data 
+# ------------------------------------------------------------
+
+##function that takes three parameters: the dataset you want cleaned, and the two vectors we created above: 
+strip_chars_pop <- function(dt){
+  
+  ## vector dictionary of special characters to regular characters
+  unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='C', '?'='E', '?'='E',
+                            '?'='E', '?'='E', '?'='I', '?'='I', '?'='I', '?'='I', '?'='N', '?'='O', '?'='O', '?'='O', '?'='O', '?'='O', '?'='O', '?'='U',
+                            '?'='U', '?'='U', '?'='U', '?'='Y', '?'='B', '?'='Ss', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='c',
+                            '?'='e', '?'='e', '?'='e', '?'='e', '?'='i', '?'='i', '?'='i', '?'='i', '?'='o', '?'='n', '?'='o', '?'='o', '?'='o', '?'='o',
+                            '?'='o', '?'='o', '?'='u', '?'='u', '?'='u', '?'='y', '?'='y', '?'='b', '?'='y', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
+                            'è'='e', 'é'='e', 'ê'='e', 'ë'='e', 'ì'='i', 'í'='i', 'î'='i', 'ï'='i', 'ð'='o', 'ñ'='n', 'ò'='o', 'ó'='o', 'ô'='o', 'õ'='o',
+                            'ö'='o', 'ø'='o', 'ù'='u', 'ú'='u', 'û'='u', 'ý'='y', 'ý'='y', 'þ'='b', 'ÿ'='y')
+  
+  
+  # vector of characters or phrases to remove
+  remove_chars <- c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
+                    , "[[:punct:]]", "[^[:alnum:]]","\"", ",") 
+  
+  
+  #Save an original copy of population and intervention
+  dt$orig_population <- copy(dt$population)
+  
+  ##remove special characters and blank spaces
+  dt$population <-tolower(dt$population)
+  dt$population <-gsub(paste(remove_chars, collapse="|"), "",dt$population)
+  
+  dt$population <- chartr(paste(names(unwanted_array), collapse=''),
+                      paste(unwanted_array, collapse=''),
+                      dt$population)
+
+  return(dt)
+}
+
 # --------------------------------------------------------------------------------
 #Given a country's file list, only keeps the files that will be kept after GOS data 
 # is prioritized in step 4. Right now, drop everything before 2017. 
