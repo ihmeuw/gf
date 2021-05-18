@@ -14,6 +14,7 @@ library(scales)
 library(grid)
 library(lattice)
 library(RColorBrewer)
+library(tidyr)
 # -------------------------------------------------------------------
 # Files and directories
 setwd('C:/local/gf/')
@@ -24,10 +25,11 @@ user=as.character(Sys.info()[7])
 box = paste0("C:/Users/", user, "/Box Sync/Global Fund Files/")
 inFile = paste0(box, 'synthesis/data/draft_synthesis_budget_quant.xlsx')
 ehgFile = paste0(box, 'synthesis/data/Synthesis Budget Variance 181120.xlsx')
+inFile_nfm3 = paste0(box, 'tableau_data/budgetRevisions_with_frBudgets_activityLevel.csv')
 
 # output file
-outFile = "J:/Project/Evaluation/GF/resource_tracking/visualizations2020/Synthesis/synthesis_ch3_rssh_heatmap.pdf"
-
+#outFile = "J:/Project/Evaluation/GF/resource_tracking/visualizations2020/Synthesis/synthesis_ch3_rssh_heatmap.pdf"
+out_dir = "J:/Project/Evaluation/GF/resource_tracking/visualizations2021/heatmaps_rssh_indicators/"
 # -------------------------------------------------------------------
 # read IHME and EGH rssh data
 rssh_data = as.data.table(read_xlsx(path = inFile, sheet = "RSSH"))
@@ -65,6 +67,7 @@ dt[gf_module == 'Procurement and supply chain management systems', gf_module := 
 dt[, rssh_total_by_country := sum(budget), by = c('loc_name')]
 dt[, module_percent_of_total_rssh := round((budget/rssh_total_by_country)*100)]
 dt = dt[budget > 0]
+
 # -------------------------------------------------------------------
 # add in table of indicators for captions: 
 indicators = as.data.table(read_xlsx('J:/Project/Evaluation/GF/resource_tracking/visualizations2020/Synthesis/table in ch3 on rssh indicators.xlsx'))
@@ -134,3 +137,121 @@ print(g)
 dev.off()
 
 ##########################################################################################
+
+# -------------------------------------------------------------------
+# read in NFM3 approved data
+data = as.data.table(read.csv(inFile_nfm3))
+data = data[grant_period == '2021-2023' & budget_version == 'approved' & rssh == TRUE, .(budget = sum(budget, na.rm=TRUE)), 
+            by = .(loc_name, gf_module, grant)]
+data[, rssh_total_by_grant := sum(budget), by = c('grant')]
+data[, module_percent_of_total_rssh := round((budget/rssh_total_by_grant)*100)]
+data = data[budget > 0]
+# -------------------------------------------------------------------
+
+# -------------------------------------------------------------------
+# add in table of indicators for captions: 
+indicators = as.data.table(read_xlsx('J:/Project/Evaluation/GF/resource_tracking/visualizations2020/Synthesis/table in ch3 on rssh indicators - nfm3.xlsx'))
+
+# make this data so it makes more sense...
+indicators = melt.data.table(indicators, id.vars = c('Module', 'RSSH_indicator_NFM3'), variable.name = 'grant', value.name = 'indicator_present' )
+indicators = indicators[indicator_present == 1, ] 
+# save this version...
+write.csv(indicators, 'J:/Project/Evaluation/GF/resource_tracking/visualizations2020/Synthesis/table in ch3 on rssh indicators_nfm3_long.csv', row.names = FALSE)
+
+mod_grant = unique(indicators[, .(Module, grant)])
+mod_grant[, indicators := '']
+
+# can probably make this into an lapply one-liner? 
+for(i in 1:nrow(mod_grant)){
+  mod= mod_grant[i, Module]
+  c= mod_grant[i, grant]
+  
+  list_of_indicators = indicators[Module == mod & grant == c, unique(RSSH_indicator_NFM3)]
+  mod_grant[Module == mod & grant == c, indicators := paste(list_of_indicators, collapse = ',\n')]
+}
+
+# merge with budget data
+mod_grant[, grant := as.character(grant)]
+# # for now - check this later*******
+# mod_grant[grant != 'COD-C-CORDAID', ]
+mod_grant[grepl('COD', grant), loc_name := 'DRC']
+mod_grant[grepl('UGA', grant), loc_name := 'Uganda']
+mod_grant[grepl('SEN', grant), loc_name := 'Senegal']
+mod_grant[grepl('GTM', grant), loc_name := 'Guatemala']
+
+data[gf_module == 'Health management information system and monitoring and evaluation', gf_module := 'Health management information systems and M&E']
+plot_dt = merge(data, mod_grant, by.x = c('loc_name', 'grant', 'gf_module'), by.y = c('loc_name','grant', 'Module'), all = TRUE)
+
+# shorten column names - is there a better way to do this with data table?
+plot_dt[gf_module == 'Health management information systems and M&E', plot_module := 'HMIS and M&E']
+plot_dt[gf_module == 'Health products management systems', plot_module := 'Health products\nmanagement systems']
+plot_dt[gf_module == 'Integrated service delivery and quality improvement', plot_module := 'Int. service delivery\nand QE']
+plot_dt[gf_module == 'Community systems strengthening', plot_module := 'CSS']
+plot_dt[gf_module == 'Health sector governance and planning', plot_module := 'Health sector gov.\nand planning']
+plot_dt[gf_module == 'Human resources for health, including community health workers', plot_module := 'HRH, incl. CHWs']
+plot_dt[gf_module == 'Laboratory systems', plot_module := 'Laboratory systems']
+plot_dt[gf_module == 'Financial management systems', plot_module := 'Financial management\nsystems']
+
+# order to match what is in the synthesis report
+plot_dt[, plot_module := factor(plot_module, levels = c('HMIS and M&E', 
+                                                        'Health products\nmanagement systems',
+                                                        'Int. service delivery\nand QE',
+                                                        'CSS',
+                                                        'Health sector gov.\nand planning',
+                                                        'HRH, incl. CHWs',
+                                                        'Laboratory systems',
+                                                        'Financial management\nsystems'))]
+
+# -------------------------------------------------------------------
+## make data table square
+# grants = unique(plot_dt$grant)
+# plot_modules = unique(plot_dt$plot_module)
+# merge_dt = expand_grid(grants, plot_modules)
+# 
+# plot_dt = merge(plot_dt, merge_dt, by.x = c('grant', 'plot_module'), by.y = c('grants', 'plot_modules'), all = TRUE)
+
+plot_dt[grepl('COD', grant), loc_name := 'DRC']
+plot_dt[grepl('UGA', grant), loc_name := 'Uganda']
+plot_dt[grepl('SEN', grant), loc_name := 'Senegal']
+plot_dt[grepl('GTM', grant), loc_name := 'Guatemala']
+plot_dt[is.na(indicators), indicators := '']
+
+plot_dt[!is.na(module_percent_of_total_rssh), plot_label := paste0("$", (round(budget/1000000,1)),' million (', module_percent_of_total_rssh, '%)', '\n', indicators)]
+plot_dt[is.na(module_percent_of_total_rssh), plot_label := paste0("$0 (0%)\n", indicators)]
+
+for (c in unique(plot_dt$loc_name)){
+  graph_dt = plot_dt[loc_name == c, ]
+  # plot into a heatmap
+  g = ggplot(graph_dt, aes(grant, plot_module, fill= module_percent_of_total_rssh)) + geom_tile() + theme_bw() + 
+    scale_x_discrete(position = 'top') + labs( x = '', y = "", fill = "% of grant's \nRSSH Spending") + 
+    scale_fill_continuous(high = "#132B43", low = "#9fd4fc") +
+    scale_y_discrete(limits = rev(levels(graph_dt$plot_module))) +
+    theme(axis.text=element_text(size=12), legend.text = element_text(size=11), legend.title = element_text(size = 13)) +
+    theme(axis.text.x = element_text(angle = 45, hjust = -0.01)) +
+    geom_text(aes(label= graph_dt$plot_label), size = 3, color = '#FFFFFF')
+  # scale_fill_continuous(type = 'viridis') 
+  # 56B1F7 - alternate/close to default color 
+  file = paste0(out_dir, 'rssh_indicator_heatmaps_by_country_grant_', c, '.png')
+  png(file, height = 8, width = 11, units = "in", res = 300)
+  print(g)
+  dev.off()
+}
+
+pdf(paste0(out_dir, 'rssh_indicator_heatmaps_by_country_grant.pdf'), height = 8, width = 11)
+for (c in unique(plot_dt$loc_name)){
+  graph_dt = plot_dt[loc_name == c, ]
+  # plot into a heatmap
+  print(ggplot(graph_dt, aes(grant, plot_module, fill= module_percent_of_total_rssh)) + geom_tile() + theme_bw() + 
+         scale_x_discrete(position = 'top') + labs( x = '', y = "", fill = "% of grant's \nRSSH Spending") + 
+         scale_fill_continuous(high = "#132B43", low = "#9fd4fc") +
+         scale_y_discrete(limits = rev(levels(graph_dt$plot_module))) +
+         theme(axis.text=element_text(size=12), legend.text = element_text(size=11), legend.title = element_text(size = 13)) +
+         theme(axis.text.x = element_text(angle = 45, hjust = -0.01)) +
+         geom_text(aes(label= graph_dt$plot_label), size = 3, color = '#FFFFFF'))
+}
+dev.off()
+
+# pdf(paste0('C:/Users/', user, '/Box Sync/Global Fund Files/synthesis/figures/synthesis_ch3_rssh_heatmap.pdf'), height = 8, width = 11)
+# print(g)
+# dev.off()
+# -------------------------------------------------------------------
