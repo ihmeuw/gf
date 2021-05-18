@@ -224,7 +224,7 @@ for (c in unique(plot_dt$loc_name)){
   graph_dt = plot_dt[loc_name == c, ]
   # plot into a heatmap
   g = ggplot(graph_dt, aes(grant, plot_module, fill= module_percent_of_total_rssh)) + geom_tile() + theme_classic() + 
-    scale_x_discrete(position = 'top') + labs( x = '', y = "", fill = "% of grant's \nRSSH Spending") + 
+    scale_x_discrete(position = 'top') + labs( x = '', y = "", fill = "% of grant's \nRSSH Funding") + 
     scale_fill_continuous(high = "#132B43", low = "#9fd4fc") +
     scale_y_discrete(limits = rev(levels(graph_dt$plot_module))) +
     theme(axis.text=element_text(size=12), legend.text = element_text(size=11), legend.title = element_text(size = 13)) +
@@ -243,7 +243,7 @@ for (c in unique(plot_dt$loc_name)){
   graph_dt = plot_dt[loc_name == c, ]
   # plot into a heatmap
   print(ggplot(graph_dt, aes(grant, plot_module, fill= module_percent_of_total_rssh)) + geom_tile() + 
-         scale_x_discrete(position = 'top') + labs( x = '', y = "", fill = "% of grant's \nRSSH Spending") + 
+         scale_x_discrete(position = 'top') + labs( x = '', y = "", fill = "% of grant's \nRSSH Funding") + 
          scale_fill_continuous(high = "#132B43", low = "#9fd4fc") +
          scale_y_discrete(limits = rev(levels(graph_dt$plot_module))) +
          theme(axis.text=element_text(size=12), legend.text = element_text(size=11), legend.title = element_text(size = 13)) +
