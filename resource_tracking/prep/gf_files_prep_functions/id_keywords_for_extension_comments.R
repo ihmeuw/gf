@@ -24,7 +24,7 @@
 # FUNCTION
 # -----------------------------------------------
 # Function to read in detailed budgets and search through activities for keywords, could be saved in common_functions folder later on
-id_keywords_for_extension <- function(country, include_module_intervention = FALSE, inFile) {
+id_keywords_for_extension_comments <- function(country, include_module_intervention = TRUE, inFile) {
   
   # # example - can uncomment the lines below to troubleshoot/test
   
@@ -54,7 +54,7 @@ id_keywords_for_extension <- function(country, include_module_intervention = FAL
   
   # use activity description or the combination of module/intervention/activity to search for key words
   if (include_module_intervention == TRUE){
-    data[, search_column := paste(gf_module, gf_intervention, activity_description)]
+    data[, search_column := paste(gf_module, gf_intervention, activity_description, comments)]
   } else {
     data[, search_column := activity_description]
   }
