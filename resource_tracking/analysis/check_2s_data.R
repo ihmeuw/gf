@@ -102,5 +102,12 @@ data_2s = data_2s[loc_name != 'DRC']
 z = z[budget != 0, ]
 corrected_data = rbindlist(list(data_2s,z), use.names = TRUE, fill = TRUE)
 write.csv(corrected_data, outFile_all_countries, row.names = FALSE)
+
+prepped_dt = as.data.table(read.csv(outFile_all_countries))
+prepped_dt[module == 'Health management information system and monitoring and evaluation', module := 'Health management information systems and M&E']
+prepped_dt[module == 'Community responses and systems', module := 'Community systems strengthening']
+prepped_dt[module == 'Procurement and supply chain management systems', module := 'Health products management systems']
+
+write.csv(prepped_dt, outFile_all_countries, row.names = FALSE)
 # -------------------------------------------------------------------
 
