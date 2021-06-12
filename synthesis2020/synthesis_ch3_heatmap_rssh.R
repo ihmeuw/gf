@@ -259,7 +259,9 @@ dev.off()
 # print(g)
 # dev.off()
 # -------------------------------------------------------------------
-
+data = data[loc_name == 'Uganda' & budget_version %in% c('approved', 'Approved and Catalytic/Matching Funds'), .(budget = sum(budget, na.rm=TRUE)), 
+            by = .(loc_name, budget_version, grant_period, rssh)]
+data = dcast.data.table(data, loc_name + budget_version + grant_period ~ rssh)
 ##########################################################################################
 # bar graph figures by country
 # -------------------------------------------------------------------
@@ -474,19 +476,23 @@ plot_dt[, plot_module := factor(plot_module, levels = c('HMIS and M&E',
 
 
 # plot into a heatmap
-g = ggplot(plot_dt, aes(loc_name, plot_module, fill= module_percent_of_total_rssh)) + geom_tile() + theme_classic() + 
-  scale_x_discrete(position = 'top') + labs(x = "", y = "", caption = "* = Custom coverage indicators included in the total", fill = "% of country's \nRSSH Funding") + 
-  scale_fill_continuous(high = "#132B43", low = "#9fd4fc") +
+g = ggplot(plot_dt, aes(loc_name, plot_module, color = module_percent_of_total_rssh, size= module_percent_of_total_rssh)) + geom_point() + theme_classic() + 
+  scale_x_discrete(position = 'top') + labs(x = "", y = "", caption = "\n\n\n* = Custom coverage indicators included in the total", size = "% of country's \nRSSH Funding", color = "") + 
+  scale_color_continuous(high = "#132B43", low = "#9fd4fc") +
   scale_y_discrete(limits = rev(levels(plot_dt$plot_module))) +
+  scale_size(range = c(5, 30)) + 
+  # theme(legend.position = "none") +
   theme(axis.text=element_text(size=16), legend.text = element_text(size=11), legend.title = element_text(size = 13), plot.caption = element_text(size = 11)) +
   theme(axis.text.x = element_text(angle = 45, hjust = -0.01)) +
-  geom_text(aes(label= plot_dt$plot_label), size = 4.75, color = '#FFFFFF') +
-  geom_text(data = plot_dt[module_percent_of_total_rssh <15, ], aes(label= plot_dt[module_percent_of_total_rssh <15, plot_label]), size = 4.75, color = '#132B43')
+  geom_text(data = plot_dt[module_percent_of_total_rssh >=25, ], aes(label= plot_dt[module_percent_of_total_rssh >=25, plot_label]), size = 3.75, color = '#FFFFFF') +
+  geom_text(data = plot_dt[module_percent_of_total_rssh <25, ], aes(label= plot_dt[module_percent_of_total_rssh <25, plot_label]), size = 4.8, color = '#132B43')
 
 file = paste0('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/Synthesis/heatmap_RSSHindicators_byModuleCountry.png')
-png(file, height = 8, width = 11, units = "in", res = 300)
+png(file, height = 9, width = 12, units = "in", res = 300)
 print(g)
 dev.off()
 
+# save the data
+write.csv(plot_dt, 'J:/Project/Evaluation/GF/resource_tracking/visualizations2021/Synthesis/pce_synthesis_rssh_indicators_prepped.csv', row.names = FALSE)
 # -------------------------------------------------------------------
 
