@@ -28,7 +28,7 @@ ehgFile = paste0(box, 'synthesis/data/Synthesis Budget Variance 181120.xlsx')
 inFile_nfm3 = paste0(box, 'tableau_data/budgetRevisions_with_frBudgets_activityLevel.csv')
 
 # output file
-#outFile = "J:/Project/Evaluation/GF/resource_tracking/visualizations2020/Synthesis/synthesis_ch3_rssh_heatmap.pdf"
+outFile = "J:/Project/Evaluation/GF/resource_tracking/visualizations2020/Synthesis/synthesis_ch3_rssh_heatmap.pdf"
 out_dir = "J:/Project/Evaluation/GF/resource_tracking/visualizations2021/heatmaps_rssh_indicators/"
 # -------------------------------------------------------------------
 # read IHME and EGH rssh data
@@ -70,7 +70,7 @@ dt = dt[budget > 0]
 
 # -------------------------------------------------------------------
 # add in table of indicators for captions: 
-indicators = as.data.table(read_xlsx('J:/Project/Evaluation/GF/resource_tracking/visualizations2020/Synthesis/table in ch3 on rssh indicators.xlsx'))
+indicators = as.data.table(read_xlsx('J:/Project/Evaluation/GF/resource_tracking/visualizations2020/Synthesis/table in ch3 on rssh indicators - frs.xlsx'))
 
 # reshape
 indicators = melt.data.table(indicators, id.vars = c('Module', 'RSSH_indicator_NFM3'), variable.name = 'country', value.name = 'indicator_present' )
@@ -96,7 +96,7 @@ plot_dt[is.na(indicators), indicators := '']
 # shorten column names - is there a better way to do this with data table?
 plot_dt[gf_module == 'Health management information systems and M&E', plot_module := 'HMIS and M&E']
 plot_dt[gf_module == 'Health products management systems', plot_module := 'Health products\nmanagement systems']
-plot_dt[gf_module == 'Integrated service delivery and quality improvement', plot_module := 'Int. service delivery\nand QE']
+plot_dt[gf_module == 'Integrated service delivery and quality improvement', plot_module := 'Int. service delivery\nand QI']
 plot_dt[gf_module == 'Community systems strengthening', plot_module := 'CSS']
 plot_dt[gf_module == 'Health sector governance and planning', plot_module := 'Health sector gov.\nand planning']
 plot_dt[gf_module == 'Human resources for health, including community health workers', plot_module := 'HRH, incl. CHWs']
@@ -106,7 +106,7 @@ plot_dt[gf_module == 'Financial management systems', plot_module := 'Financial m
 # order to match what is in the synthesis report
 plot_dt[, plot_module := factor(plot_module, levels = c('HMIS and M&E', 
                                                     'Health products\nmanagement systems',
-                                                    'Int. service delivery\nand QE',
+                                                    'Int. service delivery\nand QI',
                                                     'CSS',
                                                     'Health sector gov.\nand planning',
                                                     'HRH, incl. CHWs',
@@ -188,7 +188,7 @@ plot_dt = merge(data, mod_grant, by.x = c('loc_name', 'grant', 'gf_module'), by.
 # shorten column names - is there a better way to do this with data table?
 plot_dt[gf_module == 'Health management information systems and M&E', plot_module := 'HMIS and M&E']
 plot_dt[gf_module == 'Health products management systems', plot_module := 'Health products\nmanagement systems']
-plot_dt[gf_module == 'Integrated service delivery and quality improvement', plot_module := 'Int. service delivery\nand QE']
+plot_dt[gf_module == 'Integrated service delivery and quality improvement', plot_module := 'Int. service delivery\nand QI']
 plot_dt[gf_module == 'Community systems strengthening', plot_module := 'CSS']
 plot_dt[gf_module == 'Health sector governance and planning', plot_module := 'Health sector gov.\nand planning']
 plot_dt[gf_module == 'Human resources for health, including community health workers', plot_module := 'HRH, incl. CHWs']
@@ -198,7 +198,7 @@ plot_dt[gf_module == 'Financial management systems', plot_module := 'Financial m
 # order to match what is in the synthesis report
 plot_dt[, plot_module := factor(plot_module, levels = c('HMIS and M&E', 
                                                         'Health products\nmanagement systems',
-                                                        'Int. service delivery\nand QE',
+                                                        'Int. service delivery\nand QI',
                                                         'CSS',
                                                         'Health sector gov.\nand planning',
                                                         'HRH, incl. CHWs',
@@ -309,7 +309,7 @@ plot_dt = merge(data, mod_loc, by.x = c('loc_name', 'gf_module', 'budget_version
 # shorten column names - is there a better way to do this with data table?
 plot_dt[gf_module == 'Health management information systems and M&E', plot_module := 'HMIS and M&E']
 plot_dt[gf_module == 'Health products management systems', plot_module := 'Health products\nmanagement systems']
-plot_dt[gf_module == 'Integrated service delivery and quality improvement', plot_module := 'Int. service delivery\nand QE']
+plot_dt[gf_module == 'Integrated service delivery and quality improvement', plot_module := 'Int. service delivery\nand QI']
 plot_dt[gf_module == 'Community systems strengthening', plot_module := 'CSS']
 plot_dt[gf_module == 'Health sector governance and planning', plot_module := 'Health sector gov.\nand planning']
 plot_dt[gf_module == 'Human resources for health, including community health workers', plot_module := 'HRH, incl. CHWs']
@@ -325,7 +325,7 @@ plot_dt[, plot_label := inds_lab]
 # order to match what is in the synthesis report
 plot_dt[, plot_module := factor(plot_module, levels = c('HMIS and M&E', 
                                                         'Health products\nmanagement systems',
-                                                        'Int. service delivery\nand QE',
+                                                        'Int. service delivery\nand QI',
                                                         'CSS',
                                                         'Health sector gov.\nand planning',
                                                         'HRH, incl. CHWs',
@@ -355,7 +355,7 @@ for (c in unique(plot_dt$loc_name)){
     # order to match what is in the synthesis report
     graph_dt[, plot_module := factor(plot_module, levels = c('HMIS and M&E', 
                                                             'HRH, incl. CHWs',
-                                                            'Int. service delivery\nand QE',
+                                                            'Int. service delivery\nand QI',
                                                             'CSS',
                                                             'Health products\nmanagement systems',
                                                             'Health sector gov.\nand planning',
@@ -431,7 +431,7 @@ plot_dt = merge(data, mod_loc, by.x = c('loc_name', 'gf_module'), by.y = c('loc_
 # shorten column names - is there a better way to do this with data table?
 plot_dt[gf_module == 'Health management information systems and M&E', plot_module := 'HMIS and M&E']
 plot_dt[gf_module == 'Health products management systems', plot_module := 'Health products\nmanagement systems']
-plot_dt[gf_module == 'Integrated service delivery and quality improvement', plot_module := 'Int. service delivery\nand QE']
+plot_dt[gf_module == 'Integrated service delivery and quality improvement', plot_module := 'Int. service delivery\nand QI']
 plot_dt[gf_module == 'Community systems strengthening', plot_module := 'CSS']
 plot_dt[gf_module == 'Health sector governance and planning', plot_module := 'Health sector gov.\nand planning']
 plot_dt[gf_module == 'Human resources for health, including community health workers', plot_module := 'HRH, incl. CHWs']
@@ -457,7 +457,7 @@ plot_dt[, plot_label := inds_lab]
 # # order to match what is in the synthesis report
 # plot_dt[, plot_module := factor(plot_module, levels = c('HMIS and M&E\n(5)', 
 #                                                         'Health products\nmanagement systems\n(5)',
-#                                                         'Int. service delivery\nand QE\n(4)',
+#                                                         'Int. service delivery\nand QI\n(4)',
 #                                                         'CSS\n(2)',
 #                                                         'Health sector gov.\nand planning\n(1)',
 #                                                         'HRH, incl. CHWs\n(3)',
@@ -467,7 +467,7 @@ plot_dt[, plot_label := inds_lab]
 # order to match what is in the synthesis report
 plot_dt[, plot_module := factor(plot_module, levels = c('HMIS and M&E', 
                                                         'Health products\nmanagement systems',
-                                                        'Int. service delivery\nand QE',
+                                                        'Int. service delivery\nand QI',
                                                         'CSS',
                                                         'Health sector gov.\nand planning',
                                                         'HRH, incl. CHWs',
@@ -491,6 +491,57 @@ file = paste0('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/Syn
 png(file, height = 9, width = 12, units = "in", res = 300)
 print(g)
 dev.off()
+
+# plot into a bar graph by country
+for (c in c('Uganda', 'DRC', 'Senegal')){
+  graph_dt = plot_dt[loc_name == c, ]
+  
+  if( c == 'DRC'){
+    # order to match what is in the synthesis report
+    graph_dt[, plot_module := factor(plot_module, levels = c('HMIS and M&E', 
+                                                             'HRH, incl. CHWs',
+                                                             'Int. service delivery\nand QI',
+                                                             'CSS',
+                                                             'Health products\nmanagement systems',
+                                                             'Health sector gov.\nand planning',
+                                                             'Laboratory systems',
+                                                             'Financial management\nsystems'))]
+  }
+  
+  g = ggplot(graph_dt, aes(loc_name, plot_module, color = module_percent_of_total_rssh, size= module_percent_of_total_rssh)) + geom_point() + theme_classic() + 
+    scale_x_discrete(position = 'top') + labs(x = "", y = "", caption = "\n\n\n* = Custom coverage indicators included in the total", size = "% of country's \nRSSH Funding", color = "") + 
+    scale_color_continuous(high = "#132B43", low = "#9fd4fc") +
+    scale_y_discrete(limits = rev(levels(graph_dt$plot_module))) +
+    scale_size(range = c(5, 30)) + 
+    # theme(legend.position = "none") +
+    theme(axis.text=element_text(size=16), legend.text = element_text(size=11), legend.title = element_text(size = 13), plot.caption = element_text(size = 11)) +
+    theme(axis.text.x = element_text(angle = 45, hjust = -0.01)) +
+    geom_text(data = graph_dt[module_percent_of_total_rssh >=15, ], aes(label= graph_dt[module_percent_of_total_rssh >=15, plot_label]), size = 3.75, color = '#FFFFFF') +
+    geom_text(data = graph_dt[module_percent_of_total_rssh <15, ], aes(label= graph_dt[module_percent_of_total_rssh <15, plot_label]), size = 4.8, color = '#132B43')
+  
+  file = paste0('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/bargraphs_rssh_indicators/circle_graphs_rssh_indicators_', c, '.png')
+  png(file, height = 8, width = 6, units = "in", res = 300)
+  print(g)
+  dev.off()
+  
+  g = ggplot(graph_dt, aes(loc_name, plot_module, color = module_percent_of_total_rssh, size= module_percent_of_total_rssh)) + geom_point() + theme_classic() + 
+    scale_x_discrete(position = 'top') + labs(x = "", y = "", caption = "", size = "% of country's \nRSSH Funding", color = "") + 
+    scale_color_continuous(high = "#132B43", low = "#9fd4fc") +
+    scale_y_discrete(limits = (levels(graph_dt$plot_module))) +
+    scale_size(range = c(10, 50)) + 
+    # theme(legend.position = "none") +
+    theme(axis.text=element_text(size=14), legend.text = element_text(size=11), legend.title = element_text(size = 13), plot.caption = element_text(size = 11)) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    geom_text(data = graph_dt[module_percent_of_total_rssh >=15, ], aes(label= graph_dt[module_percent_of_total_rssh >=15, plot_label]), size = 5, color = '#FFFFFF') +
+    geom_text(data = graph_dt[module_percent_of_total_rssh <15, ], aes(label= graph_dt[module_percent_of_total_rssh <15, plot_label]), size = 5, color = '#132B43') +
+    coord_flip()
+  
+  file = paste0('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/bargraphs_rssh_indicators/circle_graphs_rssh_indicators_', c, '_horizontal.png')
+  png(file, height = 9, width = 16, units = "in", res = 300)
+  print(g)
+  dev.off()
+}
+
 
 # save the data
 write.csv(plot_dt, 'J:/Project/Evaluation/GF/resource_tracking/visualizations2021/Synthesis/pce_synthesis_rssh_indicators_prepped.csv', row.names = FALSE)
