@@ -56,7 +56,7 @@ Unless otherwise stated, all files should be run in numerical/alphabetical order
 - "8a_commitments_obligations_prep.r" Extracts raw commitments/obligations from the PUDRs. It's similar in structure to "2b_gf_files_prep_data.r".
 - "8b_commitments_obligations_clean.r" Cleans the raw extracted data from step 8a. Maps modules/interventions, converts currencies, and validates columns.
 
-### PREP NFM2 FRs and NFM3 FRs and APPROVED FILES
+### PREP NFM2 FRs and NFM3 FRs and APPROVED FILES (9)
 
 - Extracting NFM2 FRs and all NFM3 data (FRs and Approved)
   - "9_run_prep_fr_budgets.r": extracts data from NFM3 and NFM2 funding request budgets as well as updated to extract data from NFM3 final approved budgets; merges data together.  
@@ -64,11 +64,11 @@ Unless otherwise stated, all files should be run in numerical/alphabetical order
   - "9b_update_focus_topics.r": 
 	- Add focus topic indicators to budget dataset. This file sources the four scripts which together help map focus topics onto budget data and then save all types of data (funding requests, approved budgets, revisions) together.
 
-### Data prep necessary for 2020-2021 PCE analyses
+### Data prep necessary for 2020-2021 PCE analyses (10)
   - "10_prep_qualitative_data.r": Extracts qualitative data (LFA comments, PR comments) from financial and performance indicator tabs in PUDRs and saves them into an excel file with multiple sheets on "J:/Project/Evaluation/GF/resource_tracking/qualitative_data/". 
   - "11_get_data_for_2s_analysis.r": sets prepped data to the relevant fields for the 4S Framework Analysis.
   
-### Keyword searches to identify focus topics in the database
+### Keyword searches to identify focus topics in the database (11)
  - "focus_topic_search.r" *searches the budget for the keywords in each country*
  - "merge_keyword_search_results_with_budget_data.r" *merges keyword findings with budget data*
  - "focus_topic_search.r" DESCRIPTION PENDING
