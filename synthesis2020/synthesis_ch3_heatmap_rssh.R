@@ -267,8 +267,15 @@ data = dcast.data.table(data, loc_name + budget_version + grant_period ~ rssh)
 # -------------------------------------------------------------------
 # read in NFM3 approved data
 data = as.data.table(read.csv(inFile_nfm3))
+translate = unique(data[!is.na(gf_module_fr), .(gf_module, gf_module_fr)])
+
 data = data[grant_period == '2021-2023' & budget_version %in% c('approved', 'funding_request20') & rssh == TRUE, .(budget = sum(budget, na.rm=TRUE)), 
             by = .(loc_name, gf_module, budget_version)]
+data = merge(data, translate, by = 'gf_module', all.x = TRUE)
+data[gf_module == 'Health products management systems', gf_module_fr := 'Systèmes de gestion des produits de santé']
+data[gf_module == 'Community systems strengthening', gf_module_fr := 'Renforcement des systèmes communautaires']
+data[gf_module == 'Health sector governance and planning', gf_module_fr := 'Gouvernance et planification du secteur de la santé']
+data[gf_module == 'Laboratory systems', gf_module_fr := 'Systèmes de laboratoire']
 
 # add in table of indicators for captions: 
 indicators = as.data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/Synthesis/table in ch3 on rssh indicators_nfm3_long.csv'))
@@ -316,6 +323,15 @@ plot_dt[gf_module == 'Human resources for health, including community health wor
 plot_dt[gf_module == 'Laboratory systems', plot_module := 'Laboratory systems']
 plot_dt[gf_module == 'Financial management systems', plot_module := 'Financial management\nsystems']
 
+plot_dt[gf_module == 'Health management information systems and M&E', plot_module_fr := 'Système de gestion \nde l'information sanitaire \net suivi et évaluation']
+plot_dt[gf_module == 'Health products management systems', plot_module_fr := 'Systèmes de gestion \ndes produits de santé']
+plot_dt[gf_module == 'Integrated service delivery and quality improvement', plot_module_fr := 'Prestation de services \nintégrés et amélioration \nde la qualité']
+plot_dt[gf_module == 'Community systems strengthening', plot_module_fr := 'Renforcement des \nsystèmes communautaires']
+plot_dt[gf_module == 'Health sector governance and planning', plot_module_fr := 'Gouvernance et \nplanification du \nsecteur de la santé']
+plot_dt[gf_module == 'Human resources for health, including community health workers', plot_module_fr := 'Resources humaines pour \nla santé, y compris agents \nde santé communautaires']
+plot_dt[gf_module == 'Laboratory systems', plot_module_fr := 'Systèmes \nde laboratoire']
+plot_dt[gf_module == 'Financial management systems', plot_module_fr := 'Système de \ngestion financière']
+
 # -------------------------------------------------------------------
 # make figures
 plot_dt[is.na(indicators), indicators := '']
@@ -332,12 +348,16 @@ plot_dt[, plot_module := factor(plot_module, levels = c('HMIS and M&E',
                                                         'Laboratory systems',
                                                         'Financial management\nsystems'))]
 
+
+plot_dt[budget_version == 'approved', budget_version_fr := 'Budgets approuvés']
+plot_dt[budget_version == 'funding_request20', budget_version_fr := 'Demande de financement']
 plot_dt[budget_version == 'approved', budget_version := 'Approved Budget']
 plot_dt[budget_version == 'funding_request20', budget_version := 'Funding Request']
 
 plot_dt[, budget_version := factor(budget_version, levels = c('Funding Request', 
                                                         'Approved Budget'))]
-
+plot_dt[, budget_version_fr := factor(budget_version_fr, levels = c('Demande de financement', 
+                                                              'Budgets approuvés'))]
 # plot into a bar graph by country
 for (c in unique(plot_dt$loc_name)){
   graph_dt = plot_dt[loc_name == c, ]
@@ -350,8 +370,29 @@ for (c in unique(plot_dt$loc_name)){
     theme(axis.text.x = element_text(angle = 45, hjust = 0.9)) +
     theme(text=element_text(size=14)) +
     geom_text(aes(label=plot_label), size = 6, vjust = -0.3)
-
-  if( c == 'DRC'){
+  
+  if( c == 'Senegal'){
+    
+    graph_dt[, plot_module_fr := factor(plot_module_fr, levels = c('Système de gestion \nde l'information sanitaire \net suivi et évaluation', 'Systèmes de gestion \ndes produits de santé',
+                                                                  'Prestation de services \nintégrés et amélioration \nde la qualité', 'Renforcement des \nsystèmes communautaires',
+                                                                  'Gouvernance et \nplanification du \nsecteur de la santé', 'Resources humaines pour \nla santé, y compris agents \nde santé communautaires',
+                                                                  'Systèmes \nde laboratoire','Système de \ngestion financière'))]
+    
+    g_fr = ggplot(graph_dt, aes(x=plot_module_fr, y=round(budget/1000000), fill=plot_module_fr)) + 
+      geom_bar(stat="identity") + theme_bw() + 
+      facet_wrap(~budget_version_fr) + 
+      labs(title = paste0(c, ': Indicateurs RSSH et allocations par module, comparant la demande de financement aux budgets \napprouvés/cadres de résultats'), x = "Module", y = "Budget (Millions USD)", caption = "* = Indicateurs de couverture personnalisés inclus dans le total,\n^ = Le module avait également des WPTM, non inclus dans le total", fill = "Module") +
+      theme(legend.position = 'none') +
+      theme(axis.text.x = element_text(angle = 45, hjust = 0.9)) +
+      theme(text=element_text(size=14)) +
+      geom_text(aes(label=plot_label), size = 6, vjust = -0.3)
+    
+    file = paste0('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/bargraphs_rssh_indicators/bargraphs_rssh_indicators_', c, '_fr.png')
+    png(file, height = 8, width = 14, units = "in", res = 300)
+    print(g_fr)
+    dev.off()
+  }
+    if( c == 'DRC'){
     # order to match what is in the synthesis report
     graph_dt[, plot_module := factor(plot_module, levels = c('HMIS and M&E', 
                                                             'HRH, incl. CHWs',
@@ -361,14 +402,36 @@ for (c in unique(plot_dt$loc_name)){
                                                             'Health sector gov.\nand planning',
                                                             'Laboratory systems',
                                                             'Financial management\nsystems'))]
+      
+      plot_dt[, plot_module_fr := factor(plot_module_fr, levels = c('Système de gestion \nde l'information sanitaire \net suivi et évaluation',
+                                                                    'Resources humaines pour \nla santé, y compris agents \nde santé communautaires',
+                                                                    'Prestation de services \nintégrés et amélioration \nde la qualité',
+                                                                    'Renforcement des \nsystèmes communautaires',
+                                                                    'Systèmes de gestion \ndes produits de santé',
+                                                                    'Gouvernance et \nplanification du \nsecteur de la santé', 
+                                                                    'Systèmes \nde laboratoire','Système de \ngestion financière'))]
     
     g = ggplot(graph_dt[budget_version == 'Approved Budget'], aes(x=plot_module, y=round(budget/1000000), fill=plot_module)) + 
       geom_bar(stat="identity") + theme_bw() + 
-      labs(title = paste0(c, ': RSSH indicators and allocations by module, comparing funding request to \napproved budgets/PFs'), x = "Module", y = "Budget (Millions USD)", caption = "* = Custom coverage indicators included in the total, ^ = Module also had WPTM(s), not included in total", fill = "Module") +
+      labs(title = paste0(c, ': RSSH indicators and allocations by module, approved budgets/PFs'), x = "Module", y = "Budget (Millions USD)", caption = "* = Custom coverage indicators included in the total, ^ = Module also had WPTM(s), not included in total", fill = "Module") +
       theme(legend.position = 'none') +
       theme(axis.text.x = element_text(angle = 45, hjust = 0.9)) +
       theme(text=element_text(size=14)) +
       geom_text(aes(label=plot_label), size = 6, vjust = -0.3)
+    
+    g_fr = ggplot(graph_dt[budget_version == 'Approved Budget'], aes(x=plot_module_fr, y=round(budget/1000000), fill=plot_module_fr)) + 
+      geom_bar(stat="identity") + theme_bw() + 
+      facet_wrap(~budget_version_fr) + 
+      labs(title = paste0(c, ': Indicateurs RSSH et allocations par module, approuvés/cadres de résultats'), x = "Module", y = "Budget (Millions USD)", caption = "* = Indicateurs de couverture personnalisés inclus dans le total,\n^ = Le module avait également des WPTM, non inclus dans le total", fill = "Module") +
+      theme(legend.position = 'none') +
+      theme(axis.text.x = element_text(angle = 45, hjust = 0.9)) +
+      theme(text=element_text(size=14)) +
+      geom_text(aes(label=plot_label), size = 6, vjust = -0.3)
+    
+    file = paste0('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/bargraphs_rssh_indicators/bargraphs_rssh_indicators_', c, '_fr.png')
+    png(file, height = 8, width = 11, units = "in", res = 300)
+    print(g_fr)
+    dev.off()
     
   }
   
@@ -476,16 +539,19 @@ plot_dt[, plot_module := factor(plot_module, levels = c('HMIS and M&E',
 
 
 # plot into a heatmap
-g = ggplot(plot_dt, aes(loc_name, plot_module, color = module_percent_of_total_rssh, size= module_percent_of_total_rssh)) + geom_point() + theme_classic() + 
-  scale_x_discrete(position = 'top') + labs(x = "", y = "", caption = "\n\n\n* = Custom coverage indicators included in the total", size = "% of country's \nRSSH Funding", color = "") + 
-  scale_color_continuous(high = "#132B43", low = "#9fd4fc") +
+
+g = ggplot(plot_dt[module_percent_of_total_rssh > 0, ], aes(loc_name, plot_module, color = module_percent_of_total_rssh, size= module_percent_of_total_rssh)) + geom_point() + theme_classic() + 
+  scale_x_discrete(position = 'top') + labs(x = "", y = "", caption = "\n\n\n* = Custom coverage indicators included in the total", size = "% of country's \nRSSH Funding", color = "% of country's \nRSSH Funding") + 
+  scale_color_continuous(high = "#132B43", low = "#9fd4fc") + 
+  scale_size_continuous(range = c(5,30)) + 
   scale_y_discrete(limits = rev(levels(plot_dt$plot_module))) +
-  scale_size(range = c(5, 30)) + 
+  guides(color= guide_legend(), size=guide_legend()) + 
+  # scale_size(range = c(5, 30)) + 
   # theme(legend.position = "none") +
   theme(axis.text=element_text(size=16), legend.text = element_text(size=11), legend.title = element_text(size = 13), plot.caption = element_text(size = 11)) +
   theme(axis.text.x = element_text(angle = 45, hjust = -0.01)) +
   geom_text(data = plot_dt[module_percent_of_total_rssh >=25, ], aes(label= plot_dt[module_percent_of_total_rssh >=25, plot_label]), size = 3.75, color = '#FFFFFF') +
-  geom_text(data = plot_dt[module_percent_of_total_rssh <25, ], aes(label= plot_dt[module_percent_of_total_rssh <25, plot_label]), size = 4.8, color = '#132B43')
+  geom_text(data = plot_dt[module_percent_of_total_rssh <25, ], aes(label= plot_dt[module_percent_of_total_rssh <25, plot_label]), size = 3.75, color = '#132B43')
 
 file = paste0('J:/Project/Evaluation/GF/resource_tracking/visualizations2021/Synthesis/heatmap_RSSHindicators_byModuleCountry.png')
 png(file, height = 9, width = 12, units = "in", res = 300)
@@ -508,11 +574,12 @@ for (c in c('Uganda', 'DRC', 'Senegal')){
                                                              'Financial management\nsystems'))]
   }
   
-  g = ggplot(graph_dt, aes(loc_name, plot_module, color = module_percent_of_total_rssh, size= module_percent_of_total_rssh)) + geom_point() + theme_classic() + 
-    scale_x_discrete(position = 'top') + labs(x = "", y = "", caption = "\n\n\n* = Custom coverage indicators included in the total", size = "% of country's \nRSSH Funding", color = "") + 
+  g = ggplot(graph_dt[ module_percent_of_total_rssh > 0, ], aes(loc_name, plot_module, color = module_percent_of_total_rssh, size= module_percent_of_total_rssh)) + geom_point() + theme_classic() + 
+    scale_x_discrete(position = 'top') + labs(x = "", y = "", caption = "\n\n\n* = Custom coverage indicators included in the total", size = "% of country's \nRSSH Funding", color = "% of country's \nRSSH Funding") + 
     scale_color_continuous(high = "#132B43", low = "#9fd4fc") +
+    scale_size_continuous(range = c(5, 30)) + 
     scale_y_discrete(limits = rev(levels(graph_dt$plot_module))) +
-    scale_size(range = c(5, 30)) + 
+    guides(color= guide_legend(), size=guide_legend()) + 
     # theme(legend.position = "none") +
     theme(axis.text=element_text(size=16), legend.text = element_text(size=11), legend.title = element_text(size = 13), plot.caption = element_text(size = 11)) +
     theme(axis.text.x = element_text(angle = 45, hjust = -0.01)) +
@@ -524,11 +591,12 @@ for (c in c('Uganda', 'DRC', 'Senegal')){
   print(g)
   dev.off()
   
-  g = ggplot(graph_dt, aes(loc_name, plot_module, color = module_percent_of_total_rssh, size= module_percent_of_total_rssh)) + geom_point() + theme_classic() + 
-    scale_x_discrete(position = 'top') + labs(x = "", y = "", caption = "", size = "% of country's \nRSSH Funding", color = "") + 
+  g = ggplot(graph_dt[module_percent_of_total_rssh > 0, ], aes(loc_name, plot_module, color = module_percent_of_total_rssh, size= module_percent_of_total_rssh)) + geom_point() + theme_classic() + 
+    scale_x_discrete(position = 'top') + labs(x = "", y = "", caption = "", size = "% of country's \nRSSH Funding", color = "% of country's \nRSSH Funding") + 
     scale_color_continuous(high = "#132B43", low = "#9fd4fc") +
+    scale_size_continuous(range = c(10, 50)) + 
     scale_y_discrete(limits = (levels(graph_dt$plot_module))) +
-    scale_size(range = c(10, 50)) + 
+    guides(color= guide_legend(), size=guide_legend()) + 
     # theme(legend.position = "none") +
     theme(axis.text=element_text(size=14), legend.text = element_text(size=11), legend.title = element_text(size = 13), plot.caption = element_text(size = 11)) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
