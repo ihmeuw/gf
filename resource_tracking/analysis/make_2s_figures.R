@@ -301,6 +301,13 @@ for (country in c('UGA')){
   }
 }
 # -----------------------------------------------
+
+# -----------------------------------------------
+# combine NFM2 2s data and absorption data
+# -----------------------------------------------
+abs_dt = as.data.table(read.csv(paste0(box, 'tableau_data/cumulative_absorption.csv')))
+abs_dt[end_date <= '2020-12-31', cycle := 'NFM2']
+
 intervention_nfm2 = prepped_dt[cycle == 'NFM2' & version == 'approved_budget', .(budget = sum(budget)), by = .(loc_name, version, cycle, module, plot_module, intervention, coding_2s)]
 intervention_nfm2[ loc_name == 'UGA', loc_name := 'Uganda']
 intervention_nfm2[ loc_name == 'GTM', loc_name := 'Guatemala']
