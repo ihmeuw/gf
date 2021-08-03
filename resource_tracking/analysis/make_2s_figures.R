@@ -301,6 +301,12 @@ for (country in c('UGA')){
   }
 }
 # -----------------------------------------------
+intervention_nfm2 = prepped_dt[cycle == 'NFM2' & version == 'approved_budget', .(budget = sum(budget)), by = .(loc_name, version, cycle, module, plot_module, intervention, coding_2s)]
+intervention_nfm2[ loc_name == 'UGA', loc_name := 'Uganda']
+intervention_nfm2[ loc_name == 'GTM', loc_name := 'Guatemala']
+intervention_nfm2[ loc_name == 'SEN', loc_name := 'Senegal']
+intervention_nfm2 = intervention_nfm2[budget != 0, ]
+
 sd_cols = c('cumulative_budget', 'cumulative_expenditure')
 abs_nfm2 = abs_dt[cycle == 'NFM2', lapply(.SD, sum), by = .(loc_name, gf_module, gf_intervention, cycle), .SDcols = sd_cols]
 abs_nfm2[, cumulative_absorption := (cumulative_expenditure/cumulative_budget)*100]
