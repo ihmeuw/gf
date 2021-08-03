@@ -301,3 +301,19 @@ for (country in c('UGA')){
   }
 }
 # -----------------------------------------------
+sd_cols = c('cumulative_budget', 'cumulative_expenditure')
+abs_nfm2 = abs_dt[cycle == 'NFM2', lapply(.SD, sum), by = .(loc_name, gf_module, gf_intervention, cycle), .SDcols = sd_cols]
+abs_nfm2[, cumulative_absorption := (cumulative_expenditure/cumulative_budget)*100]
+abs_nfm2[gf_module == 'Health management information system and monitoring and evaluation', gf_module := 'Health management information systems and M&E']
+abs_nfm2[gf_module == 'Community responses and systems', gf_module := 'Community systems strengthening']
+abs_nfm2[gf_module == 'Procurement and supply chain management systems', gf_module := 'Health products management systems']
+
+keep_mods = unique(intervention_nfm2$module)
+abs_nfm2 = abs_nfm2[gf_module %in% keep_mods, ]
+
+dt = merge(intervention_nfm2, abs_nfm2, by.x = c('loc_name', 'module', 'intervention', 'cycle'), by.y = c('loc_name', 'gf_module', 'gf_intervention', 'cycle'), all=TRUE)
+dt = dt[budget != 0, ]
+
+g = ggplot(dt[coding_2s == 'Supporting', ], aes(x = cumulative_absorption, y = budget/1000000, color = loc_name)) + 
+  geom_point() + labs
+# -----------------------------------------------
